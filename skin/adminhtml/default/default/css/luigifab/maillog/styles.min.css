@@ -1,0 +1,28 @@
+@charset "utf-8";
+/**
+ * Copyright 2015 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Created D/22/03/2015,updated D/05/04/2015,version 6
+ * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ *
+ * This program is free software,you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL).
+ */
+body.adminhtml-maillog-history-index h3.icon-head,body.adminhtml-maillog-history-view h3.icon-head{min-height:19px;background:url("../../../images/fam_lorry.gif") no-repeat left center;}
+body.adminhtml-maillog-history-index table.data tr:hover{background-color:#DEDEDE;}
+body.adminhtml-maillog-history-index table.data tr td.a-status span{display:block;height:17px;line-height:17px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;color:#FFF;border-radius:10px;}
+body.adminhtml-maillog-history-index table.data tr td.a-status span.grid-pending{background-color:#FF9C00;}
+body.adminhtml-maillog-history-index table.data tr td.a-status span.grid-sent{background-color:#B3B4B3;}
+body.adminhtml-maillog-history-index table.data tr td.a-status span.grid-read{background-color:#3CB861;}
+body.adminhtml-maillog-history-index table.data tr td.a-status span.grid-error{background-color:#E41101;}
+body.adminhtml-maillog-history-index #loading-mask{background-color:rgba(255,255,255,.5);}
+body.adminhtml-maillog-history-index #loading_mask_loader{margin-left:-120px;margin-top:-30px;}
+body.adminhtml-maillog-history-view div.content-header td{width:auto !important;}
+body.adminhtml-maillog-history-view div.content ul + ul{width:45em;}
+body.adminhtml-maillog-history-view div.content ul{display:inline-block;margin:.2em .5em 1.4em 0;padding:.7em 1em;width:27.5em;height:7.2em;vertical-align:middle;font-size:13px;border-radius:1em;border:1px solid #DDD;background-color:#EFEFEF;background-clip:padding-box;}
+body.adminhtml-maillog-history-view div.content object{display:block;width:99.9%;margin:0 0 1.4em;border-radius:1em;border:1px solid #DDD;}
+#config_edit_form[action*="system_config/save/section/maillog"] p.note{padding-top:4px;line-height:125%;}
+#config_edit_form[action*="system_config/save/section/maillog"] fieldset > .comment{padding:5px 5px 15px;line-height:130%;color:red;}
+body.adminhtml-maillog-history-index table.data tr td.a-status span.grid-error,body.adminhtml-maillog-history-view div.content ul li strong.status-error{animation:maillogBlink 1s step-start 0s infinite;-moz-animation:maillogBlink 1s step-start 0s infinite;-webkit-animation:maillogBlink 1s step-start 0s infinite;}
+@keyframes maillogBlink{30%{color:transparent;}}
+@-moz-keyframes maillogBlink{30%{color:transparent;}}
+@-webkit-keyframes maillogBlink{30%{color:transparent;}}

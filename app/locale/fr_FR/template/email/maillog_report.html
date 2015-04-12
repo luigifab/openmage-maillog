@@ -1,0 +1,33 @@
+<!--@subject Rapport des emails envoyés@-->
+<!--@vars {
+"var frequency":"Fréquence du rapport",
+"var date_period_from":"Date de début du rapport",
+"var date_period_to":"Date de fin du rapport",
+"var total_email":"Nombre d'email",
+"var total_pending":"Nombre d'email en attente",
+"var total_sent":"Nombre d'email envoyé",
+"var total_error":"Nombre d'email en erreur",
+"var total_read":"Nombre d'email en erreur",
+"var list":"Liste des emails en erreur",
+"var config":"Adresse de configuration"
+}@-->
+
+<div style="margin:1em; font-size:12px;">
+	<p>Rapport {{var frequency}} par rapport aux envois des emails.
+	<br />Période du <strong>{{var date_period_from}}</strong> au <strong>{{var date_period_to}}</strong>.</p>
+
+	<p>Sur les <strong>{{var total_email}}</strong> emails prévus :
+	<br />➩ <span style="color:orange;">Email(s) en attente(s) : {{var total_pending}}</span>
+	<br />➩ <span style="color:red;">Email(s) en erreur(s) : {{var total_error}}</span>
+	<br />➩ <span style="color:gray;">Email(s) envoyé(s) : {{var total_sent}}</span>
+	<br />➩ <span style="color:green;">Email(s) ouvert(s)/lu(s) : {{var total_read}}</span></p>
+
+	{{depend list}}
+		<ul style="margin:1.5em 0; padding:0.5em 0 0; font-size:0.9em; list-style:none; border-top:1px dashed #777;">
+			<li style="margin:0.8em 0 0.5em;">{{var list}}</li>
+		</ul>
+	{{/depend}}
+
+	<p style="font-size:0.8em; line-height:130%; font-style:italic; color:gray;">{{config path='design/head/default_title'}} - Rapport des emails envoyés
+	<br /><a href="{{var config}}" style="color:gray;">{{var config}}</a></p>
+</div>

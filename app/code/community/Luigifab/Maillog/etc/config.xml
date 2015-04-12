@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Created D/22/03/2015
+ * Updated D/05/04/2015
+ * Version 4
+ *
+ * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ *
+ * This program is free software, you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL) as published
+ * by the free software foundation, either version 2 of the license, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but without any warranty, without even the implied warranty of
+ * merchantability or fitness for a particular purpose. See the
+ * GNU General Public License (GPL) for more details.
+-->
+
+<config>
+	<modules>
+		<Luigifab_Maillog>
+			<version>1.0.0</version>
+		</Luigifab_Maillog>
+	</modules>
+	<global>
+		<blocks>
+			<maillog>
+				<class>Luigifab_Maillog_Block</class>
+			</maillog>
+		</blocks>
+		<helpers>
+			<maillog>
+				<class>Luigifab_Maillog_Helper</class>
+			</maillog>
+		</helpers>
+		<models>
+			<maillog>
+				<class>Luigifab_Maillog_Model</class>
+				<resourceModel>maillog_resource</resourceModel>
+			</maillog>
+			<core>
+				<rewrite>
+					<email_queue>Luigifab_Maillog_Model_Rewrite_Queue</email_queue><!-- Magento 1.9.1.0+ -->
+				</rewrite>
+			</core>
+			<maillog_resource>
+				<class>Luigifab_Maillog_Model_Resource</class>
+				<entities>
+					<email>
+						<table>luigifab_maillog</table>
+					</email>
+				</entities>
+			</maillog_resource>
+		</models>
+		<resources>
+			<maillog_setup>
+				<setup>
+					<module>Luigifab_Maillog</module>
+					<class>Mage_Core_Model_Resource_Setup</class>
+				</setup>
+				<connection>
+					<use>core_setup</use>
+				</connection>
+			</maillog_setup>
+			<maillog_write>
+				<connection>
+					<use>core_write</use>
+				</connection>
+			</maillog_write>
+			<maillog_read>
+				<connection>
+					<use>core_read</use>
+				</connection>
+			</maillog_read>
+		</resources>
+		<template>
+			<email>
+				<maillog_email_template translate="label">
+					<label>Email send report</label>
+					<file>maillog_report.html</file>
+					<type>html</type>
+				</maillog_email_template>
+			</email>
+		</template>
+	</global>
+	<frontend>
+		<routers>
+			<maillog>
+				<use>standard</use>
+				<args>
+					<module>Luigifab_Maillog</module>
+					<frontName>maillog</frontName>
+				</args>
+			</maillog>
+		</routers>
+	</frontend>
+	<admin>
+		<routers>
+			<adminhtml>
+				<args>
+					<modules>
+						<luigifab_maillog before="Mage_Adminhtml">Luigifab_Maillog</luigifab_maillog>
+					</modules>
+				</args>
+			</adminhtml>
+		</routers>
+	</admin>
+	<adminhtml>
+		<events>
+			<admin_system_config_changed_section_maillog>
+				<observers>
+					<maillog>
+						<class>maillog/observer</class>
+						<method>updateConfig</method>
+					</maillog>
+				</observers>
+			</admin_system_config_changed_section_maillog>
+		</events>
+		<layout>
+			<updates>
+				<maillog>
+					<file>luigifab/maillog.xml</file>
+				</maillog>
+			</updates>
+		</layout>
+		<translate>
+			<modules>
+				<Luigifab_Maillog>
+					<files>
+						<default>Luigifab_Maillog.csv</default>
+					</files>
+				</Luigifab_Maillog>
+			</modules>
+		</translate>
+	</adminhtml>
+	<crontab>
+		<jobs>
+			<maillog_send_report>
+				<run>
+					<model>maillog/observer::sendEmailReport</model>
+				</run>
+			</maillog_send_report>
+		</jobs>
+	</crontab>
+	<default>
+		<maillog>
+			<email>
+				<enabled>0</enabled>
+				<recipient_email>hello@example.com</recipient_email>
+				<sender_email_identity>general</sender_email_identity>
+				<template>maillog_email_template</template>
+			</email>
+		</maillog>
+	</default>
+</config>
