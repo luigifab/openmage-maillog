@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/04/04/2015
- * Version 9
+ * Updated S/11/04/2015
+ * Version 10
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -53,7 +53,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 	public function getGridHtml() {
 
 		$email = Mage::registry('current_email');
-		$size  = Mage::getBlockSingleton('maillog/adminhtml_widget_size')->render($email);
+		$size  = Mage::getBlockSingleton('maillog/adminhtml_history_grid')->decorateSize(null, $email, null, null);
 		$date  = Mage::getSingleton('core/locale'); //date($date, $format, $locale = null, $useTimezone = null)
 
 		$status = ($email->getStatus() === 'read') ? 'open/read' : $email->getStatus();
@@ -65,7 +65,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		if (!in_array($email->getSentAt(), array('', '0000-00-00 00:00:00', null))) {
 			$html .= "\n".'<li><strong>'.$this->__('Sent At: %s', $date->date($email->getSentAt(), Zend_Date::ISO_8601)).'</strong></li>';
-			$duration = Mage::getBlockSingleton('maillog/adminhtml_widget_duration')->render($email);
+			$duration = Mage::getBlockSingleton('maillog/adminhtml_history_grid')->decorateDuration(null, $email, null, null);
 			if (strlen($duration) > 0)
 				$html .= "\n".'<li>'.$this->__('Duration: %s', $duration).'</li>';
 		}

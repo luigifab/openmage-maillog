@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/04/04/2015
- * Version 10
+ * Updated S/11/04/2015
+ * Version 20
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -90,10 +90,10 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 				'header'    => $this->__('Size'),
 				'index'     => 'size',
 				'type'      => 'number',
-				'renderer'  => 'maillog/adminhtml_widget_size',
 				'width'     => '80px',
 				'filter'    => false,
-				'sortable'  => false
+				'sortable'  => false,
+				'frame_callback' => array($this, 'decorateSize')
 			));
 		}
 
@@ -101,35 +101,34 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'header'    => $this->__('Created At'),
 			'index'     => 'created_at',
 			'type'      => 'datetime',
-			'renderer'  => 'maillog/adminhtml_widget_datetime',
 			'align'     => 'center',
-			'width'     => '180px'
+			'width'     => '180px',
+			'frame_callback' => array($this, 'decorateDate')
 		));
 
 		$this->addColumn('sent_at', array(
 			'header'    => $this->__('Sent At'),
 			'index'     => 'sent_at',
 			'type'      => 'datetime',
-			'renderer'  => 'maillog/adminhtml_widget_datetime',
 			'align'     => 'center',
-			'width'     => '180px'
+			'width'     => '180px',
+			'frame_callback' => array($this, 'decorateDate')
 		));
 
 		$this->addColumn('duration', array(
 			'header'    => $this->__('Duration'),
 			'index'     => 'duration',
-			'renderer'  => 'maillog/adminhtml_widget_duration',
 			'align'     => 'center',
 			'width'     => '60px',
 			'filter'    => false,
-			'sortable'  => false
+			'sortable'  => false,
+			'frame_callback' => array($this, 'decorateDuration')
 		));
 
 		$this->addColumn('status', array(
 			'header'    => $this->helper('adminhtml')->__('Status'),
 			'index'     => 'status',
 			'type'      => 'options',
-			'renderer'  => 'maillog/adminhtml_widget_status',
 			'options'   => array(
 				'pending' => $this->__('Pending (%d)', $pending),
 				'sent'    => $this->__('Sent (%d)', $sent),
@@ -137,7 +136,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 				'error'   => $this->__('Error (%d)', $error)
 			),
 			'align'     => 'status',
-			'width'     => '125px'
+			'width'     => '125px',
+			'frame_callback' => array($this, 'decorateStatus')
 		));
 
 		$this->addColumn('action', array(
@@ -160,7 +160,52 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return parent::_prepareColumns();
 	}
 
+
+	public function getRowClass($row) {
+		return '';
+	}
+
 	public function getRowUrl($row) {
 		return $this->getUrl('*/*/view', array('id' => $row->getId()));
+	}
+
+	public function decorateStatus($value, $row, $column, $isExport) {
+
+		$status = (strpos($value, ' (') !== false) ? substr($value, 0, strpos($value, ' (')) : $value;
+		return '<span class="grid-'.$row->getData('status').'">'.trim($status).'</span>';
+	}
+
+	public function decorateDuration($value, $row, $column, $isExport) {
+
+		if (!in_array($row->getData('created_at'), array('', '0000-00-00 00:00:00', null)) &&
+		    !in_array($row->getData('sent_at'), array('', '0000-00-00 00:00:00', null))) {
+
+			$data = strtotime($row->getData('sent_at')) - strtotime($row->getData('created_at'));
+			$minutes = intval($data / 60);
+			$seconds = intval($data % 60);
+
+			if ($data > 599)
+				$data = '<strong>'.(($seconds > 9) ? $minutes.':'.$seconds : $minutes.':0'.$seconds).'</strong>';
+			else if ($data > 59)
+				$data = '<strong>'.(($seconds > 9) ? '0'.$minutes.':'.$seconds : '0'.$minutes.':0'.$seconds).'</strong>';
+			else if ($data > 0)
+				$data = ($seconds > 9) ? '00:'.$data : '00:0'.$data;
+			else
+				$data = '&lt; 1';
+
+			return $data;
+		}
+	}
+
+	public function decorateSize($value, $row, $column, $isExport) {
+
+		$size = number_format($row->getData('size') / 1024, 2);
+		$size = Zend_Locale_Format::toNumber($size, array('locale' => Mage::app()->getLocale()->getLocaleCode()));
+
+		return $this->__('%s KB', $size);
+	}
+
+	public function decorateDate($value, $row, $column, $isExport) {
+		return (!in_array($row->getData($column->getIndex()), array('', '0000-00-00 00:00:00', null))) ? $value : '';
 	}
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated S/04/04/2015
+ * Updated S/11/04/2015
  * Version 7
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
@@ -50,7 +50,7 @@
 					<expanded>1</expanded>
 					<fields>
 						<enabled translate="label">
-							<label>Enabled</label>
+							<label>Enable</label>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
 							<sort_order>1</sort_order>

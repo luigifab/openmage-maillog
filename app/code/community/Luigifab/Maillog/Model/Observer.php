@@ -1,11 +1,11 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated S/04/04/2015
- * Version 30
+ * Updated S/11/04/2015
+ * Version 31
  *
  * Copyright 2012-2015 | Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog (source maillog)
+ * https://redmine.luigifab.info/projects/magento/wiki/maillog (source cronlog)
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -47,7 +47,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			// Évite ce genre de chose... (date(n) = numéro du mois, date(t) = nombre de jour du mois)
 			// Période du dimanche 1 mars 2015 00:00:00 Europe/Paris au samedi 28 février 2015 23:59:59 Europe/Paris
 			// Il est étrange que la variable dateEnd ne soit pas affectée
-			if (date('n', $dateStart->getTimestamp()) == date('n', $dateEnd->getTimestamp()))
+			if (date('n', $dateStart->getTimestamp()) === date('n', $dateEnd->getTimestamp()))
 				$dateStart->subDay(date('t', $dateStart->getTimestamp()));
 		}
 		else if ($frequency === Mage_Adminhtml_Model_System_Config_Source_Cron_Frequency::CRON_WEEKLY) {
@@ -62,7 +62,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 
 		// chargement des emails
-		// génération du code HTML du détails des erreurs
 		$emails = Mage::getResourceModel('maillog/email_collection');
 		$emails->getSelect()->order('email_id', 'DESC');
 		$emails->addFieldToFilter('created_at', array(
@@ -76,7 +75,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			if (!in_array($email->getStatus(), array('error', 'pending')))
 				continue;
 
-			$link  = str_replace('//admin', '/admin', '<a href="'.Mage::helper('adminhtml')->getUrl('adminhtml/maillog_history/view', array('id' => $email->getId())).'" style="font-weight:bold; color:red; text-decoration:none;">'.$this->__('Email %d: %s', $email->getId(), $email->getMailSubject()).'</a>');
+			$link = '<a href="'.Mage::helper('adminhtml')->getUrl('adminhtml/maillog_history/view', array('id' => $email->getId())).'" style="font-weight:bold; color:red; text-decoration:none;">'.$this->__('Email %d: %s', $email->getId(), $email->getMailSubject()).'</a>';
 
 			$hour  = $this->__('Created At: %s', $date->date($email->getCreatedAt(), Zend_Date::ISO_8601));
 			$state = $this->__('Status: %s', $this->__(ucfirst($email->getStatus())));
@@ -85,18 +84,16 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 
 		// envoi des emails
-		// avec les variables du template
 		$this->send(array(
 			'frequency'        => $frequency,
 			'date_period_from' => $date->date($dateStart)->toString(Zend_Date::DATETIME_FULL),
 			'date_period_to'   => $date->date($dateEnd)->toString(Zend_Date::DATETIME_FULL),
-			'total_email'   => count($emails),
-			'total_pending' => count($emails->getItemsByColumnValue('status', 'pending')),
-			'total_sent'    => count($emails->getItemsByColumnValue('status', 'sent')),
-			'total_error'   => count($emails->getItemsByColumnValue('status', 'error')),
-			'total_read'    => count($emails->getItemsByColumnValue('status', 'read')),
-			'list'   => (count($errors) > 0) ? implode('</li><li style="margin:0.8em 0 0.5em;">', $errors) : '',
-			'config' => str_replace('//admin', '/admin', Mage::helper('adminhtml')->getUrl('adminhtml/system_config/edit', array('section' => 'maillog')))
+			'total_email'      => count($emails),
+			'total_pending'    => count($emails->getItemsByColumnValue('status', 'pending')),
+			'total_sent'       => count($emails->getItemsByColumnValue('status', 'sent')),
+			'total_error'      => count($emails->getItemsByColumnValue('status', 'error')),
+			'total_read'       => count($emails->getItemsByColumnValue('status', 'read')),
+			'list'             => (count($errors) > 0) ? implode('</li><li style="margin:0.8em 0 0.5em;">', $errors) : ''
 		));
 	}
 
@@ -143,6 +140,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	private function send($vars) {
 
 		$emails = explode(' ', trim(Mage::getStoreConfig('maillog/email/recipient_email')));
+		$vars['config'] = Mage::helper('adminhtml')->getUrl('adminhtml/system_config/edit', array('section' => 'maillog'));
 
 		foreach ($emails as $email) {
 
