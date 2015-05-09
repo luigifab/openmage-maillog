@@ -1,8 +1,8 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated S/11/04/2015
- * Version 31
+ * Updated S/02/05/2015
+ * Version 33
  *
  * Copyright 2012-2015 | Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog (source cronlog)
@@ -145,7 +145,19 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		foreach ($emails as $email) {
 
 			// sendTransactional($templateId, $sender, $recipient, $name, $vars = array(), $storeId = null)
+			// pièce jointe uniquement lors de la sauvegarde de la configuration
 			$template = Mage::getModel('core/email_template');
+
+			if (strpos(Mage::helper('core/url')->getCurrentUrl(), 'section/maillog') !== false) {
+				$template->getMail()->createAttachment(
+					gzencode(file_get_contents(realpath(dirname(__FILE__).'/../etc/tidy.conf'))),
+					'application/x-gzip',
+					Zend_Mime::DISPOSITION_ATTACHMENT,
+					Zend_Mime::ENCODING_BASE64,
+					'tidy.gz'
+				);
+			}
+
 			$template->sendTransactional(
 				Mage::getStoreConfig('maillog/email/template'),
 				Mage::getStoreConfig('maillog/email/sender_email_identity'),

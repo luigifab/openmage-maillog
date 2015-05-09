@@ -1,6 +1,6 @@
 /**
  * Copyright 2015 | Fabrice Creuzot (luigifab) <code~luigifab~info>
- * Created D/22/03/2015, updated D/05/04/2015, version 6
+ * Created D/22/03/2015, updated S/02/05/2015, version 7
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -41,6 +41,20 @@ body.adminhtml-maillog-history-view div.content object {
 	display:block; width:99.9%; margin:0 0 1.4em;
 	border-radius:1em; border:1px solid #DDD;
 }
+
+body.adminhtml-maillog-history-view ul.attachments li { display:inline-block; vertical-align:middle; }
+
+body.adminhtml-maillog-history-view ul.attachments li a {
+	display:inline-block; padding:0 0.8em 0 50px; height:48px;
+	color:inherit; text-decoration:none; background-repeat:no-repeat; background-position:center left;
+}
+
+body.adminhtml-maillog-history-view ul.attachments li a span:first-child { display:block; line-height:220%; font-weight:bold; }
+body.adminhtml-maillog-history-view ul.attachments li a span:last-child { display:block; line-height:70%; }
+
+body.adminhtml-maillog-history-view ul.attachments li a { background-image:url("../../../images/luigifab/maillog/humanity-file.svg"); }
+body.adminhtml-maillog-history-view ul.attachments li a[type="application/pdf"] {
+	background-image:url("../../../images/luigifab/maillog/humanity-pdf.svg"); }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& system/config &&& */
 #config_edit_form[action*="system_config/save/section/maillog"] p.note { padding-top:4px; line-height:125%; }

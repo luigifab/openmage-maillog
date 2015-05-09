@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/05/04/2015
- * Version 11
+ * Updated S/02/05/2015
+ * Version 13
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -24,27 +24,28 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		return (string) Mage::getConfig()->getModuleConfig('Luigifab_Maillog')->version;
 	}
 
-	public function sendMail($zendMail, $mailData) {
+	public function sendMail($zend, $data, $parts) {
 
 		$email = Mage::getModel('maillog/email');
 		$email->setStatus('pending');
 		$email->setCreatedAt(strftime('%Y-%m-%d %H:%M:%S', time()));
 
 		// enregistre la version originale des entêtes, des paramètres, des destinataires et du sujet => AUCUN TRAITEMENT
-		// pour l'envoi réel et le calcul de la taille approximative de l'email
-		$email->setMailHeader($zendMail->header);
-		$email->setMailParameters($zendMail->parameters);
-		$email->setEncodedMailRecipients($zendMail->recipients);
-		$email->setEncodedMailSubject($mailData->getSubject());
+		// » pour l'envoi réel et le calcul de la taille approximative de l'email
+		$email->setMailHeader($zend->header);
+		$email->setMailParameters($zend->parameters);
+		$email->setEncodedMailRecipients($zend->recipients);
+		$email->setEncodedMailSubject($data->getSubject());
 
 		// enregistre la version décodée des destinataires et du sujet => UN SEUL TRAITEMENT LE DÉCODAGE
-		// pour la recherche en base de données et l'affichage
-		$email->setMailRecipients($zendMail->recipients);
-		$email->setMailSubject($mailData->getSubject());
+		// » pour la recherche en base de données et l'affichage
+		$email->setMailRecipients($zend->recipients);
+		$email->setMailSubject($data->getSubject());
 
 		// enregistre la version décodée du contenu du mail => NOMBREUX TRAITEMENTS
-		// pour les différents traitements, l'affichage, l'envoi réel et le calcul de la taille approximative de l'email
-		$email->setMailBody($zendMail->body);
+		// enregistre également les différentes parties du mail => AUCUN TRAITEMENT
+		// » pour les différents traitements, l'affichage, l'envoi réel et le calcul de la taille approximative de l'email
+		$email->setMailContent($parts);
 
 		$email->save();
 		$email->send();

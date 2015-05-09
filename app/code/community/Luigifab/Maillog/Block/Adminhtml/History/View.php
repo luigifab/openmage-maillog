@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/11/04/2015
- * Version 10
+ * Updated J/07/05/2015
+ * Version 15
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -53,8 +53,10 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 	public function getGridHtml() {
 
 		$email = Mage::registry('current_email');
-		$size  = Mage::getBlockSingleton('maillog/adminhtml_history_grid')->decorateSize(null, $email, null, null);
+		$block = Mage::getBlockSingleton('maillog/adminhtml_history_grid');
 		$date  = Mage::getSingleton('core/locale'); //date($date, $format, $locale = null, $useTimezone = null)
+		$recipients = $block->decorateRecipients(null, $email, null, false);
+		$size  = $block->decorateSize(null, $email, null, false);
 
 		$status = ($email->getStatus() === 'read') ? 'open/read' : $email->getStatus();
 		$status = trim(str_replace('(0)', '', $this->__(ucfirst($status.' (%d)'), 0)));
@@ -65,7 +67,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		if (!in_array($email->getSentAt(), array('', '0000-00-00 00:00:00', null))) {
 			$html .= "\n".'<li><strong>'.$this->__('Sent At: %s', $date->date($email->getSentAt(), Zend_Date::ISO_8601)).'</strong></li>';
-			$duration = Mage::getBlockSingleton('maillog/adminhtml_history_grid')->decorateDuration(null, $email, null, null);
+			$duration = $block->decorateDuration(null, $email, null, false);
 			if (strlen($duration) > 0)
 				$html .= "\n".'<li>'.$this->__('Duration: %s', $duration).'</li>';
 		}
@@ -73,11 +75,35 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		$html .= "\n".'</ul>';
 		$html .= "\n".'<ul>';
 		$html .= "\n".'<li><strong class="status-'.$email->getStatus().'">'.$this->__('Status: %s', $status).'</strong></li>';
-		$html .= "\n".'<li>'.$this->__('Approximate size: %s', $size).'</li>';
-		$html .= "\n".'<li>'.$this->__('Recipient(s): %s', htmlentities($email->getMailRecipients())).'</li>';
+
+		if (strlen($size) > 0)
+			$html .= "\n".'<li>'.$this->__('Approximate size: %s', $size).'</li>';
+
+		$html .= "\n".'<li>'.$this->__('Recipient(s): %s', $recipients).'</li>';
 		$html .= "\n".'</ul>';
-		$html .= "\n".'<object data="'.$this->getUrl('*/*/viewmail', array('id' => $email->getId())).'" type="text/html" onload="this.style.height = (this.contentDocument.body.scrollHeight + 40) + \'px\';"></object>';
+		$html .= "\n".'<object data="'.$this->getUrl('*/*/show', array('id' => $email->getId())).'" type="text/html" onload="this.style.height = (this.contentDocument.body.scrollHeight + 40) + \'px\';"></object>';
 		$html .= "\n".'</div>';
+
+		if (!is_null($email->getMailParts())) {
+
+			$parts = unserialize(gzdecode($email->getMailParts()));
+			$html .= "\n".'<ul class="attachments">';
+
+			foreach ($parts as $key => $part) {
+
+				if ($key > 0) {
+
+					$email->setSize(strlen( rtrim(chunk_split(str_replace("\n", '', $part->getContent()))) ));
+					$size1 = $block->decorateSize(null, $email, null, false);
+					$email->setSize(strlen( base64_decode(rtrim(chunk_split(str_replace("\n", '', $part->getContent())))) ));
+					$size2 = $block->decorateSize(null, $email, null, false);
+
+					$html .= "\n".'<li><a href="'.$this->getUrl('*/*/download', array('id' => $email->getId(), 'part' => $key)).'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size1.' / '.$size2.'</span></a></li>';
+				}
+			}
+
+			$html .= "\n".'</ul>';
+		}
 
 		return $html;
 	}

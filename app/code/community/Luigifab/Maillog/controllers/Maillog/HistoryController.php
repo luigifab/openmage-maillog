@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/04/04/2015
- * Version 6
+ * Updated D/03/05/2015
+ * Version 9
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -34,7 +34,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 	public function viewAction() {
 
-		$email = Mage::getModel('maillog/email')->load(intval($this->getRequest()->getParam('id', 0)));
+		$email = $this->loadEmail();
 
 		if ($email->getId() > 0) {
 			Mage::register('current_email', $email);
@@ -45,12 +45,46 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		}
 	}
 
-	public function viewmailAction() {
+	public function showAction() {
 
-		$email = Mage::getModel('maillog/email')->load(intval($this->getRequest()->getParam('id', 0)));
+		$email = $this->loadEmail();
 
 		if ($email->getId() > 0)
-			$this->getResponse()->setBody($email->printMail(true));
+			$this->getResponse()->setBody($email->printOnlineMail(true, false));
+		else
+			$this->getResponse()->setHttpResponseCode(404);
+	}
+
+	public function downloadAction() {
+
+		$email = $this->loadEmail();
+
+		if (($email->getId() > 0) && !is_null($email->getMailParts())) {
+
+			$parts = unserialize(gzdecode($email->getMailParts()));
+			$nb = intval($this->getRequest()->getParam('part', 0));
+
+			foreach ($parts as $key => $part) {
+
+				if ($key == $nb) {
+
+					$data = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
+					$data = base64_decode($data);
+
+					$this->getResponse()->setHttpResponseCode(200);
+					$this->getResponse()->setHeader('Content-Type', $part->type, true);
+					$this->getResponse()->setHeader('Content-Length', strlen($data));
+					$this->getResponse()->setHeader('Content-Disposition', 'attachment; filename="'.$part->filename.'"');
+					$this->getResponse()->setHeader('Last-Modified', date('r'));
+					$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);
+					$this->getResponse()->setHeader('Pragma', 'no-cache', true);
+					$this->getResponse()->setBody($data);
+					return;
+				}
+			}
+		}
+
+		$this->getResponse()->setHttpResponseCode(404);
 	}
 
 	public function deleteAction() {
@@ -84,8 +118,12 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 				if (($id = $this->getRequest()->getParam('id', false)) === false)
 					Mage::throwException($this->__('The <em>%s</em> field is a required value.', 'id'));
 
-				Mage::getModel('maillog/email')->load($id)->send(true);
-				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully resent.', $id));
+				Mage::getModel('maillog/email')->load($id)->setStatus('pending')->save()->send();
+
+				if (Mage::getStoreConfig('maillog/general/background') !== '1')
+					Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully resent (warning, dates are not updated).', $id));
+				else
+					Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully resent (warning, dates are not updated). As you send emails in background, sending can take a few minutes.', $id));
 			}
 		}
 		catch (Exception $e) {
@@ -93,5 +131,9 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		}
 
 		$this->_redirect('*/*/index');
+	}
+
+	private function loadEmail() {
+		return Mage::getModel('maillog/email')->load(intval($this->getRequest()->getParam('id', 0)));
 	}
 }

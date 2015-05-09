@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/11/04/2015
- * Version 20
+ * Updated J/07/05/2015
+ * Version 23
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -44,13 +44,13 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	protected function _prepareColumns() {
 
 		// comptage des emails
+		// et génération de la colonne type
 		$emails  = Mage::getResourceModel('maillog/email_collection');
 		$pending = count($emails->getItemsByColumnValue('status', 'pending'));
 		$error   = count($emails->getItemsByColumnValue('status', 'error'));
 		$read    = count($emails->getItemsByColumnValue('status', 'read'));
 		$sent    = count($emails) - $pending - $error - $read;
 
-		// génération de la colonne type
 		$types = $emails->getColumnValues('type');
 		$types = array_combine($types, $types);
 		unset($types['']);
@@ -63,7 +63,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'width'     => '80px'
 		));
 
-		if (count($types) > 0) {
+		if (count($types) > 1) {
+			ksort($types);
 			$this->addColumn('type', array(
 				'header'    => $this->helper('adminhtml')->__('Type'),
 				'index'     => 'type',
@@ -75,7 +76,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 		$this->addColumn('mail_recipients', array(
 			'header'    => $this->__('Recipient(s)'),
-			'index'     => 'mail_recipients'
+			'index'     => 'mail_recipients',
+			'frame_callback' => array($this, 'decorateRecipients')
 		));
 
 		if (Mage::getStoreConfig('maillog/general/subject') === '1') {
@@ -199,13 +201,26 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 	public function decorateSize($value, $row, $column, $isExport) {
 
-		$size = number_format($row->getData('size') / 1024, 2);
-		$size = Zend_Locale_Format::toNumber($size, array('locale' => Mage::app()->getLocale()->getLocaleCode()));
-
-		return $this->__('%s KB', $size);
+		if ($row->getData('size') < 1) {
+			return '';
+		}
+		else if (($row->getData('size') / 1024) < 1024) {
+			$size = number_format($row->getData('size') / 1024, 2);
+			$size = Zend_Locale_Format::toNumber($size, array('locale' => Mage::app()->getLocale()->getLocaleCode()));
+			return $this->__('%s KB', $size);
+		}
+		else {
+			$size = number_format($row->getData('size') / 1024 / 1024, 2);
+			$size = Zend_Locale_Format::toNumber($size, array('locale' => Mage::app()->getLocale()->getLocaleCode()));
+			return $this->__('%s MB', $size);
+		}
 	}
 
 	public function decorateDate($value, $row, $column, $isExport) {
 		return (!in_array($row->getData($column->getIndex()), array('', '0000-00-00 00:00:00', null))) ? $value : '';
+	}
+
+	public function decorateRecipients($value, $row, $column, $isExport) {
+		return htmlspecialchars(str_replace(array('<','>','&lt;','&gt;',','), array('(',')','(',')',', '), $row->getData('mail_recipients')));
 	}
 }
