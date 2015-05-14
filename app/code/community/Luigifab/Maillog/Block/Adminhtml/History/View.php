@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/07/05/2015
- * Version 15
+ * Updated J/14/05/2015
+ * Version 17
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -43,10 +43,16 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 			'class'   => 'delete'
 		));
 
-		$this->_addButton('action', array(
+		$this->_addButton('resend', array(
 			'label'   => $this->__('Resend email'),
 			'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/resend', array('id' => $email->getId()))."');", // ce n'est pas un delete, mais une demande de confirmation
 			'class'   => 'add'
+		));
+
+		$this->_addButton('online', array(
+			'label'   => $this->helper('adminhtml')->__('View'),
+			'onclick' => "window.open('".$email->getFrontUrl('index', array('nomark' => 1))."');",
+			'class'   => 'go'
 		));
 	}
 
@@ -81,29 +87,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$html .= "\n".'<li>'.$this->__('Recipient(s): %s', $recipients).'</li>';
 		$html .= "\n".'</ul>';
-		$html .= "\n".'<object data="'.$this->getUrl('*/*/show', array('id' => $email->getId())).'" type="text/html" onload="this.style.height = (this.contentDocument.body.scrollHeight + 40) + \'px\';"></object>';
+		$html .= "\n".'<object data="'.$email->getFrontUrl('index', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'nomark' => 1)).'" type="text/html" onload="this.style.height = (this.contentDocument.body.scrollHeight + 40) + \'px\';"></object>';
 		$html .= "\n".'</div>';
-
-		if (!is_null($email->getMailParts())) {
-
-			$parts = unserialize(gzdecode($email->getMailParts()));
-			$html .= "\n".'<ul class="attachments">';
-
-			foreach ($parts as $key => $part) {
-
-				if ($key > 0) {
-
-					$email->setSize(strlen( rtrim(chunk_split(str_replace("\n", '', $part->getContent()))) ));
-					$size1 = $block->decorateSize(null, $email, null, false);
-					$email->setSize(strlen( base64_decode(rtrim(chunk_split(str_replace("\n", '', $part->getContent())))) ));
-					$size2 = $block->decorateSize(null, $email, null, false);
-
-					$html .= "\n".'<li><a href="'.$this->getUrl('*/*/download', array('id' => $email->getId(), 'part' => $key)).'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size1.' / '.$size2.'</span></a></li>';
-				}
-			}
-
-			$html .= "\n".'</ul>';
-		}
 
 		return $html;
 	}

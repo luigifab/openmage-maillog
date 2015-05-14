@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/07/05/2015
- * Version 8
+ * Updated J/14/05/2015
+ * Version 9
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -53,21 +53,15 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			else if (in_array(Mage::getStoreConfig('maillog/content/minify'), array('tidy', 'manual')))
 				$body = $this->cleanWithReplace($body);
 
-			if ((Mage::getStoreConfig('maillog/content/online') === '1') && (strpos($body, '#online#') !== false)) {
-				$url  = $this->getFrontUrl('maillog/view/index', array('_secure' => false, 'key' => $this->getUniqid()));
-				$body = str_replace('#online#', $url, $body);
-			}
-			else if (strpos($body, '#online#') !== false) {
+			if ((Mage::getStoreConfig('maillog/content/online') === '1') && (strpos($body, '#online#') !== false))
+				$body = str_replace('#online#', $this->getFrontUrl('index'), $body);
+			else if (strpos($body, '#online#') !== false)
 				$body = str_replace('#online#', '', $body);
-			}
 
-			if ((Mage::getStoreConfig('maillog/content/readimg') === '1') && (strpos($body, '#readimg#') !== false)) {
-				$url  = $this->getFrontUrl('maillog/view/mark', array('_secure' => false, 'key' => $this->getUniqid()));
-				$body = str_replace('#readimg#', '<img src="'.$url.'" width="1" height="1" alt="">', $body);
-			}
-			else if (strpos($body, '#readimg#') !== false) {
+			if ((Mage::getStoreConfig('maillog/content/readimg') === '1') && (strpos($body, '#readimg#') !== false))
+				$body = str_replace('#readimg#', '<img src="'.$this->getFrontUrl('mark').'" width="1" height="1" alt="">', $body);
+			else if (strpos($body, '#readimg#') !== false)
 				$body = str_replace('#readimg#', '', $body);
-			}
 		}
 
 		// recherche et remplace #uniqid# par sa valeur ou rien en fonction de la configuration
@@ -172,7 +166,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 	// préparation de l'email pour un affichage dans une page web
 	// supprime l'image de marquage si demandé
-	public function printOnlineMail($withoutMark, $withAttachments) {
+	public function toHtml($noMark) {
 
 		if ($this->getId() < 1)
 			Mage::throwException('You must load an email before trying to print it.');
@@ -187,12 +181,12 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			$body = (strpos($body, '<html') === false) ? '<html>'."\n".'<head>'."\n".'<title>'.htmlentities($this->getMailSubject()).'</title>'."\n".'<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'."\n".$body."\n".'</html>' : $body;
 			$body = (strpos($body, '</head>') === false) ? str_replace('<body', '</head>'."\n".'<body', $body) : $body;
 
-			if ($withoutMark) {
+			if ($noMark) {
 				$body = (strpos($body, 'maillog/view/mark') !== false) ?
 					preg_replace('#\s*<img src=".+maillog/view/mark.+" width="1" height="1" alt="">#', ' #', $body) : $body;
 			}
 
-			if ($withAttachments && !is_null($this->getMailParts())) {
+			if (!is_null($this->getMailParts())) {
 
 				$parts = unserialize(gzdecode($this->getMailParts()));
 
@@ -219,10 +213,11 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 					if ($key > 0) {
 
-						$this->setSize(strlen( base64_decode(rtrim(chunk_split(str_replace("\n", '', $part->getContent())))) ));
+						$size = base64_decode(rtrim(chunk_split(str_replace("\n", '', $part->getContent()))));
+						$this->setSize(strlen($size));
 						$size = Mage::getBlockSingleton('maillog/adminhtml_history_grid')->decorateSize(null, $this, null, false);
 
-						$html .= "\n".'<li><a href="'.Mage::getUrl('*/*/download', array('key' => $this->getUniqid(), 'part' => $key)).'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size.'</span></a></li>';
+						$html .= "\n".'<li><a href="'.$this->getFrontUrl('download', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'part' => $key)).'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size.'</span></a></li>';
 					}
 				}
 				$body = str_replace('</body>', '<ul class="attachments">'.$html."\n".'</ul>'."\n".'</body>', $body);
@@ -289,7 +284,12 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 	}
 
 	// adresse de la vue magasin par défaut
-	private function getFrontUrl($key, $param) {
-		return preg_replace('#/[a-z0-9_]+\.php/#', '/', Mage::app()->getDefaultStoreView()->getUrl($key, $param));
+	// est secure si le back-office est sur HTTPS via param
+	public function getFrontUrl($key = 'index', $param = array()) {
+
+		$key = 'maillog/view/'.$key;
+		$param = array_merge(array('_secure' => false, 'key' => $this->getUniqid()), $param);
+
+		return str_replace('/mail.php/', '/', Mage::app()->getDefaultStoreView()->getUrl($key, $param));
 	}
 }

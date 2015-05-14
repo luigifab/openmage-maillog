@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/03/05/2015
- * Version 9
+ * Updated J/14/05/2015
+ * Version 10
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -43,48 +43,6 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		else {
 			$this->_redirect('*/*/index');
 		}
-	}
-
-	public function showAction() {
-
-		$email = $this->loadEmail();
-
-		if ($email->getId() > 0)
-			$this->getResponse()->setBody($email->printOnlineMail(true, false));
-		else
-			$this->getResponse()->setHttpResponseCode(404);
-	}
-
-	public function downloadAction() {
-
-		$email = $this->loadEmail();
-
-		if (($email->getId() > 0) && !is_null($email->getMailParts())) {
-
-			$parts = unserialize(gzdecode($email->getMailParts()));
-			$nb = intval($this->getRequest()->getParam('part', 0));
-
-			foreach ($parts as $key => $part) {
-
-				if ($key == $nb) {
-
-					$data = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
-					$data = base64_decode($data);
-
-					$this->getResponse()->setHttpResponseCode(200);
-					$this->getResponse()->setHeader('Content-Type', $part->type, true);
-					$this->getResponse()->setHeader('Content-Length', strlen($data));
-					$this->getResponse()->setHeader('Content-Disposition', 'attachment; filename="'.$part->filename.'"');
-					$this->getResponse()->setHeader('Last-Modified', date('r'));
-					$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);
-					$this->getResponse()->setHeader('Pragma', 'no-cache', true);
-					$this->getResponse()->setBody($data);
-					return;
-				}
-			}
-		}
-
-		$this->getResponse()->setHttpResponseCode(404);
 	}
 
 	public function deleteAction() {

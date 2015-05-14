@@ -1,8 +1,8 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated D/03/05/2015
- * Version 8
+ * Updated J/14/05/2015
+ * Version 10
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -25,7 +25,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 		$email = $this->loadEmail();
 
 		if ($email->getId() > 0)
-			$this->getResponse()->setBody($email->printOnlineMail(false, true));
+			$this->getResponse()->setBody($email->toHtml(($this->getRequest()->getParam('nomark') !== '1') ? false : true));
 	}
 
 	public function downloadAction() {

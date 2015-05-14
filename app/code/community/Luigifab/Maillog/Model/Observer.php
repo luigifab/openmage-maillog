@@ -1,8 +1,8 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated S/02/05/2015
- * Version 33
+ * Updated J/14/05/2015
+ * Version 34
  *
  * Copyright 2012-2015 | Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog (source cronlog)
@@ -140,7 +140,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	private function send($vars) {
 
 		$emails = explode(' ', trim(Mage::getStoreConfig('maillog/email/recipient_email')));
-		$vars['config'] = Mage::helper('adminhtml')->getUrl('adminhtml/system_config/edit', array('section' => 'maillog'));
+		$vars['config'] = Mage::helper('adminhtml')->getUrl('adminhtml/system/config');
+		$vars['config'] = substr($vars['config'], 0, strrpos($vars['config'], '/system/config'));
 
 		foreach ($emails as $email) {
 
