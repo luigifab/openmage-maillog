@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/07/05/2015
- * Version 23
+ * Updated S/16/05/2015
+ * Version 4
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -33,6 +33,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		$this->setPagerVisibility(true);
 		$this->setFilterVisibility(true);
 		$this->setDefaultLimit(max($this->_defaultLimit, intval(Mage::getStoreConfig('maillog/general/number'))));
+
+		$this->back = array(); // = pour la grille principale
 	}
 
 	protected function _prepareCollection() {
@@ -43,19 +45,6 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 	protected function _prepareColumns() {
 
-		// comptage des emails
-		// et génération de la colonne type
-		$emails  = Mage::getResourceModel('maillog/email_collection');
-		$pending = count($emails->getItemsByColumnValue('status', 'pending'));
-		$error   = count($emails->getItemsByColumnValue('status', 'error'));
-		$read    = count($emails->getItemsByColumnValue('status', 'read'));
-		$sent    = count($emails) - $pending - $error - $read;
-
-		$types = $emails->getColumnValues('type');
-		$types = array_combine($types, $types);
-		unset($types['']);
-
-		// définition des colonnes
 		$this->addColumn('email_id', array(
 			'header'    => $this->helper('adminhtml')->__('Id'),
 			'index'     => 'email_id',
@@ -63,16 +52,12 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'width'     => '80px'
 		));
 
-		if (count($types) > 1) {
-			ksort($types);
-			$this->addColumn('type', array(
-				'header'    => $this->helper('adminhtml')->__('Type'),
-				'index'     => 'type',
-				'type'      => 'options',
-				'options'   => $types,
-				'align'     => 'center'
-			));
-		}
+		$this->addColumn('type', array(
+			'header'    => $this->helper('adminhtml')->__('Type'),
+			'index'     => 'type',
+			'type'      => 'options',
+			'align'     => 'center'
+		));
 
 		$this->addColumn('mail_recipients', array(
 			'header'    => $this->__('Recipient(s)'),
@@ -80,24 +65,20 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'frame_callback' => array($this, 'decorateRecipients')
 		));
 
-		if (Mage::getStoreConfig('maillog/general/subject') === '1') {
-			$this->addColumn('mail_subject', array(
-				'header'    => $this->__('Subject'),
-				'index'     => 'mail_subject'
-			));
-		}
+		$this->addColumn('mail_subject', array(
+			'header'    => $this->__('Subject'),
+			'index'     => 'mail_subject'
+		));
 
-		if (Mage::getStoreConfig('maillog/general/size') === '1') {
-			$this->addColumn('size', array(
-				'header'    => $this->__('Size'),
-				'index'     => 'size',
-				'type'      => 'number',
-				'width'     => '80px',
-				'filter'    => false,
-				'sortable'  => false,
-				'frame_callback' => array($this, 'decorateSize')
-			));
-		}
+		$this->addColumn('size', array(
+			'header'    => $this->__('Size'),
+			'index'     => 'size',
+			'type'      => 'number',
+			'width'     => '80px',
+			'filter'    => false,
+			'sortable'  => false,
+			'frame_callback' => array($this, 'decorateSize')
+		));
 
 		$this->addColumn('created_at', array(
 			'header'    => $this->__('Created At'),
@@ -131,12 +112,6 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'header'    => $this->helper('adminhtml')->__('Status'),
 			'index'     => 'status',
 			'type'      => 'options',
-			'options'   => array(
-				'pending' => $this->__('Pending (%d)', $pending),
-				'sent'    => $this->__('Sent (%d)', $sent),
-				'read'    => $this->__('Open/read (%d)', $read),
-				'error'   => $this->__('Error (%d)', $error)
-			),
 			'align'     => 'status',
 			'width'     => '125px',
 			'frame_callback' => array($this, 'decorateStatus')
@@ -148,7 +123,9 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'actions'   => array(
 				array(
 					'caption' => $this->helper('adminhtml')->__('View'),
-					'url'     => array('base' => '*/*/view'),
+					'url'     => (isset($this->back['bid'])) ?
+						array('base' => '*/maillog_history/view/back/'.$this->back['back'].'/bid/'.$this->back['bid']) :
+						array('base' => '*/maillog_history/view'),
 					'field'   => 'id'
 				)
 			),
@@ -158,6 +135,59 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'sortable'  => false,
 			'is_system' => true
 		));
+
+		// recherche des types d'emails et comptage des emails
+		// se base sur la totalité de la collection en fonction du filtre appliquée sur la grille (sauf pour les types)
+		$filter = $this->getParam($this->getVarNameFilter(), null);
+		$emails = Mage::getResourceModel('maillog/email_collection');
+
+		$types = $emails->getColumnValues('type');
+		$types = array_combine($types, $types);
+		$emails->clear(); // pour permettre le rechargement de la collection
+
+		if (is_string($filter) || !empty($this->_defaultFilter)) {
+
+			$filter = array_merge($this->_defaultFilter, $this->helper('adminhtml')->prepareFilterString($filter));
+
+			foreach ($filter as $field => $cond) {
+
+				$column = $this->getColumn($field)->getFilter();
+				$column->setValue($cond);
+
+				$cond = $column->getCondition();
+
+				if (isset($cond))
+					$emails->addFieldToFilter($field, $cond);
+			}
+		}
+
+		$this->getColumn('status')->setData('options', array(
+			'pending' => $this->__('Pending (%d)',   count($emails->getItemsByColumnValue('status', 'pending'))),
+			'sent'    => $this->__('Sent (%d)',      count($emails->getItemsByColumnValue('status', 'sent'))),
+			'read'    => $this->__('Open/read (%d)', count($emails->getItemsByColumnValue('status', 'read'))),
+			'error'   => $this->__('Error (%d)',     count($emails->getItemsByColumnValue('status', 'error')))
+		));
+
+		unset($types['']);
+		ksort($types);
+
+		$this->getColumn('type')->setData('options', $types);
+
+		// filtrage des colonnes
+		// pour les grilles des commandes et des clients ou pour la grille principale
+		if (isset($this->back['bid'])) {
+			unset($this->_columns['type']);
+			unset($this->_columns['mail_recipients']);
+			unset($this->_columns['size']);
+		}
+		else {
+			if (count($types) < 1)
+				unset($this->_columns['type']);
+			if (Mage::getStoreConfig('maillog/general/subject') !== '1')
+				unset($this->_columns['mail_subject']);
+			if (Mage::getStoreConfig('maillog/general/size') !== '1')
+				unset($this->_columns['size']);
+		}
 
 		return parent::_prepareColumns();
 	}

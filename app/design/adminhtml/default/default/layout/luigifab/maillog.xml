@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated L/30/03/2015
- * Version 2
+ * Updated S/16/05/2015
+ * Version 5
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -28,6 +28,38 @@
 			</action>
 		</reference>
 	</adminhtml_system_config_edit>
+
+	<adminhtml_customer_edit>
+		<reference name="head">
+			<action method="addItem" ifconfig="maillog/general/enabled">
+				<type>skin_css</type>
+				<name>css/luigifab/maillog/styles.min.css</name>
+				<params>media="screen, projection"</params>
+			</action>
+		</reference>
+		<reference name="customer_edit_tabs">
+			<action method="addTab" ifconfig="maillog/general/enabled">
+				<name>maillog_grid_customer</name>
+				<block>maillog/adminhtml_history_tab</block>
+			</action>
+		</reference>
+	</adminhtml_customer_edit>
+
+	<adminhtml_sales_order_view>
+		<reference name="head">
+			<action method="addItem" ifconfig="maillog/general/enabled">
+				<type>skin_css</type>
+				<name>css/luigifab/maillog/styles.min.css</name>
+				<params>media="screen, projection"</params>
+			</action>
+		</reference>
+		<reference name="sales_order_tabs">
+			<action method="addTab" ifconfig="maillog/general/enabled">
+				<name>maillog_grid_order</name>
+				<block>maillog/adminhtml_history_tab</block>
+			</action>
+		</reference>
+	</adminhtml_sales_order_view>
 
 	<adminhtml_maillog_history_index>
 		<reference name="head">

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated J/14/05/2015
+ * Updated S/16/05/2015
  * Version 34
  *
  * Copyright 2012-2015 | Fabrice Creuzot (luigifab) <code~luigifab~info>
@@ -65,7 +65,10 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$emails = Mage::getResourceModel('maillog/email_collection');
 		$emails->getSelect()->order('email_id', 'DESC');
 		$emails->addFieldToFilter('created_at', array(
-			'datetime' => true, 'from' => $dateStart->toString(Zend_Date::RFC_3339), 'to' => $dateEnd->toString(Zend_Date::RFC_3339)));
+			'datetime' => true,
+			'from' => $dateStart->toString(Zend_Date::RFC_3339),
+			'to' => $dateEnd->toString(Zend_Date::RFC_3339)
+		));
 
 		$date = Mage::getSingleton('core/locale');
 		$errors = array();

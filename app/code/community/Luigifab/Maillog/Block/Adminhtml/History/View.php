@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/14/05/2015
- * Version 17
+ * Updated S/16/05/2015
+ * Version 19
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -33,19 +33,19 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$this->_addButton('back', array(
 			'label'   => $this->helper('adminhtml')->__('Back'),
-			'onclick' => "setLocation('".$this->getUrl('*/*/index')."');",
+			'onclick' => "setLocation('".$this->getBackUrl()."');",
 			'class'   => 'back'
 		));
 
 		$this->_addButton('remove', array(
 			'label'   => $this->helper('adminhtml')->__('Remove'),
-			'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/delete', array('id' => $email->getId()))."');",
+			'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/delete', array('id' => $email->getId(), 'back' => $this->getRequest()->getParam('back'), 'bid' => $this->getRequest()->getParam('bid')))."');",
 			'class'   => 'delete'
 		));
 
 		$this->_addButton('resend', array(
 			'label'   => $this->__('Resend email'),
-			'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/resend', array('id' => $email->getId()))."');", // ce n'est pas un delete, mais une demande de confirmation
+			'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/resend', array('id' => $email->getId(), 'back' => $this->getRequest()->getParam('back'), 'bid' => $this->getRequest()->getParam('bid')))."');", // ce n'est pas un delete, mais une demande de confirmation
 			'class'   => 'add'
 		));
 
@@ -95,5 +95,17 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 	protected function _prepareLayout() {
 		//return parent::_prepareLayout();
+	}
+
+	private function getBackUrl() {
+
+		if ($this->getRequest()->getParam('back') === 'order')
+			return $this->getUrl('*/sales_order/view',
+				array('order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_grid_order'));
+		else if ($this->getRequest()->getParam('back') === 'customer')
+			return $this->getUrl('*/customer/edit',
+				array('id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_grid_customer'));
+		else
+			return $this->getUrl('*/*/index');
 	}
 }

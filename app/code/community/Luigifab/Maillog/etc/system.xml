@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated S/11/04/2015
- * Version 7
+ * Updated V/15/05/2015
+ * Version 8
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -67,6 +67,16 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</background>
+						<minify translate="label comment">
+							<label>Minify HTML code</label>
+							<comment><![CDATA[Possibly requires <a href="http://us.php.net/manual/en/book.tidy.php" onclick="window.open(this.href); return false;">PHP-TIDY</a>.]]></comment>
+							<frontend_type>select</frontend_type>
+							<source_model>maillog/source_minify</source_model>
+							<sort_order>3</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</minify>
 						<options translate="label">
 							<label>Options</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
@@ -161,67 +171,6 @@
 						</template>
 					</fields>
 				</email>
-				<content translate="label comment">
-					<label>Emails content</label>
-					<comment>Warning! PHP-TIDY will delete all things outside the body tag.</comment>
-					<sort_order>3</sort_order>
-					<show_in_default>1</show_in_default>
-					<show_in_website>0</show_in_website>
-					<show_in_store>0</show_in_store>
-					<expanded>1</expanded>
-					<fields>
-						<minify translate="label comment">
-							<label>Minify HTML code</label>
-							<comment><![CDATA[Possibly requires <a href="http://us.php.net/manual/en/book.tidy.php" onclick="window.open(this.href); return false;">PHP-TIDY</a>.]]></comment>
-							<frontend_type>select</frontend_type>
-							<source_model>maillog/source_minify</source_model>
-							<sort_order>1</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</minify>
-						<mailid translate="label comment">
-							<label>Use mailid</label>
-							<comment>Search and replace #mailid#xyz# by xyz.</comment>
-							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>2</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</mailid>
-						<uniqid translate="label comment">
-							<label>Use uniqid</label>
-							<comment>Search and replace #uniqid# by an uniq id.</comment>
-							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>3</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</uniqid>
-						<online translate="label comment">
-							<label>Use online link</label>
-							<comment>Search and replace #online# by an url. This url allow the user to read mail in a browser.</comment>
-							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>4</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</online>
-						<readimg translate="label comment">
-							<label>Use readimg tag</label>
-							<comment>Search and replace #readimg# by an image tag. This image allow to know if the user has read the email.</comment>
-							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>5</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</readimg>
-					</fields>
-				</content>
 			</groups>
 		</maillog>
 	</sections>

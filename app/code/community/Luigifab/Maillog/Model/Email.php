@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/14/05/2015
- * Version 9
+ * Updated S/16/05/2015
+ * Version 11
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -45,43 +45,32 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		$this->setUniqid(substr(sha1(time().$this->getMailRecipients().$this->getMailSubject()), 0, 30));
 
 		// minifie le code HTML avec ou sans Tidy ou pas en fonction de la configuration
-		// puis remplace #online# et #readimg# par leur valeurs ou rien en fonction de la configuration
+		// puis remplace #online# et #readimg# par leur valeurs
 		if ((strpos($body, '</p>') !== false) || (strpos($body, '</td>') !== false) || (strpos($body, '</div>') !== false)) {
 
-			if ((Mage::getStoreConfig('maillog/content/minify') === 'tidy') && extension_loaded('tidy') && class_exists('tidy', false))
+			if ((Mage::getStoreConfig('maillog/general/minify') === 'tidy') && extension_loaded('tidy') && class_exists('tidy', false))
 				$body = $this->cleanWithTidy($body);
-			else if (in_array(Mage::getStoreConfig('maillog/content/minify'), array('tidy', 'manual')))
+			else if (in_array(Mage::getStoreConfig('maillog/general/minify'), array('tidy', 'manual')))
 				$body = $this->cleanWithReplace($body);
 
-			if ((Mage::getStoreConfig('maillog/content/online') === '1') && (strpos($body, '#online#') !== false))
+			if (strpos($body, '#online#') !== false)
 				$body = str_replace('#online#', $this->getFrontUrl('index'), $body);
-			else if (strpos($body, '#online#') !== false)
-				$body = str_replace('#online#', '', $body);
 
-			if ((Mage::getStoreConfig('maillog/content/readimg') === '1') && (strpos($body, '#readimg#') !== false))
+			if (strpos($body, '#readimg#') !== false)
 				$body = str_replace('#readimg#', '<img src="'.$this->getFrontUrl('mark').'" width="1" height="1" alt="">', $body);
-			else if (strpos($body, '#readimg#') !== false)
-				$body = str_replace('#readimg#', '', $body);
 		}
 
-		// recherche et remplace #uniqid# par sa valeur ou rien en fonction de la configuration
-		if ((Mage::getStoreConfig('maillog/content/uniqid') === '1') && (strpos($body, '#uniqid#') !== false)) {
+		// recherche et remplace #uniqid# par sa valeur
+		if (strpos($body, '#uniqid#') !== false)
 			$body = str_replace('#uniqid#', $this->getUniqid(), $body);
-		}
-		else if (strpos($body, '#uniqid#') !== false) {
-			$body = str_replace('#uniqid#', '', $body);
-		}
 
-		// recherche et remplace #mailid# par sa valeur ou rien en fonction de la configuration
-		if ((Mage::getStoreConfig('maillog/content/mailid') === '1') && (strpos($body, '#mailid#') !== false)) {
+		// recherche et remplace #mailid# par rien
+		if (strpos($body, '#mailid#') !== false) {
 			$mailid = substr($body, strpos($body, '#mailid#'));
 			$mailid = substr($mailid, strlen('#mailid#'));
 			$mailid = substr($mailid, 0, strpos($mailid, '#'));
-			$body = str_replace('#mailid#'.$mailid.'#', $mailid, $body);
-			$this->setType(trim($mailid));
-		}
-		else if (strpos($body, '#mailid#') !== false) {
 			$body = str_replace('#mailid#'.$mailid.'#', '', $body);
+			$this->setType(trim($mailid));
 		}
 
 		$this->setMailBody(trim($body));
@@ -173,55 +162,59 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 		$body = $this->getMailBody();
 
-		// génération du code HTML et suppression de l'éventuelle l'image de marquage
+		if ((strpos($body, '</p>') === false) && (strpos($body, '</td>') === false) && (strpos($body, '</div>') === false))
+			$body = '<pre>'.$body.'</pre>';
+
+		// génération du code HTML
+		$body = (strpos($body, '<body') === false) ? '<body>'."\n".$body."\n".'</body>' : $body;
+		$body = (strpos($body, '<html') === false) ?
+			'<html>'."\n".
+			'<head>'."\n".
+				'<title>'.htmlentities($this->getMailSubject()).'</title>'."\n".
+				'<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'."\n".
+			'</head>'."\n".
+			$body."\n".
+			'</html>' : $body;
+
+		// suppression de l'éventuelle l'image de marquage
+		if ($noMark && (strpos($body, 'maillog/view/mark') !== false))
+			$body = preg_replace('#\s*<img[^>]+maillog/view/mark[^>]+>#', '', $body);
+
 		// ajout des pièces jointes
-		if ((strpos($body, '</p>') !== false) || (strpos($body, '</td>') !== false) || (strpos($body, '</div>') !== false)) {
+		if (!is_null($this->getMailParts())) {
 
-			$body = (strpos($body, '<body') === false) ? '<body>'."\n".$body."\n".'</body>' : $body;
-			$body = (strpos($body, '<html') === false) ? '<html>'."\n".'<head>'."\n".'<title>'.htmlentities($this->getMailSubject()).'</title>'."\n".'<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'."\n".$body."\n".'</html>' : $body;
-			$body = (strpos($body, '</head>') === false) ? str_replace('<body', '</head>'."\n".'<body', $body) : $body;
+			$parts = unserialize(gzdecode($this->getMailParts()));
+			array_shift($parts); // dégomme la première
 
-			if ($noMark) {
-				$body = (strpos($body, 'maillog/view/mark') !== false) ?
-					preg_replace('#\s*<img src=".+maillog/view/mark.+" width="1" height="1" alt="">#', ' #', $body) : $body;
+			// design des pièces jointes
+			$html = array();
+			$html[] = '<style type="text/css">';
+			$html[] = 'ul.attachments { margin:3em 0 1em; padding:1em; font-size:0.7em; border-top:1px solid #CCC; }';
+			$html[] = 'ul.attachments li { display:inline-block; vertical-align:middle; }';
+			$html[] = 'ul.attachments li a {';
+			$html[] = '	display:inline-block; padding:0 1.7em 0 50px; height:48px;';
+			$html[] = '	color:inherit; text-decoration:none; background-repeat:no-repeat; background-position:center left;';
+			$html[] = '}';
+			$html[] = 'ul.attachments li a span:first-child { display:block; line-height:220%; font-weight:bold; }';
+			$html[] = 'ul.attachments li a span:last-child { display:block; line-height:70%; }';
+			$html[] = 'ul.attachments li a { background-image:url("'.
+				Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-file.svg').'"); }';
+			$html[] = 'ul.attachments li a[type="application/pdf"] { background-image:url("'.
+				Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-pdf.svg').'"); }';
+			$html[] = '</style>';
+			$body = str_replace('</head>', implode("\n", $html)."\n".'</head>', $body);
+
+			// liens des pièces jointes
+			$html = array();
+			$html[] = '<ul class="attachments">';
+			foreach ($parts as $key => $part) {
+				$this->setSize(strlen(base64_decode(rtrim(chunk_split(str_replace("\n", '', $part->getContent()))))));
+				$size = Mage::getBlockSingleton('maillog/adminhtml_history_grid')->decorateSize(null, $this, null, false);
+				$url  = $this->getFrontUrl('download', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'part' => $key));
+				$html[] = '<li><a href="'.$url.'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size.'</span></a></li>';
 			}
-
-			if (!is_null($this->getMailParts())) {
-
-				$parts = unserialize(gzdecode($this->getMailParts()));
-
-				// design des pièces jointes
-				$html = '<style type="text/css">';
-				$html .= 'ul.attachments { margin:3em 0 1em; padding:1em; font-size:0.7em; border-top:1px solid #CCC; }';
-				$html .= 'ul.attachments li { display:inline-block; vertical-align:middle; }';
-				$html .= 'ul.attachments li a {';
-				$html .= '	display:inline-block; padding:0 1.7em 0 50px; height:48px;';
-				$html .= '	color:inherit; text-decoration:none; background-repeat:no-repeat; background-position:center left;';
-				$html .= '}';
-				$html .= 'ul.attachments li a span:first-child { display:block; line-height:220%; font-weight:bold; }';
-				$html .= 'ul.attachments li a span:last-child { display:block; line-height:70%; }';
-				$html .= 'ul.attachments li a {';
-				$html .= '	background-image:url("'.Mage::getDesign()->getSkinUrl('images/luigifab/maillog/humanity-file.svg').'"); }';
-				$html .= 'ul.attachments li a[type="application/pdf"] {';
-				$html .= '	background-image:url("'.Mage::getDesign()->getSkinUrl('images/luigifab/maillog/humanity-pdf.svg').'"); }';
-				$html .= '</style>';
-				$body = str_replace('</head>', $html."\n".'</head>', $body);
-
-				// liens des pièces jointes
-				$html = '';
-				foreach ($parts as $key => $part) {
-
-					if ($key > 0) {
-
-						$size = base64_decode(rtrim(chunk_split(str_replace("\n", '', $part->getContent()))));
-						$this->setSize(strlen($size));
-						$size = Mage::getBlockSingleton('maillog/adminhtml_history_grid')->decorateSize(null, $this, null, false);
-
-						$html .= "\n".'<li><a href="'.$this->getFrontUrl('download', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'part' => $key)).'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size.'</span></a></li>';
-					}
-				}
-				$body = str_replace('</body>', '<ul class="attachments">'.$html."\n".'</ul>'."\n".'</body>', $body);
-			}
+			$html[] = '</ul>';
+			$body = str_replace('</body>', implode("\n", $html)."\n".'</body>', $body);
 		}
 
 		return $body;
@@ -284,12 +277,15 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 	}
 
 	// adresse de la vue magasin par défaut
-	// est secure si le back-office est sur HTTPS via param
+	// est secure si le back-office est sur HTTPS
 	public function getFrontUrl($key = 'index', $param = array()) {
 
 		$key = 'maillog/view/'.$key;
 		$param = array_merge(array('_secure' => false, 'key' => $this->getUniqid()), $param);
 
-		return str_replace('/mail.php/', '/', Mage::app()->getDefaultStoreView()->getUrl($key, $param));
+		if (Mage::getStoreConfig('web/seo/use_rewrites', Mage::app()->getDefaultStoreView()->getStoreId()) === '1')
+			return preg_replace('#/[a-z0-9_]+\.php/#', '/', Mage::app()->getDefaultStoreView()->getUrl($key, $param));
+		else
+			return Mage::app()->getDefaultStoreView()->getUrl($key, $param);
 	}
 }

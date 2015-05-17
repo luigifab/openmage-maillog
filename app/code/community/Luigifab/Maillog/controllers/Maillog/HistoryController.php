@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/14/05/2015
- * Version 10
+ * Updated S/16/05/2015
+ * Version 13
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -26,7 +26,9 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 	public function indexAction() {
 
-		if ($this->getRequest()->getParam('isAjax', false))
+		if (!is_null($this->getRequest()->getParam('isAjax')) && !is_null($this->getRequest()->getParam('back')))
+			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_history_tab')->toHtml());
+		else if (!is_null($this->getRequest()->getParam('isAjax')))
 			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_history_grid')->toHtml());
 		else
 			$this->loadLayout()->_setActiveMenu('tools/maillog')->renderLayout();
@@ -41,7 +43,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 			$this->loadLayout()->_setActiveMenu('tools/maillog')->renderLayout();
 		}
 		else {
-			$this->_redirect('*/*/index');
+			$this->redirectBack();
 		}
 	}
 
@@ -63,7 +65,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 			Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
 		}
 
-		$this->_redirect('*/*/index');
+		$this->redirectBack();
 	}
 
 	public function resendAction() {
@@ -88,10 +90,25 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 			Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
 		}
 
-		$this->_redirect('*/*/index');
+		$this->redirectBack();
 	}
 
 	private function loadEmail() {
 		return Mage::getModel('maillog/email')->load(intval($this->getRequest()->getParam('id', 0)));
+	}
+
+	private function redirectBack() {
+
+		if ($this->getRequest()->getParam('back') === 'order') {
+			$this->_redirect('*/sales_order/view',
+				array('order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_grid_order'));
+		}
+		else if ($this->getRequest()->getParam('back') === 'customer') {
+			$this->_redirect('*/customer/edit',
+				array('id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_grid_customer'));
+		}
+		else {
+			$this->_redirect('*/*/index');
+		}
 	}
 }
