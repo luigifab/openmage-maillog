@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/16/05/2015
- * Version 11
+ * Updated M/09/06/2015
+ * Version 13
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -207,12 +207,16 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			// liens des pièces jointes
 			$html = array();
 			$html[] = '<ul class="attachments">';
+
 			foreach ($parts as $key => $part) {
-				$this->setSize(strlen(base64_decode(rtrim(chunk_split(str_replace("\n", '', $part->getContent()))))));
-				$size = Mage::getBlockSingleton('maillog/adminhtml_history_grid')->decorateSize(null, $this, null, false);
-				$url  = $this->getFrontUrl('download', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'part' => $key));
+
+				$size = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
+				$size = $this->decorateSize(strlen(base64_decode($size)));
+				$url  = $this->getFrontUrl('download', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'part' => $key + 1));
+
 				$html[] = '<li><a href="'.$url.'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size.'</span></a></li>';
 			}
+
 			$html[] = '</ul>';
 			$body = str_replace('</body>', implode("\n", $html)."\n".'</body>', $body);
 		}
@@ -278,14 +282,35 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 	// adresse de la vue magasin par défaut
 	// est secure si le back-office est sur HTTPS
+	// est secure si le back-office est sur HTTPS même si le front-office n'est pas sur HTTPS (nulle part)
 	public function getFrontUrl($key = 'index', $param = array()) {
 
 		$key = 'maillog/view/'.$key;
 		$param = array_merge(array('_secure' => false, 'key' => $this->getUniqid()), $param);
+		$url = Mage::app()->getDefaultStoreView()->getUrl($key, $param);
 
 		if (Mage::getStoreConfig('web/seo/use_rewrites', Mage::app()->getDefaultStoreView()->getStoreId()) === '1')
-			return preg_replace('#/[a-z0-9_]+\.php/#', '/', Mage::app()->getDefaultStoreView()->getUrl($key, $param));
-		else
-			return Mage::app()->getDefaultStoreView()->getUrl($key, $param);
+			$url = preg_replace('#/[a-z0-9_]+\.php/#', '/', $url);
+
+		return ($param['_secure']) ? str_replace('http:', 'https:', $url) : $url;
+	}
+
+	// mise en forme de la taille des pièces jointes
+	// copie de la méthode Luigifab_Maillog_Block_Adminhtml_History_Grid::decorateSize
+	private function decorateSize($size) {
+
+		if ($size < 1) {
+			return '';
+		}
+		else if (($size / 1024) < 1024) {
+			$size = number_format($size / 1024, 2);
+			$size = Zend_Locale_Format::toNumber($size);
+			return Mage::helper('maillog')->__('%s KB', $size);
+		}
+		else {
+			$size = number_format($size / 1024 / 1024, 2);
+			$size = Zend_Locale_Format::toNumber($size);
+			return Mage::helper('maillog')->__('%s MB', $size);
+		}
 	}
 }

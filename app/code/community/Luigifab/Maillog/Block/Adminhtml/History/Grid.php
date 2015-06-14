@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/16/05/2015
- * Version 4
+ * Updated M/09/06/2015
+ * Version 5
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -236,12 +236,12 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		}
 		else if (($row->getData('size') / 1024) < 1024) {
 			$size = number_format($row->getData('size') / 1024, 2);
-			$size = Zend_Locale_Format::toNumber($size, array('locale' => Mage::app()->getLocale()->getLocaleCode()));
+			$size = Zend_Locale_Format::toNumber($size);
 			return $this->__('%s KB', $size);
 		}
 		else {
 			$size = number_format($row->getData('size') / 1024 / 1024, 2);
-			$size = Zend_Locale_Format::toNumber($size, array('locale' => Mage::app()->getLocale()->getLocaleCode()));
+			$size = Zend_Locale_Format::toNumber($size);
 			return $this->__('%s MB', $size);
 		}
 	}
