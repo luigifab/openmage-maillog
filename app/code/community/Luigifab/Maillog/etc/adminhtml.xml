@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated L/23/03/2015
- * Version 2
+ * Updated V/26/06/2015
+ * Version 3
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -32,7 +32,7 @@
 				<maillog translate="title">
 					<title>Transactionnal emails</title>
 					<action>adminhtml/maillog_history/index</action>
-					<sort_order>64</sort_order><!-- 63=m +1 pour après modules -->
+					<sort_order>63</sort_order>
 				</maillog>
 			</children>
 		</tools>
@@ -51,7 +51,7 @@
 							</configuration>
 							<maillog translate="title">
 								<title>Transactionnal emails</title>
-								<sort_order>64</sort_order><!-- 63=m +1 pour après modules -->
+								<sort_order>63</sort_order>
 							</maillog>
 						</children>
 					</tools>
@@ -65,7 +65,7 @@
 										<children-->
 											<maillog translate="title">
 												<title>Transactionnal emails</title>
-												<sort_order>103064</sort_order><!-- 63=m +1 pour après modules -->
+												<sort_order>103063</sort_order>
 											</maillog>
 										<!--/children>
 									</luigifab-->

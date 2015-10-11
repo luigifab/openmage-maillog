@@ -1,6 +1,6 @@
 /**
  * Copyright 2015 | Fabrice Creuzot (luigifab) <code~luigifab~info>
- * Created D/22/03/2015, updated D/17/05/2015, version 10
+ * Created D/22/03/2015, updated V/26/06/2015, version 12
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -17,6 +17,10 @@ body.adminhtml-maillog-history-index h3.icon-head, body.adminhtml-maillog-histor
  * pour maillog/history/index ET customer/edit ET sales/order/view
  */
 body div[id*="maillog"] table.data tr:hover { background-color:#DEDEDE; }
+
+body div[id*="maillog"] table.data tr.parts td.a-right {
+	background:url("../../../images/luigifab/maillog/gnome-mail-attachment.png") no-repeat center left;
+}
 
 body div[id*="maillog"] table.data tr td.a-status span {
 	display:block; height:17px; line-height:17px; text-align:center;
@@ -38,19 +42,22 @@ body.adminhtml-maillog-history-index #loading_mask_loader { margin-left:-120px; 
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/history/view &&& */
 body.adminhtml-maillog-history-view div.content-header td { width:auto !important; }
-body.adminhtml-maillog-history-view div.content ul + ul { width:45em; }
+body.adminhtml-maillog-history-view div.content div { display:table; margin:1.4em auto; width:100%; border-spacing:1em 0; border-collapse:separate; }
+body.adminhtml-maillog-history-view div.content ul + ul { width:62%; }
 
 body.adminhtml-maillog-history-view div.content ul {
-	display:inline-block; margin:0.2em 0.5em 1.4em 0; padding:0.7em 1em; width:27.5em; height:7.2em; vertical-align:middle;
+	display:table-cell; margin:0; padding:0.7em 1em; height:7.2em;
 	font-size:13px; border-radius:1em; border:1px solid #DDD; background-color:#EFEFEF; background-clip:padding-box;
 }
 
 body.adminhtml-maillog-history-view div.content object {
-	display:block; width:99.9%; margin:0 0 1.4em;
+	display:block; margin:1em auto; min-height:26em;
+	width:calc(100% - 2em); width:-moz-calc(100% - 2em); width:-webkit-calc(100% - 2em);
 	border-radius:1em; border:1px solid #DDD;
 }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& system/config &&& */
+#config_edit_form[action*="system_config/save/section/maillog"] tr[id*="_stats_"] td.scope-label { display:none; }
 #config_edit_form[action*="system_config/save/section/maillog"] p.note { padding-top:4px; line-height:125%; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& animation &&& */

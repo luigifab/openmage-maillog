@@ -1,8 +1,8 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated S/16/05/2015
- * Version 5
+ * Updated J/03/09/2015
+ * Version 7
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -30,7 +30,15 @@ class Luigifab_Maillog_Block_Adminhtml_History_Tab extends Luigifab_Maillog_Bloc
 	}
 
 	public function canShowTab() {
-		return true;
+
+		if (!Mage::getSingleton('admin/session')->isAllowed('tools/maillog'))
+			return false;
+		else if (is_object(Mage::registry('current_order')))
+			return true;
+		else if (is_object(Mage::registry('current_customer')) && (Mage::registry('current_customer')->getId() > 0))
+			return true;
+		else
+			return false;
 	}
 
 	public function isHidden() {
@@ -54,10 +62,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Tab extends Luigifab_Maillog_Bloc
 		if (is_object(Mage::registry('current_order'))) {
 			$this->setId('maillog_grid_order');
 			$this->back = array('back' => 'order', 'bid' => Mage::registry('current_order')->getId());
-			$this->_defaultFilter = array(
-				'mail_recipients' => Mage::registry('current_order')->getCustomerEmail(),
-				'mail_subject' => Mage::registry('current_order')->getIncrementId()
-			);
+			$this->_defaultFilter = array('mail_subject' => Mage::registry('current_order')->getIncrementId());
 		}
 		else if (is_object(Mage::registry('current_customer'))) {
 			$this->setId('maillog_grid_customer');

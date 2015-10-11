@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/09/06/2015
- * Version 5
+ * Updated S/12/09/2015
+ * Version 10
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -74,7 +74,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'header'    => $this->__('Size'),
 			'index'     => 'size',
 			'type'      => 'number',
-			'width'     => '80px',
+			'width'     => '90px',
 			'filter'    => false,
 			'sortable'  => false,
 			'frame_callback' => array($this, 'decorateSize')
@@ -112,6 +112,12 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'header'    => $this->helper('adminhtml')->__('Status'),
 			'index'     => 'status',
 			'type'      => 'options',
+			'options'   => array(
+				'pending' => $this->__('Pending'),
+				'sent'    => $this->__('Sent'),
+				'read'    => $this->__('Open/read'),
+				'error'   => $this->__('Error')
+			),
 			'align'     => 'status',
 			'width'     => '125px',
 			'frame_callback' => array($this, 'decorateStatus')
@@ -136,39 +142,16 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'is_system' => true
 		));
 
-		// recherche des types d'emails et comptage des emails
-		// se base sur la totalité de la collection en fonction du filtre appliquée sur la grille (sauf pour les types)
-		$filter = $this->getParam($this->getVarNameFilter(), null);
-		$emails = Mage::getResourceModel('maillog/email_collection');
+		// recherche des types
+		// efficacité maximale avec la PROCEDURE ANALYSE de MySQL
+		$resource = Mage::getSingleton('core/resource');
+		$read = $resource->getConnection('core_read');
 
-		$types = $emails->getColumnValues('type');
+		$types = $read->fetchAll('SELECT type FROM '.$resource->getTableName('luigifab_maillog').' PROCEDURE ANALYSE();');
+		$types = (isset($types[0]['Optimal_fieldtype'])) ?
+			explode(',', str_replace(array('ENUM(', '\'', ') NOT NULL'), '', $types[0]['Optimal_fieldtype'])) : array();
+
 		$types = array_combine($types, $types);
-		$emails->clear(); // pour permettre le rechargement de la collection
-
-		if (is_string($filter) || !empty($this->_defaultFilter)) {
-
-			$filter = array_merge($this->_defaultFilter, $this->helper('adminhtml')->prepareFilterString($filter));
-
-			foreach ($filter as $field => $cond) {
-
-				$column = $this->getColumn($field)->getFilter();
-				$column->setValue($cond);
-
-				$cond = $column->getCondition();
-
-				if (isset($cond))
-					$emails->addFieldToFilter($field, $cond);
-			}
-		}
-
-		$this->getColumn('status')->setData('options', array(
-			'pending' => $this->__('Pending (%d)',   count($emails->getItemsByColumnValue('status', 'pending'))),
-			'sent'    => $this->__('Sent (%d)',      count($emails->getItemsByColumnValue('status', 'sent'))),
-			'read'    => $this->__('Open/read (%d)', count($emails->getItemsByColumnValue('status', 'read'))),
-			'error'   => $this->__('Error (%d)',     count($emails->getItemsByColumnValue('status', 'error')))
-		));
-
-		unset($types['']);
 		ksort($types);
 
 		$this->getColumn('type')->setData('options', $types);
@@ -194,7 +177,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 
 	public function getRowClass($row) {
-		return '';
+		return (strlen($row->getData('mail_parts')) > 0) ? 'parts' : '';
 	}
 
 	public function getRowUrl($row) {
@@ -202,48 +185,15 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	}
 
 	public function decorateStatus($value, $row, $column, $isExport) {
-
-		$status = (strpos($value, ' (') !== false) ? substr($value, 0, strpos($value, ' (')) : $value;
-		return '<span class="grid-'.$row->getData('status').'">'.trim($status).'</span>';
+		return '<span class="grid-'.$row->getData('status').'">'.$value.'</span>';
 	}
 
 	public function decorateDuration($value, $row, $column, $isExport) {
-
-		if (!in_array($row->getData('created_at'), array('', '0000-00-00 00:00:00', null)) &&
-		    !in_array($row->getData('sent_at'), array('', '0000-00-00 00:00:00', null))) {
-
-			$data = strtotime($row->getData('sent_at')) - strtotime($row->getData('created_at'));
-			$minutes = intval($data / 60);
-			$seconds = intval($data % 60);
-
-			if ($data > 599)
-				$data = '<strong>'.(($seconds > 9) ? $minutes.':'.$seconds : $minutes.':0'.$seconds).'</strong>';
-			else if ($data > 59)
-				$data = '<strong>'.(($seconds > 9) ? '0'.$minutes.':'.$seconds : '0'.$minutes.':0'.$seconds).'</strong>';
-			else if ($data > 0)
-				$data = ($seconds > 9) ? '00:'.$data : '00:0'.$data;
-			else
-				$data = '&lt; 1';
-
-			return $data;
-		}
+		return $this->helper('maillog')->getHumanDuration($row);
 	}
 
 	public function decorateSize($value, $row, $column, $isExport) {
-
-		if ($row->getData('size') < 1) {
-			return '';
-		}
-		else if (($row->getData('size') / 1024) < 1024) {
-			$size = number_format($row->getData('size') / 1024, 2);
-			$size = Zend_Locale_Format::toNumber($size);
-			return $this->__('%s KB', $size);
-		}
-		else {
-			$size = number_format($row->getData('size') / 1024 / 1024, 2);
-			$size = Zend_Locale_Format::toNumber($size);
-			return $this->__('%s MB', $size);
-		}
+		return $this->helper('maillog')->getNumberToHumanSize($row->getData('size'));
 	}
 
 	public function decorateDate($value, $row, $column, $isExport) {
@@ -251,6 +201,6 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	}
 
 	public function decorateRecipients($value, $row, $column, $isExport) {
-		return htmlspecialchars(str_replace(array('<','>','&lt;','&gt;',','), array('(',')','(',')',', '), $row->getData('mail_recipients')));
+		return $this->helper('maillog')->getHumanRecipients($row);
 	}
 }

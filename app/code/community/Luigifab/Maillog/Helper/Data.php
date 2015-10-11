@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/02/05/2015
- * Version 13
+ * Updated S/12/09/2015
+ * Version 15
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -49,5 +49,49 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 		$email->save();
 		$email->send();
+	}
+
+
+	public function getNumberToHumanSize($number) {
+
+		if ($number < 1) {
+			return '';
+		}
+		else if (($number / 1024) < 1024) {
+			$size = number_format($number / 1024, 2);
+			$size = Zend_Locale_Format::toNumber($size);
+			return $this->__('%s KB', $size);
+		}
+		else {
+			$size = number_format($number / 1024 / 1024, 2);
+			$size = Zend_Locale_Format::toNumber($size);
+			return $this->__('%s MB', $size);
+		}
+	}
+
+	public function getHumanDuration($email) {
+
+		if (!in_array($email->getData('created_at'), array('', '0000-00-00 00:00:00', null)) &&
+		    !in_array($email->getData('sent_at'), array('', '0000-00-00 00:00:00', null))) {
+
+			$data = strtotime($email->getData('sent_at')) - strtotime($email->getData('created_at'));
+			$minutes = intval($data / 60);
+			$seconds = intval($data % 60);
+
+			if ($data > 599)
+				$data = '<strong>'.(($seconds > 9) ? $minutes.':'.$seconds : $minutes.':0'.$seconds).'</strong>';
+			else if ($data > 59)
+				$data = '<strong>'.(($seconds > 9) ? '0'.$minutes.':'.$seconds : '0'.$minutes.':0'.$seconds).'</strong>';
+			else if ($data > 0)
+				$data = ($seconds > 9) ? '00:'.$data : '00:0'.$data;
+			else
+				$data = '&lt; 1';
+
+			return $data;
+		}
+	}
+
+	public function getHumanRecipients($email) {
+		return htmlspecialchars(str_replace(array('<','>','&lt;','&gt;',','), array('(',')','(',')',', '), $email->getData('mail_recipients')));
 	}
 }

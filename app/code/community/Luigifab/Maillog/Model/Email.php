@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/09/06/2015
- * Version 13
+ * Updated J/03/09/2015
+ * Version 16
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -54,10 +54,10 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				$body = $this->cleanWithReplace($body);
 
 			if (strpos($body, '#online#') !== false)
-				$body = str_replace('#online#', $this->getFrontUrl('index'), $body);
+				$body = str_replace('#online#', $this->getMaillogUrl('index'), $body);
 
 			if (strpos($body, '#readimg#') !== false)
-				$body = str_replace('#readimg#', '<img src="'.$this->getFrontUrl('mark').'" width="1" height="1" alt="">', $body);
+				$body = str_replace('#readimg#', '<img src="'.$this->getMaillogUrl('mark').'" width="1" height="1" alt="">', $body);
 		}
 
 		// recherche et remplace #uniqid# par sa valeur
@@ -81,7 +81,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 
 	// envoi réel de l'email avec la fonction mail de PHP
-	// envoi en arrière plan si la configuration le permet
+	// ou envoi en arrière plan si la configuration le permet
 	public function send($now = false) {
 
 		if ($this->getId() < 1)
@@ -160,66 +160,87 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		if ($this->getId() < 1)
 			Mage::throwException('You must load an email before trying to print it.');
 
-		$body = $this->getMailBody();
+		Mage::getSingleton('core/translate')->setLocale(Mage::getStoreConfig('general/locale/code'))->init('adminhtml', true);
 
+		$body = $this->getMailBody();
+		$parts = (!is_null($this->getMailParts())) ? unserialize(gzdecode($this->getMailParts())) : array();
+		array_shift($parts); // dégomme la première pièce jointe
+
+		// mail au format texte
 		if ((strpos($body, '</p>') === false) && (strpos($body, '</td>') === false) && (strpos($body, '</div>') === false))
 			$body = '<pre>'.$body.'</pre>';
 
 		// génération du code HTML
-		$body = (strpos($body, '<body') === false) ? '<body>'."\n".$body."\n".'</body>' : $body;
+		// avec du code CSS
+		$body = (strpos($body, '<body') === false) ? '<body style="margin:0;">'."\n".$body."\n".'</body>' : $body;
 		$body = (strpos($body, '<html') === false) ?
+			//'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">'."\n".
 			'<html>'."\n".
 			'<head>'."\n".
 				'<title>'.htmlentities($this->getMailSubject()).'</title>'."\n".
 				'<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'."\n".
+				'<style type="text/css">'."\n".
+				'body > ul.attachments { margin:0 0 2.5em; padding:1em; text-align:center; font-size:0.7em; background-color:#F6F6F6; }'."\n".
+				'body > ul.attachments li { display:inline-block; text-align:left; vertical-align:middle; }'."\n".
+				'body > ul.attachments li:first-child {'."\n".
+				'	padding:0 4em 0 60px; line-height:140%; white-space:pre-wrap;'."\n".
+				'	background:url("'.Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-mail.svg').'") no-repeat left -3px;'."\n".
+				'}'."\n".
+				'body > ul.attachments li:first-child a { text-decoration:underline; color:#555; }'."\n".
+				'body > ul.attachments li a[type] {'."\n".
+				'	display:inline-block; padding:0 1.7em 0 50px; height:48px;'."\n".
+				'	color:inherit; text-decoration:none; background-repeat:no-repeat; background-position:center left;'."\n".
+				'}'."\n".
+				'body > ul.attachments li a[type] span:first-child { display:block; line-height:220%; font-weight:bold; }'."\n".
+				'body > ul.attachments li a[type] span:last-child { display:block; line-height:70%; }'."\n".
+				'body > ul.attachments li a[type] { background-image:url("'.
+					Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-file.svg').'"); }'."\n".
+				'body > ul.attachments li a[type="application/pdf"] { background-image:url("'.
+					Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-pdf.svg').'"); }'."\n".
+				'body > pre { white-space:pre-wrap; }'."\n".
+				'@media print {'."\n".
+				'	body > ul.attachments { font-size:0.6em; }'."\n".
+				'	body > ul.attachments li:first-child a { text-decoration:none; }'."\n".
+				'}'."\n".
+				'</style>'."\n".
 			'</head>'."\n".
 			$body."\n".
 			'</html>' : $body;
 
-		// suppression de l'éventuelle l'image de marquage
+		// suppression de l'éventuelle image de marquage
 		if ($noMark && (strpos($body, 'maillog/view/mark') !== false))
 			$body = preg_replace('#\s*<img[^>]+maillog/view/mark[^>]+>#', '', $body);
 
-		// ajout des pièces jointes
-		if (!is_null($this->getMailParts())) {
+		// suppression de l'éventuel lien voir la version en ligne
+		if (!$noMark && (strpos($body, 'maillog/view/index') !== false))
+			$body = preg_replace('#\s*<a[^>]+maillog/view/index.+</a>#', '&nbsp;', $body);
 
-			$parts = unserialize(gzdecode($this->getMailParts()));
-			array_shift($parts); // dégomme la première
+		// informations du mail
+		// sujet - date d'envoi - lien d'impression
+		$html = array();
+		$html[] = '<ul class="attachments">';
 
-			// design des pièces jointes
-			$html = array();
-			$html[] = '<style type="text/css">';
-			$html[] = 'ul.attachments { margin:3em 0 1em; padding:1em; font-size:0.7em; border-top:1px solid #CCC; }';
-			$html[] = 'ul.attachments li { display:inline-block; vertical-align:middle; }';
-			$html[] = 'ul.attachments li a {';
-			$html[] = '	display:inline-block; padding:0 1.7em 0 50px; height:48px;';
-			$html[] = '	color:inherit; text-decoration:none; background-repeat:no-repeat; background-position:center left;';
-			$html[] = '}';
-			$html[] = 'ul.attachments li a span:first-child { display:block; line-height:220%; font-weight:bold; }';
-			$html[] = 'ul.attachments li a span:last-child { display:block; line-height:70%; }';
-			$html[] = 'ul.attachments li a { background-image:url("'.
-				Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-file.svg').'"); }';
-			$html[] = 'ul.attachments li a[type="application/pdf"] { background-image:url("'.
-				Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-pdf.svg').'"); }';
-			$html[] = '</style>';
-			$body = str_replace('</head>', implode("\n", $html)."\n".'</head>', $body);
+		$that = Mage::helper('maillog');
+		$date = Mage::getSingleton('core/locale'); //date($date, $format, $locale = null, $useTimezone = null)
 
-			// liens des pièces jointes
-			$html = array();
-			$html[] = '<ul class="attachments">';
+		if (!in_array($this->getSentAt(), array('', '0000-00-00 00:00:00', null)))
+			$html[] = '<li><strong>'.$that->__('Subject: %s', htmlentities($this->getMailSubject()))."</strong>\n".$that->__('Sent At: %s', $date->date($this->getSentAt(), Zend_Date::ISO_8601)->toString(Zend_Date::DATETIME_FULL))."\n".$that->__('<a href="%s">Print</a> this email only if necessary.', 'javascript:window.print();').'</li>';
+		else
+			$html[] = '<li><strong>'.$that->__('Subject: %s', htmlentities($this->getMailSubject()))."</strong>\n".$that->__('<a href="%s">Print</a> this email only if necessary.', 'javascript:window.print();').'</li>';
 
-			foreach ($parts as $key => $part) {
+		// pièces jointes
+		// nom et extension - taille - lien
+		foreach ($parts as $key => $part) {
 
-				$size = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
-				$size = $this->decorateSize(strlen(base64_decode($size)));
-				$url  = $this->getFrontUrl('download', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'part' => $key + 1));
+			$size = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
+			$size = $that->getNumberToHumanSize(strlen(base64_decode($size)));
+			$url  = $this->getMaillogUrl('download', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'part' => $key + 1));
 
-				$html[] = '<li><a href="'.$url.'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size.'</span></a></li>';
-			}
-
-			$html[] = '</ul>';
-			$body = str_replace('</body>', implode("\n", $html)."\n".'</body>', $body);
+			$html[] = '<li><a href="'.$url.'" type="'.$part->type.'"><span>'.$part->filename.'</span> <span>'.$size.'</span></a></li>';
 		}
+
+		$html[] = '</ul>';
+		$body = str_replace('<body style="margin:0;">', '<body style="margin:0;">'."\n".implode("\n", $html), $body);
 
 		return $body;
 	}
@@ -273,6 +294,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 		$html = str_replace("\t", '', $html);
 		$html = str_replace("\r", "\n", $html);
+
 		$html = preg_replace('# {4,}#', '', $html);
 		$html = preg_replace('#\n?<!\-\-[^\-\->]+\-\->#', '', $html);
 		$html = preg_replace('#\n{2,}#', "\n", $html);
@@ -281,36 +303,16 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 	}
 
 	// adresse de la vue magasin par défaut
-	// est secure si le back-office est sur HTTPS
-	// est secure si le back-office est sur HTTPS même si le front-office n'est pas sur HTTPS (nulle part)
-	public function getFrontUrl($key = 'index', $param = array()) {
+	// avec HTTPS si le back-office est sur HTTPS (voir $param)
+	// avec HTTPS si le back-office est sur HTTPS même si le front-office n'est pas sur HTTPS (voir $param)
+	public function getMaillogUrl($key = 'index', $param = array()) {
 
-		$key = 'maillog/view/'.$key;
 		$param = array_merge(array('_secure' => false, 'key' => $this->getUniqid()), $param);
-		$url = Mage::app()->getDefaultStoreView()->getUrl($key, $param);
+		$url = Mage::app()->getDefaultStoreView()->getUrl('maillog/view/'.$key, $param);
 
 		if (Mage::getStoreConfig('web/seo/use_rewrites', Mage::app()->getDefaultStoreView()->getStoreId()) === '1')
 			$url = preg_replace('#/[a-z0-9_]+\.php/#', '/', $url);
 
 		return ($param['_secure']) ? str_replace('http:', 'https:', $url) : $url;
-	}
-
-	// mise en forme de la taille des pièces jointes
-	// copie de la méthode Luigifab_Maillog_Block_Adminhtml_History_Grid::decorateSize
-	private function decorateSize($size) {
-
-		if ($size < 1) {
-			return '';
-		}
-		else if (($size / 1024) < 1024) {
-			$size = number_format($size / 1024, 2);
-			$size = Zend_Locale_Format::toNumber($size);
-			return Mage::helper('maillog')->__('%s KB', $size);
-		}
-		else {
-			$size = number_format($size / 1024 / 1024, 2);
-			$size = Zend_Locale_Format::toNumber($size);
-			return Mage::helper('maillog')->__('%s MB', $size);
-		}
 	}
 }

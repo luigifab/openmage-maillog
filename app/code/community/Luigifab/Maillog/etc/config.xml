@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated L/08/06/2015
+ * Updated S/22/08/2015
  * Version 6
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
@@ -21,7 +21,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>2.2.1</version>
+			<version>2.3.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -42,7 +42,7 @@
 			</maillog>
 			<core>
 				<rewrite>
-					<email_queue>Luigifab_Maillog_Model_Rewrite_Queue</email_queue><!-- Magento 1.9.1.0+ -->
+					<email_queue>Luigifab_Maillog_Model_Rewrite_Queue</email_queue><!-- Magento 1.9.1.0 et + -->
 				</rewrite>
 			</core>
 			<maillog_resource>

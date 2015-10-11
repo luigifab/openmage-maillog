@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/15/05/2015
- * Version 8
+ * Updated M/01/09/2015
+ * Version 11
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -29,7 +29,7 @@
 		<maillog translate="label">
 			<label>Transactionnal emails</label>
 			<tab>luigifab</tab>
-			<sort_order>64</sort_order><!-- 63=m +1 pour après modules -->
+			<sort_order>63</sort_order>
 			<show_in_default>1</show_in_default>
 			<show_in_website>0</show_in_website>
 			<show_in_store>0</show_in_store>
@@ -68,7 +68,7 @@
 							<show_in_store>0</show_in_store>
 						</background>
 						<minify translate="label comment">
-							<label>Minify HTML code</label>
+							<label><![CDATA[Minify <abbr title="HyperText Markup Language">HTML</abbr> code]]></label>
 							<comment><![CDATA[Possibly requires <a href="http://us.php.net/manual/en/book.tidy.php" onclick="window.open(this.href); return false;">PHP-TIDY</a>.]]></comment>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_minify</source_model>
@@ -112,6 +112,32 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</size>
+						<stats translate="label">
+							<label>Statistics</label>
+							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+							<sort_order>20</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</stats>
+						<stats_nb translate="label">
+							<label>Number of emails</label>
+							<frontend_type>label</frontend_type>
+							<frontend_model>maillog/adminhtml_config_number</frontend_model>
+							<sort_order>21</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</stats_nb>
+						<stats_size translate="label">
+							<label>Table size</label>
+							<frontend_type>label</frontend_type>
+							<frontend_model>maillog/adminhtml_config_size</frontend_model>
+							<sort_order>22</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</stats_size>
 					</fields>
 				</general>
 				<email translate="label">

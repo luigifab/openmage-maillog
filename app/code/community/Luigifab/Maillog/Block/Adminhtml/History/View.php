@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/16/05/2015
- * Version 19
+ * Updated S/12/09/2015
+ * Version 25
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -45,52 +45,54 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$this->_addButton('resend', array(
 			'label'   => $this->__('Resend email'),
-			'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/resend', array('id' => $email->getId(), 'back' => $this->getRequest()->getParam('back'), 'bid' => $this->getRequest()->getParam('bid')))."');", // ce n'est pas un delete, mais une demande de confirmation
+			'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/resend', array('id' => $email->getId(), 'back' => $this->getRequest()->getParam('back'), 'bid' => $this->getRequest()->getParam('bid')))."');", // ce n'est pas un delete, mais bien une demande de confirmation
 			'class'   => 'add'
 		));
 
 		$this->_addButton('online', array(
 			'label'   => $this->helper('adminhtml')->__('View'),
-			'onclick' => "window.open('".$email->getFrontUrl('index', array('nomark' => 1))."');",
+			'onclick' => "window.open('".$email->getMaillogUrl('index', array('nomark' => 1))."');",
 			'class'   => 'go'
 		));
 	}
 
 	public function getGridHtml() {
 
-		$email = Mage::registry('current_email');
-		$block = Mage::getBlockSingleton('maillog/adminhtml_history_grid');
-		$date  = Mage::getSingleton('core/locale'); //date($date, $format, $locale = null, $useTimezone = null)
-		$recipients = $block->decorateRecipients(null, $email, null, false);
-		$size  = $block->decorateSize(null, $email, null, false);
-
+		$that   = $this->helper('maillog');
+		$email  = Mage::registry('current_email');
+		$date   = Mage::getSingleton('core/locale'); //date($date, $format, $locale = null, $useTimezone = null)
 		$status = ($email->getStatus() === 'read') ? 'open/read' : $email->getStatus();
-		$status = trim(str_replace('(0)', '', $this->__(ucfirst($status.' (%d)'), 0)));
+		$status = $this->__(ucfirst($status));
 
-		$html  = '<div class="content">';
-		$html .= "\n".'<ul>';
-		$html .= "\n".'<li>'.$this->__('Created At: %s', $date->date($email->getCreatedAt(), Zend_Date::ISO_8601)).'</li>';
+		$html = array();
+		$html[] = '<div class="content">';
+		$html[] = '<div>';
+		$html[] = '<ul>';
+		$html[] = '<li>'.$this->__('Created At: %s', $date->date($email->getCreatedAt(), Zend_Date::ISO_8601)).'</li>';
 
 		if (!in_array($email->getSentAt(), array('', '0000-00-00 00:00:00', null))) {
-			$html .= "\n".'<li><strong>'.$this->__('Sent At: %s', $date->date($email->getSentAt(), Zend_Date::ISO_8601)).'</strong></li>';
-			$duration = $block->decorateDuration(null, $email, null, false);
+
+			$html[] = '<li><strong>'.$this->__('Sent At: %s', $date->date($email->getSentAt(), Zend_Date::ISO_8601)).'</strong></li>';
+
+			$duration = $that->getHumanDuration($email);
 			if (strlen($duration) > 0)
-				$html .= "\n".'<li>'.$this->__('Duration: %s', $duration).'</li>';
+				$html[] = '<li>'.$this->__('Duration: %s', $duration).'</li>';
 		}
 
-		$html .= "\n".'</ul>';
-		$html .= "\n".'<ul>';
-		$html .= "\n".'<li><strong class="status-'.$email->getStatus().'">'.$this->__('Status: %s', $status).'</strong></li>';
+		$html[] = '</ul>';
+		$html[] = '<ul>';
+		$html[] = '<li><strong class="status-'.$email->getStatus().'">'.$this->__('Status: %s', $status).'</strong></li>';
 
-		if (strlen($size) > 0)
-			$html .= "\n".'<li>'.$this->__('Approximate size: %s', $size).'</li>';
+		if ($email->getSize() > 0)
+			$html[] = '<li>'.$this->__('Approximate size: %s', $that->getNumberToHumanSize($email->getSize())).'</li>';
 
-		$html .= "\n".'<li>'.$this->__('Recipient(s): %s', $recipients).'</li>';
-		$html .= "\n".'</ul>';
-		$html .= "\n".'<object data="'.$email->getFrontUrl('index', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'nomark' => 1)).'" type="text/html" onload="this.style.height = (this.contentDocument.body.scrollHeight + 40) + \'px\';"></object>';
-		$html .= "\n".'</div>';
+		$html[] = '<li>'.$this->__('Recipient(s): %s', $that->getHumanRecipients($email)).'</li>';
+		$html[] = '</ul>';
+		$html[] = '</div>';
+		$html[] = '<object data="'.$email->getMaillogUrl('index', array('_secure' => Mage::app()->getStore()->isCurrentlySecure(), 'nomark' => 1)).'" type="text/html" onload="this.style.height = (this.contentDocument.body.scrollHeight + 40) + \'px\';"></object>';
+		$html[] = '</div>';
 
-		return $html;
+		return implode("\n", $html);
 	}
 
 	protected function _prepareLayout() {
