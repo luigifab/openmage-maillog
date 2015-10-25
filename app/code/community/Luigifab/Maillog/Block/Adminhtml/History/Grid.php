@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/12/09/2015
- * Version 10
+ * Updated M/20/10/2015
+ * Version 12
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -114,9 +114,11 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'type'      => 'options',
 			'options'   => array(
 				'pending' => $this->__('Pending'),
+				'sending' => $this->__('Sending'),
 				'sent'    => $this->__('Sent'),
 				'read'    => $this->__('Open/read'),
-				'error'   => $this->__('Error')
+				'error'   => $this->helper('maillog')->_('Error'),
+				'notsent' => $this->__('Not sent')
 			),
 			'align'     => 'status',
 			'width'     => '125px',
@@ -166,6 +168,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		else {
 			if (count($types) < 1)
 				unset($this->_columns['type']);
+			if (Mage::getStoreConfig('maillog/general/created') !== '1')
+				unset($this->_columns['created_at']);
 			if (Mage::getStoreConfig('maillog/general/subject') !== '1')
 				unset($this->_columns['mail_subject']);
 			if (Mage::getStoreConfig('maillog/general/size') !== '1')

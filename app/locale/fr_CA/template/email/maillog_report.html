@@ -3,31 +3,63 @@
 "var frequency":"Fréquence du rapport",
 "var date_period_from":"Date de début du rapport",
 "var date_period_to":"Date de fin du rapport",
-"var total_email":"Nombre d'email",
+"var total_email":"Nombre total d'email",
 "var total_pending":"Nombre d'email en attente",
+"var total_sending":"Nombre d'email en cours d'envoi",
 "var total_sent":"Nombre d'email envoyé",
+"var total_read":"Nombre d'email ouvert/lu",
 "var total_error":"Nombre d'email en erreur",
-"var total_read":"Nombre d'email en erreur",
-"var list":"Liste des emails en erreur",
+"var total_notsent":"Nombre d'email non envoyé",
+"var error_list":"Liste des emails en erreur",
+"var week_period":"Statistiques de la semaine dernière, dates",
+"var week_total_email":"Statistiques de la semaine dernière, nombre total d'email",
+"var week_percent_sent":"Statistiques de la semaine dernière, nombre d'email envoyé",
+"var week_percent_read":"Statistiques de la semaine dernière, nombre d'email ouvert/lu",
+"var lastweek_period":"Statistiques de la semaine d'avant, dates",
+"var lastweek_total_email":"Statistiques de la semaine d'avant, nombre total d'email",
+"var lastweek_percent_sent":"Statistiques de la semaine d'avant, nombre d'email envoyé",
+"var lastweek_percent_read":"Statistiques de la semaine d'avant, nombre d'email ouvert/lu",
+"var month_period":"Statistiques du mois dernier, dates",
+"var month_total_email":"Statistiques du mois dernier, nombre total d'email",
+"var month_percent_sent":"Statistiques du mois dernier, nombre d'email envoyé",
+"var month_percent_read":"Statistiques du mois dernier, nombre d'email ouvert/lu",
+"var lastmonth_period":"Statistiques du mois d'avant, dates",
+"var lastmonth_total_email":"Statistiques du mois d'avant, nombre total d'email",
+"var lastmonth_percent_sent":"Statistiques du mois d'avant, nombre d'email envoyé",
+"var lastmonth_percent_read":"Statistiques du mois d'avant, nombre d'email ouvert/lu",
 "var config":"Adresse de configuration"
 }@-->
 
 <div style="margin:1em; font-size:12px;">
-	<p>Rapport {{var frequency}} par rapport aux envois des emails.
+	<p>Voici le rapport {{var frequency}} par rapport aux envois des emails.
 	<br />Période du <strong>{{var date_period_from}}</strong> au <strong>{{var date_period_to}}</strong>.</p>
 
 	<p>Sur les <strong>{{var total_email}}</strong> emails prévus :
-	<br /><span style="color:orange;">➩ Email(s) en attente(s) : {{var total_pending}}</span>
-	<br /><span style="color:red;">➩ Email(s) en erreur(s) : {{var total_error}}</span>
-	<br /><span style="color:gray;">➩ Email(s) envoyé(s) : {{var total_sent}}</span>
-	<br /><span style="color:green;">➩ Email(s) ouvert(s)/lu(s) : {{var total_read}}</span></p>
+	<br /><span style="color:#B3B4B3;">➩ Email(s) en attente(s) : {{var total_pending}}</span>
+	<br /><span style="color:#FF9C00;">➩ Email(s) en cours d'envoi : {{var total_sending}}</span>
+	<br /><span style="color:#FFC700;">➩ Email(s) envoyé(s) : {{var total_sent}}</span>
+	<br /><span style="color:#3CB861;">➩ Email(s) ouvert(s)/lu(s) : {{var total_read}}</span>
+	<br /><span style="color:#E41101;">➩ Email(s) en erreur(s) : {{var total_error}}</span>
+	<br /><span style="color:purple;">➩ Email(s) non envoyé(s) : {{var total_notsent}}</span></p>
 
-	{{depend list}}
+	<p style="margin:1.5em 0 0.5em; padding:1.3em 0 0; border-top:1px dashed #777;">Statistiques de la semaine dernière ({{var week_period}}) :
+	<br />➩ {{var week_total_email}} emails, <b>{{var week_percent_sent}}%</b> ont été envoyés, <b>{{var week_percent_read}}%</b> ont été ouverts/lus</p>
+
+	<p style="margin:0.5em 0;">Statistiques de la semaine d'avant ({{var lastweek_period}}) :
+	<br />➩ {{var lastweek_total_email}} emails, <b>{{var lastweek_percent_sent}}%</b> ont été envoyés, <b>{{var lastweek_percent_read}}%</b> ont été ouverts/lus</p>
+
+	<p style="margin:0.5em 0;">Statistiques du mois dernier ({{var month_period}}) :
+	<br />➩ {{var month_total_email}} emails, <b>{{var month_percent_sent}}%</b> ont été envoyés, <b>{{var month_percent_read}}%</b> ont été ouverts/lus</p>
+
+	<p style="margin:0.5em 0 1.5em;">Statistiques du mois d'avant ({{var lastmonth_period}}) :
+	<br />➩ {{var lastmonth_total_email}} emails, <b>{{var lastmonth_percent_sent}}%</b> ont été envoyés, <b>{{var lastmonth_percent_read}}%</b> ont été ouverts/lus</p>
+
+	{{depend error_list}}
 		<ul style="margin:1.5em 0; padding:0.5em 0 0; font-size:0.9em; list-style:none; border-top:1px dashed #777;">
-			<li style="margin:0.8em 0 0.5em;">{{var list}}</li>
+			<li style="margin:0.8em 0 0.5em;">{{var error_list}}</li>
 		</ul>
 	{{/depend}}
 
-	<p style="font-size:0.8em; line-height:130%; font-style:italic; color:gray;">{{config path='design/head/default_title'}} - Rapport des emails envoyés
-	<br /><a href="{{var config}}" style="color:gray;">{{var config}}</a> #readimg#</p>
+	<p style="font-size:0.8em; line-height:130%; font-style:italic; color:#6F6F6F;">{{config path='design/head/default_title'}} - Rapport des emails envoyés
+	<br /><a href="{{var config}}" style="color:#6F6F6F;">{{var config}}</a> - <a href="#online#" style="color:#6F6F6F;">voir la version en ligne</a> #readimg#</p>
 </div>

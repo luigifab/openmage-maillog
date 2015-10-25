@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/16/05/2015
- * Version 13
+ * Updated S/10/10/2015
+ * Version 14
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -36,7 +36,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 	public function viewAction() {
 
-		$email = $this->loadEmail();
+		$email = Mage::getModel('maillog/email')->load(intval($this->getRequest()->getParam('id', 0)));
 
 		if ($email->getId() > 0) {
 			Mage::register('current_email', $email);
@@ -54,10 +54,10 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		try {
 			if (!Mage::getSingleton('admin/session')->isFirstPageAfterLogin()) {
 
-				if (($id = $this->getRequest()->getParam('id', false)) === false)
+				if ((($id = $this->getRequest()->getParam('id', false)) === false) || !is_numeric($id))
 					Mage::throwException($this->__('The <em>%s</em> field is a required value.', 'id'));
 
-				Mage::getModel('maillog/email')->load($id)->delete();
+				Mage::getModel('maillog/email')->load(intval($id))->delete();
 				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully deleted.', $id));
 			}
 		}
@@ -75,15 +75,11 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		try {
 			if (!Mage::getSingleton('admin/session')->isFirstPageAfterLogin()) {
 
-				if (($id = $this->getRequest()->getParam('id', false)) === false)
+				if ((($id = $this->getRequest()->getParam('id', false)) === false) || !is_numeric($id))
 					Mage::throwException($this->__('The <em>%s</em> field is a required value.', 'id'));
 
-				Mage::getModel('maillog/email')->load($id)->setStatus('pending')->save()->send();
-
-				if (Mage::getStoreConfig('maillog/general/background') !== '1')
-					Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully resent (warning, dates are not updated).', $id));
-				else
-					Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully resent (warning, dates are not updated). As you send emails in background, sending can take a few minutes.', $id));
+				Mage::getModel('maillog/email')->load(intval($id))->setStatus('pending')->save()->send();
+				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully resent (warning, dates are not updated).', $id));
 			}
 		}
 		catch (Exception $e) {
@@ -91,10 +87,6 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		}
 
 		$this->redirectBack();
-	}
-
-	private function loadEmail() {
-		return Mage::getModel('maillog/email')->load(intval($this->getRequest()->getParam('id', 0)));
 	}
 
 	private function redirectBack() {

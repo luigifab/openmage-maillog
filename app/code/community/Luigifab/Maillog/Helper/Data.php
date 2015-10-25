@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/12/09/2015
- * Version 15
+ * Updated D/11/10/2015
+ * Version 16
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -23,6 +23,11 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 	public function getVersion() {
 		return (string) Mage::getConfig()->getModuleConfig('Luigifab_Maillog')->version;
 	}
+
+	public function _($data, $a = null, $b = null) {
+		return (strpos($txt = $this->__(' '.$data, $a, $b), ' ') === 0) ? $this->__($data, $a, $b) : $txt;
+	}
+
 
 	public function sendMail($zend, $data, $parts) {
 

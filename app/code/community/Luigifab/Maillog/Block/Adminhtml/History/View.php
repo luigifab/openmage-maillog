@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/12/09/2015
- * Version 25
+ * Updated M/20/10/2015
+ * Version 26
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -43,11 +43,13 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 			'class'   => 'delete'
 		));
 
-		$this->_addButton('resend', array(
-			'label'   => $this->__('Resend email'),
-			'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/resend', array('id' => $email->getId(), 'back' => $this->getRequest()->getParam('back'), 'bid' => $this->getRequest()->getParam('bid')))."');", // ce n'est pas un delete, mais bien une demande de confirmation
-			'class'   => 'add'
-		));
+		if ((Mage::getStoreConfig('maillog/general/send') === '1') && ($email->getStatus() !== 'notsent')) {
+			$this->_addButton('resend', array(
+				'label'   => $this->__('Resend email'),
+				'onclick' => "deleteConfirm('".addslashes($this->helper('core')->__('Are you sure?'))."', '".$this->getUrl('*/*/resend', array('id' => $email->getId(), 'back' => $this->getRequest()->getParam('back'), 'bid' => $this->getRequest()->getParam('bid')))."');", // ce n'est pas un delete, mais bien une demande de confirmation
+				'class'   => 'add'
+			));
+		}
 
 		$this->_addButton('online', array(
 			'label'   => $this->helper('adminhtml')->__('View'),
@@ -61,8 +63,15 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		$that   = $this->helper('maillog');
 		$email  = Mage::registry('current_email');
 		$date   = Mage::getSingleton('core/locale'); //date($date, $format, $locale = null, $useTimezone = null)
-		$status = ($email->getStatus() === 'read') ? 'open/read' : $email->getStatus();
-		$status = $this->__(ucfirst($status));
+
+		if ($email->getStatus() === 'read')
+			$status = $this->__('Open/read');
+		else if ($email->getStatus() === 'error')
+			$status = $this->helper('maillog')->_('Error');
+		else if ($email->getStatus() === 'notsent')
+			$status = $this->__('Not sent');
+		else
+			$status = $this->__(ucfirst($email->getStatus()));
 
 		$html = array();
 		$html[] = '<div class="content">';
@@ -81,7 +90,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$html[] = '</ul>';
 		$html[] = '<ul>';
-		$html[] = '<li><strong class="status-'.$email->getStatus().'">'.$this->__('Status: %s', $status).'</strong></li>';
+		$html[] = '<li><strong class="status-'.$email->getStatus().'">'.$this->__('Status: <span>%s</span>', $status).'</strong></li>';
 
 		if ($email->getSize() > 0)
 			$html[] = '<li>'.$this->__('Approximate size: %s', $that->getNumberToHumanSize($email->getSize())).'</li>';

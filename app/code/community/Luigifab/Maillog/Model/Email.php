@@ -1,8 +1,8 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/03/09/2015
- * Version 16
+ * Updated M/20/10/2015
+ * Version 18
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -80,20 +80,18 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 	}
 
 
-	// envoi réel de l'email avec la fonction mail de PHP
+	// envoi réel de l'email avec la fonction mail de PHP uniquement si la configuration permet l'envoi des emails
 	// ou envoi en arrière plan si la configuration le permet
 	public function send($now = false) {
 
 		if ($this->getId() < 1)
 			Mage::throwException('You must load an email before trying to send it.');
 
-		if ($now || (Mage::getStoreConfig('maillog/general/background') !== '1')) {
+		if ($now || (Mage::getStoreConfig('maillog/general/background') !== '1') || (Mage::getStoreConfig('maillog/general/send') !== '1')) {
 
-			// sans pièce jointe
 			if (is_null($this->getMailParts())) {
 				$body = quoted_printable_encode($this->getMailBody());
 			}
-			// avec pièce jointe
 			else {
 				preg_match('#boundary="([^"]+)"#', $this->getMailHeader(), $bound);
 				$bound = $bound[1];
@@ -105,7 +103,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 					$body .= "\r\n\r\n";
 
-					if ($key == 0) {
+					if ($key < 1) {
 						$body .= '--'.$bound."\r\n";
 						$body .= 'Content-Type: '.$part->type.'; charset='.$part->charset."\r\n";
 						$body .= 'Content-Transfer-Encoding: '.$part->encoding."\r\n";
@@ -132,19 +130,25 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				strlen($this->getMailParameters())          // utilise les paramètres originaux
 			);
 
-			$result = mail(
-				$this->getEncodedMailRecipients(),          // version originale
-				$this->getEncodedMailSubject(),             // version originale
-				$body,
-				$this->getMailHeader(),                     // version originale
-				$this->getMailParameters()                  // version originale
-			);
+			if (Mage::getStoreConfig('maillog/general/send') !== '1') {
+				$this->setStatus('notsent')->save();
+			}
+			else {
+				$this->setStatus('sending')->save();
 
-			if (in_array($this->getSentAt(), array('', '0000-00-00 00:00:00', null)))
-				$this->setSentAt(strftime('%Y-%m-%d %H:%M:%S', time()));
+				$result = mail(
+					$this->getEncodedMailRecipients(),          // version originale
+					$this->getEncodedMailSubject(),             // version originale
+					$body,
+					$this->getMailHeader(),                     // version originale
+					$this->getMailParameters()                  // version originale
+				);
 
-			$this->setStatus(($result === true) ? 'sent' : 'error');
-			$this->save();
+				if (in_array($this->getSentAt(), array('', '0000-00-00 00:00:00', null)))
+					$this->setSentAt(strftime('%Y-%m-%d %H:%M:%S', time()));
+
+				$this->setStatus(($result === true) ? 'sent' : 'error')->save();
+			}
 		}
 		else {
 			$program = substr(__FILE__, 0, strpos(__FILE__, 'Model')).'lib/mail.php';
@@ -197,7 +201,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-file.svg').'"); }'."\n".
 				'body > ul.attachments li a[type="application/pdf"] { background-image:url("'.
 					Mage::getDesign()->setPackageName('default')->getSkinUrl('images/luigifab/maillog/humanity-pdf.svg').'"); }'."\n".
-				'body > pre { white-space:pre-wrap; }'."\n".
+				'body > pre { margin:1em; white-space:pre-wrap; }'."\n".
 				'@media print {'."\n".
 				'	body > ul.attachments { font-size:0.6em; }'."\n".
 				'	body > ul.attachments li:first-child a { text-decoration:none; }'."\n".

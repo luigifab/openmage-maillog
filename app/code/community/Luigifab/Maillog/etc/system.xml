@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated M/01/09/2015
- * Version 11
+ * Updated S/10/10/2015
+ * Version 12
  *
  * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
@@ -58,11 +58,20 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</enabled>
-						<background translate="label">
-							<label>Send in background</label>
+						<send translate="label">
+							<label>Send emails</label>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
 							<sort_order>2</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</send>
+						<background translate="label">
+							<label>Send emails in background</label>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -72,7 +81,7 @@
 							<comment><![CDATA[Possibly requires <a href="http://us.php.net/manual/en/book.tidy.php" onclick="window.open(this.href); return false;">PHP-TIDY</a>.]]></comment>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_minify</source_model>
-							<sort_order>3</sort_order>
+							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -112,6 +121,15 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</size>
+						<created translate="label">
+							<label>Show created at column</label>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>14</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</created>
 						<stats translate="label">
 							<label>Statistics</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
