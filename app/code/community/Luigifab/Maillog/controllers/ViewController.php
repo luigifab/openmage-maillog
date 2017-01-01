@@ -1,10 +1,9 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated J/14/05/2015
- * Version 10
+ * Updated M/08/11/2016
  *
- * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -22,15 +21,17 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 	public function indexAction() {
 
-		$email = $this->loadEmail();
+		$email = $this->getEmail();
 
-		if ($email->getId() > 0)
-			$this->getResponse()->setBody($email->toHtml(($this->getRequest()->getParam('nomark') !== '1') ? false : true));
+		if ($email->getId() > 0) {
+			$html = $email->toHtml(($this->getRequest()->getParam('nomark') !== '1') ? false : true);
+			$this->getResponse()->setBody($html);
+		}
 	}
 
 	public function downloadAction() {
 
-		$email = $this->loadEmail();
+		$email = $this->getEmail();
 
 		if (($email->getId() > 0) && !is_null($email->getMailParts())) {
 
@@ -39,7 +40,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 			foreach ($parts as $key => $part) {
 
-				if ($key == $nb) {
+				if ($key === $nb) {
 
 					$data = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
 					$data = base64_decode($data);
@@ -52,6 +53,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 					$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);
 					$this->getResponse()->setHeader('Pragma', 'no-cache', true);
 					$this->getResponse()->setBody($data);
+
 					return;
 				}
 			}
@@ -62,7 +64,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 	public function markAction() {
 
-		$email = $this->loadEmail();
+		$email = $this->getEmail();
 
 		if (($email->getId() > 0) && ($email->getStatus() !== 'read'))
 			$email->setStatus('read')->save();
@@ -80,11 +82,10 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 		$this->getResponse()->setBody($data);
 	}
 
-	private function loadEmail() {
+	private function getEmail() {
 
-		$email = Mage::getResourceModel('maillog/email_collection');
-		$email->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0));
-
-		return $email->getFirstItem();
+		return Mage::getResourceModel('maillog/email_collection')
+			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
+			->getFirstItem();
 	}
 }

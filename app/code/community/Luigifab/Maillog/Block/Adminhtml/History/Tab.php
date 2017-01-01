@@ -1,10 +1,9 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated J/03/09/2015
- * Version 7
+ * Updated M/08/11/2016
  *
- * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -93,5 +92,14 @@ class Luigifab_Maillog_Block_Adminhtml_History_Tab extends Luigifab_Maillog_Bloc
 
 	public function getRowUrl($row) {
 		return $this->getUrl('*/maillog_history/view', array_merge($this->back, array('id' => $row->getId())));
+	}
+
+
+	public function _toHtml() {
+
+		if ($this->getRequest()->getParam('isAjax', false))
+			return parent::_toHtml();
+		else
+			return Mage::getBlockSingleton('core/template')->setTemplate('luigifab/maillog/customer.phtml')->toHtml().parent::_toHtml();
 	}
 }

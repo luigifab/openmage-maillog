@@ -1,10 +1,9 @@
 <?php
 /**
  * Created S/10/10/2015
- * Updated S/10/10/2015
- * Version 1
+ * Updated M/08/11/2016
  *
- * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -19,5 +18,6 @@
  */
 
 $this->startSetup();
-$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' CHANGE status status ENUM("pending", "sent", "error", "read", "notsent", "bounce", "sending") NOT NULL DEFAULT "pending";');
+$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').'
+	CHANGE status status ENUM("pending", "sent", "error", "read", "notsent", "bounce", "sending") NOT NULL DEFAULT "pending";');
 $this->endSetup();

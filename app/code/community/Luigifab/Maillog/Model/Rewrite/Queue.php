@@ -1,10 +1,9 @@
 <?php
 /**
  * Created D/05/04/2015
- * Updated D/05/04/2015
- * Version 1
+ * Updated M/08/11/2016
  *
- * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -24,7 +23,7 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 
 		// ci-dessous une partie de la méthode Mage_Core_Model_Email_Queue::send()
 		// cela permet d'envoyer immédiatement l'email et donc de désactiver la fil d'attente de Magento 1.9.1.0+
-		if (Mage::getStoreConfig('maillog/general/enabled') === '1') {
+		if (Mage::getStoreConfigFlag('maillog/general/enabled')) {
 
 			$parameters = new Varien_Object($this->getMessageParameters());
 			if ($parameters->getReturnPathEmail() !== null) {
@@ -72,7 +71,7 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 
 	public function send() {
 
-		if (Mage::getStoreConfig('maillog/general/enabled') === '1')
+		if (Mage::getStoreConfigFlag('maillog/general/enabled'))
 			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_send_all" cron job. For more informations, read: https://redmine.luigifab.info/projects/magento/wiki/maillog');
 		else
 			return parent::send();
@@ -80,7 +79,7 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 
 	public function cleanQueue() {
 
-		if (Mage::getStoreConfig('maillog/general/enabled') === '1')
+		if (Mage::getStoreConfigFlag('maillog/general/enabled'))
 			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_clean_up" cron job. For more informations, read: https://redmine.luigifab.info/projects/magento/wiki/maillog');
 		else
 			return parent::cleanQueue();

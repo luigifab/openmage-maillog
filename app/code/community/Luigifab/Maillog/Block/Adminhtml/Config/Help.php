@@ -1,10 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/22/03/2015
- * Version 1
+ * Updated M/08/11/2016
  *
- * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -22,6 +21,6 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 		$url = 'https://redmine.luigifab.info/projects/magento/wiki/maillog';
-		return '<p class="box">Luigifab/Maillog '.$this->helper('maillog')->getVersion().' <a href="'.$url.'" onclick="window.open(this.href); return false;" style="float:right;">'.$url.'</a></p>';
+		return sprintf('<p class="box">Luigifab/Maillog %s <a href="%s" onclick="window.open(this.href); return false;" style="float:right;">%2$s</a></p>', $this->helper('maillog')->getVersion(), $url);
 	}
 }

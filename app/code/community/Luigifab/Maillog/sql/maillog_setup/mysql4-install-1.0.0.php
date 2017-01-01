@@ -1,10 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/25/08/2015
- * Version 7
+ * Updated M/08/11/2016
  *
- * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -26,11 +25,11 @@ $this->run('
 		email_id           int(11) unsigned NOT NULL auto_increment,
 		status             ENUM("pending", "sent", "error", "read") NOT NULL DEFAULT "pending",
 		--
-		created_at         datetime        NULL DEFAULT NULL,
-		sent_at            datetime        NULL DEFAULT NULL,
-		uniqid             varchar(30)     NOT NULL DEFAULT "",
-		type               varchar(50)     NOT NULL DEFAULT "",
-		size               int(8) unsigned NOT NULL DEFAULT 0,
+		created_at         datetime          NULL DEFAULT NULL,
+		sent_at            datetime          NULL DEFAULT NULL,
+		uniqid             varchar(30)       NOT NULL DEFAULT "",
+		type               varchar(50)       NOT NULL DEFAULT "",
+		size               int(8) unsigned   NOT NULL DEFAULT 0,
 		encoded_mail_recipients varchar(255) NOT NULL DEFAULT "",
 		encoded_mail_subject    varchar(255) NOT NULL DEFAULT "",
 		--

@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated D/11/10/2015
- * Version 8
+ * Updated M/08/11/2016
  *
- * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -21,7 +20,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>2.4.0</version>
+			<version>3.0.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -51,6 +50,12 @@
 					<email>
 						<table>luigifab_maillog</table>
 					</email>
+					<bounce>
+						<table>luigifab_maillog_bounce</table>
+					</bounce>
+					<sync>
+						<table>luigifab_maillog_sync</table>
+					</sync>
 				</entities>
 			</maillog_resource>
 		</models>
@@ -78,14 +83,74 @@
 		<template>
 			<email>
 				<maillog_email_template translate="label">
-					<label>Email send report</label>
+					<label>Sent email report</label>
 					<file>maillog_report.html</file>
 					<type>html</type>
 				</maillog_email_template>
 			</email>
 		</template>
+		<events>
+			<customer_save_commit_after>
+				<observers>
+					<maillog_customer_save>
+						<class>maillog/observer</class>
+						<method>customerSaveSync</method>
+					</maillog_customer_save>
+				</observers>
+			</customer_save_commit_after>
+			<customer_delete_after>
+				<observers>
+					<maillog_customer_delete>
+						<class>maillog/observer</class>
+						<method>customerDeleteSync</method>
+					</maillog_customer_delete>
+				</observers>
+			</customer_delete_after>
+			<newsletter_subscriber_save_after>
+				<observers>
+					<maillog_subscriber_save>
+						<class>maillog/observer</class>
+						<method>subscriberSaveSync</method>
+					</maillog_subscriber_save>
+				</observers>
+			</newsletter_subscriber_save_after>
+			<newsletter_subscriber_delete_after>
+				<observers>
+					<maillog_subscriber_delete>
+						<class>maillog/observer</class>
+						<method>subscriberDeleteSync</method>
+					</maillog_subscriber_delete>
+				</observers>
+			</newsletter_subscriber_delete_after>
+			<sales_order_invoice_save_commit_after>
+				<observers>
+					<maillog_order_invoice>
+						<class>maillog/observer</class>
+						<method>orderInvoiceSync</method>
+					</maillog_order_invoice>
+				</observers>
+			</sales_order_invoice_save_commit_after>
+		</events>
 	</global>
 	<frontend>
+		<events>
+			<customer_login>
+				<observers>
+					<maillog_customer_login>
+						<class>maillog/observer</class>
+						<method>customerLoginSync</method>
+					</maillog_customer_login>
+				</observers>
+			</customer_login>
+			<customer_address_save_after>
+				<observers>
+					<maillog_address_save>
+						<class>maillog/observer</class>
+						<method>addressSaveSync</method>
+					</maillog_address_save>
+				</observers>
+			</customer_address_save_after>
+		</events>
 		<routers>
 			<maillog>
 				<use>standard</use>
@@ -117,6 +182,22 @@
 					</maillog>
 				</observers>
 			</admin_system_config_changed_section_maillog>
+			<adminhtml_customer_prepare_save><!-- storeId -->
+				<observers>
+					<maillog_customer_storeid>
+						<class>maillog/observer</class>
+						<method>setCustomerStoreId</method>
+					</maillog_customer_storeid>
+				</observers>
+			</adminhtml_customer_prepare_save>
+			<newsletter_subscriber_save_before><!-- storeId -->
+				<observers>
+					<maillog_subscriber_storeid>
+						<class>maillog/observer</class>
+						<method>setSubscriberStoreId</method>
+					</maillog_subscriber_storeid>
+				</observers>
+			</newsletter_subscriber_save_before>
 		</events>
 		<layout>
 			<updates>
@@ -142,6 +223,16 @@
 					<model>maillog/observer::sendEmailReport</model>
 				</run>
 			</maillog_send_report>
+			<maillog_bounces_import>
+				<run>
+					<model>maillog/observer::bouncesFileImport</model>
+				</run>
+			</maillog_bounces_import>
+			<maillog_unsubscribers_import>
+				<run>
+					<model>maillog/observer::unsubscribersFileImport</model>
+				</run>
+			</maillog_unsubscribers_import>
 		</jobs>
 	</crontab>
 	<default>
@@ -153,10 +244,16 @@
 			</general>
 			<email>
 				<enabled>0</enabled>
-				<recipient_email>hello@example.com</recipient_email>
+				<recipient_email>hello@example.org</recipient_email>
 				<sender_email_identity>general</sender_email_identity>
 				<template>maillog_email_template</template>
 			</email>
+			<bounces>
+				<cron_expr>30 2 * * *</cron_expr>
+			</bounces>
+			<unsubscribers>
+				<cron_expr>30 2 * * *</cron_expr>
+			</unsubscribers>
 		</maillog>
 	</default>
 </config>

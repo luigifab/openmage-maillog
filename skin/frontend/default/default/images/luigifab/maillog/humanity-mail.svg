@@ -1,7 +1,7 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!--
  * Humanity icon theme, GNU GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * Sprite created with Inkscape and cleaned with python scour -enable-id-stripping -indent=tab -strip-xml-prolog
+ * Cleaned with python scour -enable-id-stripping -indent=tab -strip-xml-prolog
 -->
 <svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" version="1.0" xmlns:xlink="http://www.w3.org/1999/xlink">
 <defs>
@@ -38,6 +38,7 @@
 <stop stop-color="#fff" stop-opacity="0" offset="1"/>
 </linearGradient>
 </defs>
+<g transform="translate(-5.984e-4,-4.0002542)">
 <g transform="matrix(1.0008 0 0 1.0008 69.539 20.344)" stroke-width="1.0304">
 <rect opacity=".40206" height="6" width="31.644" y="19.636" x="-61.324" fill="url(#linearGradient2501)"/>
 <path opacity=".40206" d="m-29.68 19.636v5.9997c3.3749 0.01129 8.1588-1.3442 8.1588-3.0002s-3.7661-2.9994-8.1588-2.9994z" fill="url(#radialGradient2504)"/>
@@ -47,4 +48,5 @@
 <rect opacity=".4" rx=".082552" ry=".083472" height="31" width="43" stroke="url(#linearGradient2435)" stroke-linecap="square" y="11.5" x="2.5" fill="none"/>
 <path opacity=".5" d="m3.2367 15.212 20.763 18.637 21.077-18.762m-26.421 14.262-13.475 13.633 13.475-13.633zm10.719 0.063 13.569 13.319-13.569-13.319z" stroke="url(#linearGradient2449)" fill="none"/>
 <path opacity=".5" d="m3.2367 13.731 20.763 18.637 21.077-18.763m-26.421 14.263-13.475 13.632 13.475-13.632zm10.719 0.062 13.569 13.319-13.569-13.319z" stroke="url(#linearGradient2432)" fill="none"/>
+</g>
 </svg>

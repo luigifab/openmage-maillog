@@ -1,10 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/10/10/2015
- * Version 14
+ * Updated M/08/11/2016
  *
- * Copyright 2015 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
  * https://redmine.luigifab.info/projects/magento/wiki/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -19,6 +18,18 @@
  */
 
 class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controller_Action {
+
+	protected function _validateSecretKey() {
+
+		$result = parent::_validateSecretKey();
+
+		if (Mage::getSingleton('admin/session')->isLoggedIn() && ($this->getFullActionName() === 'adminhtml_maillog_history_view') && !$result) {
+			$this->getRequest()->setParam(Mage_Adminhtml_Model_Url::SECRET_KEY_PARAM_NAME, Mage::getSingleton('adminhtml/url')->getSecretKey());
+			$result = parent::_validateSecretKey();
+		}
+
+		return $result;
+	}
 
 	protected function _isAllowed() {
 		return Mage::getSingleton('admin/session')->isAllowed('tools/maillog');
@@ -55,9 +66,9 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 			if (!Mage::getSingleton('admin/session')->isFirstPageAfterLogin()) {
 
 				if ((($id = $this->getRequest()->getParam('id', false)) === false) || !is_numeric($id))
-					Mage::throwException($this->__('The <em>%s</em> field is a required value.', 'id'));
+					Mage::throwException($this->__('The <em>%s</em> field is a required field.', 'id'));
 
-				Mage::getModel('maillog/email')->load(intval($id))->delete();
+				Mage::getModel('maillog/email')->load($id)->delete();
 				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully deleted.', $id));
 			}
 		}
@@ -76,9 +87,9 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 			if (!Mage::getSingleton('admin/session')->isFirstPageAfterLogin()) {
 
 				if ((($id = $this->getRequest()->getParam('id', false)) === false) || !is_numeric($id))
-					Mage::throwException($this->__('The <em>%s</em> field is a required value.', 'id'));
+					Mage::throwException($this->__('The <em>%s</em> field is a required field.', 'id'));
 
-				Mage::getModel('maillog/email')->load(intval($id))->setStatus('pending')->save()->send();
+				Mage::getModel('maillog/email')->load($id)->setStatus('pending')->save()->send();
 				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully resent (warning, dates are not updated).', $id));
 			}
 		}
