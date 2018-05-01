@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/11/11/2016
+ * Updated D/01/04/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -19,26 +20,26 @@
 
 <config>
 	<tabs>
-		<luigifab>
-			<label>luigifab</label>
+		<luigifab translate="label">
+			<label>Tools</label>
 			<sort_order>103</sort_order>
 		</luigifab>
 	</tabs>
 	<sections>
 		<maillog translate="label">
-			<label>Transactionnal emails</label>
+			<label>Transactional emails</label>
 			<tab>luigifab</tab>
-			<sort_order>63</sort_order>
+			<sort_order>65</sort_order>
 			<show_in_default>1</show_in_default>
 			<show_in_website>0</show_in_website>
 			<show_in_store>0</show_in_store>
 			<groups>
 				<help>
+					<frontend_model>maillog/adminhtml_config_help</frontend_model>
 					<sort_order>0</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
-					<frontend_model>maillog/adminhtml_config_help</frontend_model>
 				</help>
 				<general translate="label">
 					<label>General</label>
@@ -66,29 +67,44 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</send>
-						<background translate="label">
-							<label>Send emails in background</label>
+						<minify translate="label comment">
+							<label><![CDATA[Minify <abbr title="HyperText Markup Language">HTML</abbr> code]]></label>
+							<comment><![CDATA[May require <a href="http://us.php.net/manual/en/book.tidy.php">PHP-TIDY</a>.]]></comment>
 							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<source_model>maillog/source_minify</source_model>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
-						</background>
-						<minify translate="label comment">
-							<label><![CDATA[Minify <abbr title="HyperText Markup Language">HTML</abbr> code]]></label>
-							<comment><![CDATA[May require <a href="http://us.php.net/manual/en/book.tidy.php" onclick="window.open(this.href); return false;">PHP-TIDY</a>.]]></comment>
-							<frontend_type>select</frontend_type>
-							<source_model>maillog/source_minify</source_model>
+						</minify>
+						<special_label translate="label">
+							<label>Lifetime of the email history and email header colors</label>
+							<frontend_type>label</frontend_type>
 							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
-						</minify>
+						</special_label>
+						<special_config>
+							<frontend_model>maillog/adminhtml_config_special</frontend_model>
+							<backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
+							<sort_order>5</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</special_config>
+						<sending translate="label">
+							<label>Sending method</label>
+							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+							<sort_order>10</sort_order>
+							<show_in_default>0</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</sending>
 						<options translate="label">
 							<label>Options</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-							<sort_order>10</sort_order>
+							<sort_order>20</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -97,7 +113,7 @@
 							<label>Number of emails per page</label>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_number</source_model>
-							<sort_order>11</sort_order>
+							<sort_order>21</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -106,7 +122,7 @@
 							<label>Show the subject column</label>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>12</sort_order>
+							<sort_order>22</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -115,7 +131,7 @@
 							<label>Show the size column</label>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>13</sort_order>
+							<sort_order>23</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -124,7 +140,7 @@
 							<label>Show the created at column</label>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>14</sort_order>
+							<sort_order>24</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -132,7 +148,7 @@
 						<stats translate="label">
 							<label>Statistics</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-							<sort_order>20</sort_order>
+							<sort_order>30</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -141,7 +157,7 @@
 							<label>Number of emails</label>
 							<frontend_type>label</frontend_type>
 							<frontend_model>maillog/adminhtml_config_email</frontend_model>
-							<sort_order>21</sort_order>
+							<sort_order>31</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -150,7 +166,7 @@
 							<label>Table size</label>
 							<frontend_type>label</frontend_type>
 							<frontend_model>maillog/adminhtml_config_size</frontend_model>
-							<sort_order>22</sort_order>
+							<sort_order>32</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -163,7 +179,6 @@
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
-					<expanded>1</expanded>
 					<fields>
 						<enabled translate="label">
 							<label>Enable</label>
@@ -187,7 +202,6 @@
 							<label>Send Emails To</label>
 							<comment>Separate addresses by a space.</comment>
 							<frontend_type>text</frontend_type>
-							<!--backend_model>adminhtml/system_config_backend_email_address</backend_model-->
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -203,26 +217,26 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</sender_email_identity>
-						<template translate="label">
-							<label>Email Template</label>
-							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_email_template</source_model>
+						<test translate="label">
+							<label>Send a test</label>
+							<frontend_type>label</frontend_type>
+							<frontend_model>maillog/adminhtml_config_test</frontend_model>
 							<sort_order>5</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
-						</template>
+						</test>
 					</fields>
 				</email>
 				<sync translate="label comment">
-					<label><![CDATA[<abbr title="Application Programming Interface">API</abbr> synchonization]]></label>
+					<label><![CDATA[<abbr title="Application Programming Interface">API</abbr> synchronization]]></label>
 					<comment><![CDATA[
-						<p>Synchronization allow to synchronize customer data from <b>Magento</b> to your newsletter <b>System</b>.<br />It is performed in real time on the following events (whether from the backend or from the frontend):</p>
+						<p>Synchronization allow to synchronize customer data from <strong>Magento</strong> to your <strong>System</strong>.<br />It is performed in real time on the following events (whether from the backend or from the frontend):</p>
 						<ul>
 							<li>when customer login,</li>
 							<li>when saving or deleting a customer,</li>
 							<li>when saving or deleting a subscriber,</li>
-							<li>when saving a shipping address of a customer,</li>
+							<li>when saving a shipping or a billing address of a customer,</li>
 							<li>when invoicing an order.</li>
 						</ul>
 						<p><strong>Warning! We must enable synchronization only when configuring the synchronization is complete.</strong></p>
@@ -250,20 +264,11 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</type>
-						<background translate="label">
-							<label>Sync in background</label>
-							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>3</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</background>
 						<lifetime translate="label">
 							<label>Lifetime of the synchronization history</label>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_lifetime</source_model>
-							<sort_order>4</sort_order>
+							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -310,17 +315,11 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</mapping>
-						<mapping_customerid_field>
-							<sort_order>21</sort_order>
-							<show_in_default>0</show_in_default><!-- voir maillog/adminhtml_config_mapping -->
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</mapping_customerid_field>
 						<mapping_config translate="label">
 							<label>Configuration</label>
 							<frontend_type>textarea</frontend_type>
 							<frontend_model>maillog/adminhtml_config_mapping</frontend_model>
-							<sort_order>22</sort_order>
+							<sort_order>21</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -329,7 +328,7 @@
 				</sync>
 				<bounces translate="label comment">
 					<label>Invalid emails import</label>
-					<comment><![CDATA[<p>This import allows to import invalid emails from your newsletter <b>System</b> to <b>Magento</b>.<br />It is carried out punctually by cron task (maximum once per day) thanks to the newest file in the specified folder below.</p>]]></comment>
+					<comment><![CDATA[<p>This import allows to import invalid emails from your <strong>System</strong> to <strong>Magento</strong>.<br />It is carried out punctually by cron job (maximum once per day) thanks to the newest file in the specified folder below.</p>]]></comment>
 					<sort_order>5</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
@@ -346,7 +345,7 @@
 						</enabled>
 						<directory translate="label comment">
 							<label>Files location</label>
-							<comment><![CDATA[In <strong>var</strong> directory.]]></comment>
+							<comment><![CDATA[In <strong>var</strong> folder.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>2</sort_order>
 							<show_in_default>1</show_in_default>
@@ -355,7 +354,7 @@
 						</directory>
 						<format translate="label comment">
 							<label>File format</label>
-							<comment><![CDATA[Example: <strong>txt</strong> / <strong>csv;2</strong> / <strong>csv,3</strong> / <strong>csv,3"</strong>...]]></comment>
+							<comment><![CDATA[Examples: <strong>txt</strong> / <strong>csv;2</strong> / <strong>csv,3</strong> / <strong>csv,3"</strong>...<br />The file must be in <strong>utf-8</strong> (with or without BOM).<br />Use <strong>→</strong> for the tabulation.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
@@ -364,13 +363,23 @@
 						</format>
 						<cron_expr translate="label comment">
 							<label>Cron expression</label>
-							<comment><![CDATA[By default, everyday at 02:30 (<strong>30 2 * * *</strong>).<br />Maximum once per day.]]></comment>
+							<comment><![CDATA[By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Maximum once per day.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</cron_expr>
+						<unmark translate="label comment">
+							<label>Validate email addresses not present in the file</label>
+							<comment><![CDATA[If yes, <strong>all</strong> Magento customers not present in the file will be marked as having a valid email address.]]></comment>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>5</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</unmark>
 						<stats translate="label">
 							<label>Statistics</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
@@ -389,7 +398,7 @@
 							<show_in_store>0</show_in_store>
 						</stats_customer>
 						<stats_bounce translate="label">
-							<label>Number of bounces</label>
+							<label>Number of invalid emails</label>
 							<frontend_type>label</frontend_type>
 							<frontend_model>maillog/adminhtml_config_bounce</frontend_model>
 							<sort_order>12</sort_order>
@@ -409,7 +418,7 @@
 				</bounces>
 				<unsubscribers translate="label comment">
 					<label>Unsubscribers emails import</label>
-					<comment><![CDATA[<p>This import allows to import unsubscribed emails from your newsletter <b>System</b> to <b>Magento</b>.<br />It is carried out punctually by cron task (maximum once per day) thanks to the newest file in the specified folder below.</p>]]></comment>
+					<comment><![CDATA[<p>This import allows to import unsubscribed emails from your <strong>System</strong> to <strong>Magento</strong>.<br />It is carried out punctually by cron job (maximum once per day) thanks to the newest file in the specified folder below.</p>]]></comment>
 					<sort_order>6</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
@@ -426,7 +435,7 @@
 						</enabled>
 						<directory translate="label comment">
 							<label>Files location</label>
-							<comment><![CDATA[In <strong>var</strong> directory.]]></comment>
+							<comment><![CDATA[In <strong>var</strong> folder.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>2</sort_order>
 							<show_in_default>1</show_in_default>
@@ -435,7 +444,7 @@
 						</directory>
 						<format translate="label comment">
 							<label>File format</label>
-							<comment><![CDATA[Example: <strong>txt</strong> / <strong>csv;2</strong> / <strong>csv,3</strong> / <strong>csv,3"</strong>...]]></comment>
+							<comment><![CDATA[Examples: <strong>txt</strong> / <strong>csv;2</strong> / <strong>csv,3</strong> / <strong>csv,3"</strong>...<br />The file must be in <strong>utf-8</strong> (with or without BOM).<br />Use <strong>→</strong> for the tabulation.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
@@ -444,13 +453,23 @@
 						</format>
 						<cron_expr translate="label comment">
 							<label>Cron expression</label>
-							<comment><![CDATA[By default, everyday at 02:30 (<strong>30 2 * * *</strong>).<br />Maximum once per day.]]></comment>
+							<comment><![CDATA[By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Maximum once per day.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</cron_expr>
+						<subscribe translate="label comment">
+							<label>Subscribe customers not present in the file</label>
+							<comment><![CDATA[If yes, <strong>all</strong> Magento customers not present in the file will be subscribed to the newsletter.]]></comment>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>5</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</subscribe>
 						<stats translate="label">
 							<label>Statistics</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
@@ -489,5 +508,105 @@
 				</unsubscribers>
 			</groups>
 		</maillog>
+		<newsletter>
+			<groups>
+				<warn>
+					<frontend_model>maillog/adminhtml_config_warn</frontend_model>
+					<sort_order>0</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>1</show_in_website>
+					<show_in_store>1</show_in_store>
+				</warn>
+				<subscription>
+					<expanded>1</expanded>
+					<fields>
+						<confirm_title translate="label">
+							<label>Confirmation request email</label>
+							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+							<sort_order>10</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</confirm_title>
+						<confirm_email_identity>
+							<sort_order>11</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</confirm_email_identity>
+						<confirm_email_template>
+							<sort_order>12</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</confirm_email_template>
+						<confirm>
+							<sort_order>13</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</confirm>
+						<success_title translate="label">
+							<label>Subscription confirmation email</label>
+							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+							<sort_order>20</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</success_title>
+						<success_email_identity>
+							<sort_order>21</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</success_email_identity>
+						<success_email_template>
+							<sort_order>21</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</success_email_template>
+						<success_send translate="label">
+							<label>Send email</label>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>23</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</success_send>
+						<un_title translate="label">
+							<label>Unsubscription confirmation email</label>
+							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+							<sort_order>30</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</un_title>
+						<un_email_identity>
+							<sort_order>31</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</un_email_identity>
+						<un_email_template>
+							<sort_order>32</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</un_email_template>
+						<un_send translate="label">
+							<label>Send email</label>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>33</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+						</un_send>
+					</fields>
+				</subscription>
+			</groups>
+		</newsletter>
 	</sections>
 </config>

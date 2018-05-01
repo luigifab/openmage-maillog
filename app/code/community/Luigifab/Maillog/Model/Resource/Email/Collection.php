@@ -1,10 +1,11 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/08/11/2016
+ * Updated V/15/12/2017
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -21,5 +22,14 @@ class Luigifab_Maillog_Model_Resource_Email_Collection extends Mage_Core_Model_M
 
 	public function _construct() {
 		$this->_init('maillog/email');
+	}
+
+	public function deleteAll() {
+
+		$where = $this->getSelect()->getPart(Zend_Db_Select::WHERE);
+		if (is_array($where) && !empty($where))
+			Mage::getSingleton('core/resource')->getConnection('core_write')->delete($this->getMainTable(), implode(' ', $where));
+
+		return $this;
 	}
 }

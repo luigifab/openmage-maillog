@@ -1,10 +1,11 @@
 <?php
 /**
  * Created S/14/11/2015
- * Updated V/18/11/2016
+ * Updated D/25/03/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -17,35 +18,43 @@
  * GNU General Public License (GPL) for more details.
  */
 
-require_once(preg_replace('#app/code.+$#', 'app/Mage.php', __FILE__));
-$id       = (isset($argv[1])) ? intval($argv[1]) : 0;
-$website  = (isset($argv[2])) ? intval($argv[2]) : 1;
-$store    = (isset($argv[3])) ? $argv[3] : '';
-$username = (isset($argv[4])) ? $argv[4] : '';
+require_once(preg_replace('#app/code.+$#', 'app/Mage.php', $argv[0]));
+$action = (!empty($argv[1])) ? $argv[1] : ''; // update ou delete ou module/model:function
+$store  = (!empty($argv[2])) ? intval($argv[2]) : 0; // customer store id
+$email  = (!empty($argv[3])) ? $argv[3] : ''; // customer email
+$dev    = (!empty($argv[4])) ? true : false;
+$code   = (!empty($argv[5])) ? $argv[5] : ''; // store code
+$user   = (!empty($argv[6])) ? $argv[6] : ''; // admin user name
 
-if ($id > 0) {
+if (!empty($action) && !empty($store) && !empty($email)) {
 
-	Mage::app($store);
+	sleep(2);
 
-	if (isset($_SERVER['MAGE_IS_DEVELOPER_MODE']))
-		Mage::setIsDeveloperMode(true);
+	Mage::app($code);
+	Mage::setIsDeveloperMode($dev);
 
-	if (($store === 'admin') && ($username !== ''))
-		Mage::getSingleton('admin/session')->setUser(new Varien_Object(array('username' => $username)));
+	if (($code == 'admin') && !empty($user))
+		Mage::getSingleton('admin/session')->setData('user', new Varien_Object(array('username' => $user)));
 
-	for ($i = 0; $i < 5; $i++) {
-
-		$sync = Mage::getSingleton('maillog/sync')->load($id);
-
-		if ($sync->getId() > 0) {
-			$sync->backgroundSync($website, $store);
-			break;
+	try {
+		if ($action == 'update') {
+			Mage::getSingleton('maillog/sync')->updateNow($store, $email);
+			exit(0);
 		}
-		else {
-			Mage::log('Warning! Sync id #'.$id.' is not ready! Next try in 3 seconds... ('.($i + 1).'/5)', Zend_Log::ERR, 'maillog.log');
-			sleep(3);
+		else if ($action == 'delete') {
+			Mage::getSingleton('maillog/sync')->deleteNow($store, $email);
+			exit(0);
 		}
+		else if (strpos($action, ':') !== false) {
+			list($model, $method) = explode(':', $action);
+			Mage::getSingleton($model)->$method($store, $email);
+			exit(0);
+		}
+	}
+	catch (Exception $e) {
+		Mage::logException($e);
+		throw $e;
 	}
 }
 
-exit(0);
+exit(-1);

@@ -1,10 +1,11 @@
 <?php
 /**
  * Created V/19/06/2015
- * Updated M/08/11/2016
+ * Updated M/12/12/2017
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -19,18 +20,24 @@
 
 class Luigifab_Maillog_Block_Adminhtml_Config_Size extends Mage_Adminhtml_Block_System_Config_Form_Field {
 
+	public function render(Varien_Data_Form_Element_Abstract $element) {
+		$element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
+		return parent::render($element);
+	}
+
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
 
-		$resource = Mage::getSingleton('core/resource');
-		$read = $resource->getConnection('maillog_read');
+		$database = Mage::getSingleton('core/resource');
+		$read = $database->getConnection('core_read');
+		$conf = $read->getConfig();
 
 		$select = $read->select()
 			->from('information_schema.TABLES', '(data_length + index_length) AS size_bytes')
-			->where('table_schema = ?', Mage::getConfig()->getNode('global/resources/default_setup/connection/dbname'))
-			->where('table_name = ?', $resource->getTableName('luigifab_maillog'));
+			->where('table_schema = ?', $conf['dbname'])
+			->where('table_name = ?', $database->getTableName('luigifab_maillog'));
 
 		$element->setValue(floatval($read->fetchOne($select)));
 
-		return '<span id="'.$element->getHtmlId().'">'.$this->helper('maillog')->getNumberToHumanSize($element->getValue()).'</span>';
+		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $this->helper('maillog')->getNumberToHumanSize($element->getValue()));
 	}
 }

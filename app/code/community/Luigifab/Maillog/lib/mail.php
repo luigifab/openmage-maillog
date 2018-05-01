@@ -1,10 +1,11 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/18/11/2016
+ * Updated D/25/03/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -17,29 +18,35 @@
  * GNU General Public License (GPL) for more details.
  */
 
-require_once(preg_replace('#app/code.+$#', 'app/Mage.php', __FILE__));
-$id = (isset($argv[1])) ? intval($argv[1]) : 0;
+require_once(preg_replace('#app/code.+$#', 'app/Mage.php', $argv[0]));
+$id   = (!empty($argv[1])) ? intval($argv[1]) : 0;
+$dev  = (!empty($argv[2])) ? true : false;
+$code = (!empty($argv[3])) ? $argv[3] : ''; // store code
 
-if ($id > 0) {
+if (!empty($id)) {
 
-	Mage::app();
+	Mage::app($code);
+	Mage::setIsDeveloperMode($dev);
 
-	if (isset($_SERVER['MAGE_IS_DEVELOPER_MODE']))
-		Mage::setIsDeveloperMode(true);
+	try {
+		for ($i = 0; $i < 5; $i++) {
 
-	for ($i = 0; $i < 5; $i++) {
+			$mail = Mage::getModel('maillog/email')->load($id);
 
-		$mail = Mage::getModel('maillog/email')->load($id);
-
-		if ($mail->getId() > 0) {
-			$mail->send(true);
-			break;
+			if (!empty($mail->getId())) {
+				$mail->sendNow();
+				exit(0);
+			}
+			else {
+				Mage::log('Warning! Mail id #'.$id.' is not ready! Next try in 3 seconds... ('.($i + 1).'/5)', Zend_Log::ERR, 'maillog.log');
+				sleep(3);
+			}
 		}
-		else {
-			Mage::log('Warning! Mail id #'.$id.' is not ready! Next try in 3 seconds... ('.($i + 1).'/5)', Zend_Log::ERR, 'maillog.log');
-			sleep(3);
-		}
+	}
+	catch (Exception $e) {
+		Mage::logException($e);
+		throw $e;
 	}
 }
 
-exit(0);
+exit(-1);

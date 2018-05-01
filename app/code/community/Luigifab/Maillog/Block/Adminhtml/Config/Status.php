@@ -1,10 +1,11 @@
 <?php
 /**
  * Created D/15/05/2016
- * Updated M/08/11/2016
+ * Updated V/15/09/2017
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -18,6 +19,11 @@
  */
 
 class Luigifab_Maillog_Block_Adminhtml_Config_Status extends Mage_Adminhtml_Block_System_Config_Form_Field {
+
+	public function render(Varien_Data_Form_Element_Abstract $element) {
+		$element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
+		return parent::render($element);
+	}
 
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
 		$key = (strpos($element->getHtmlId(), 'bounces') !== false) ? 'bounces' : 'unsubscribers';

@@ -1,10 +1,11 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/08/11/2016
+ * Updated J/22/03/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -23,7 +24,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 		$result = parent::_validateSecretKey();
 
-		if (Mage::getSingleton('admin/session')->isLoggedIn() && ($this->getFullActionName() === 'adminhtml_maillog_history_view') && !$result) {
+		if (Mage::getSingleton('admin/session')->isLoggedIn() && ($this->getFullActionName() == 'adminhtml_maillog_history_view') && !$result) {
 			$this->getRequest()->setParam(Mage_Adminhtml_Model_Url::SECRET_KEY_PARAM_NAME, Mage::getSingleton('adminhtml/url')->getSecretKey());
 			$result = parent::_validateSecretKey();
 		}
@@ -37,9 +38,11 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 	public function indexAction() {
 
-		if (!is_null($this->getRequest()->getParam('isAjax')) && !is_null($this->getRequest()->getParam('back')))
+		$isAjax = ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax'))) ? true : false;
+
+		if ($isAjax && !empty($this->getRequest()->getParam('back')))
 			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_history_tab')->toHtml());
-		else if (!is_null($this->getRequest()->getParam('isAjax')))
+		else if ($isAjax)
 			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_history_grid')->toHtml());
 		else
 			$this->loadLayout()->_setActiveMenu('tools/maillog')->renderLayout();
@@ -49,12 +52,12 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 		$email = Mage::getModel('maillog/email')->load(intval($this->getRequest()->getParam('id', 0)));
 
-		if ($email->getId() > 0) {
+		if (!empty($email->getId())) {
 			Mage::register('current_email', $email);
 			$this->loadLayout()->_setActiveMenu('tools/maillog')->renderLayout();
 		}
 		else {
-			$this->redirectBack();
+			$this->_redirectBack();
 		}
 	}
 
@@ -65,7 +68,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		try {
 			if (!Mage::getSingleton('admin/session')->isFirstPageAfterLogin()) {
 
-				if ((($id = $this->getRequest()->getParam('id', false)) === false) || !is_numeric($id))
+				if (empty($id = $this->getRequest()->getParam('id')) || !is_numeric($id))
 					Mage::throwException($this->__('The <em>%s</em> field is a required field.', 'id'));
 
 				Mage::getModel('maillog/email')->load($id)->delete();
@@ -76,7 +79,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 			Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
 		}
 
-		$this->redirectBack();
+		$this->_redirectBack();
 	}
 
 	public function resendAction() {
@@ -86,32 +89,27 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		try {
 			if (!Mage::getSingleton('admin/session')->isFirstPageAfterLogin()) {
 
-				if ((($id = $this->getRequest()->getParam('id', false)) === false) || !is_numeric($id))
+				if (empty($id = $this->getRequest()->getParam('id')) || !is_numeric($id))
 					Mage::throwException($this->__('The <em>%s</em> field is a required field.', 'id'));
 
-				Mage::getModel('maillog/email')->load($id)->setStatus('pending')->save()->send();
-				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully resent (warning, dates are not updated).', $id));
+				Mage::getModel('maillog/email')->load($id)->setData('status', 'pending')->save()->send();
+				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d will be resent (warning, dates are not updated).', $id));
 			}
 		}
 		catch (Exception $e) {
 			Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
 		}
 
-		$this->redirectBack();
+		$this->_redirectBack();
 	}
 
-	private function redirectBack() {
+	private function _redirectBack() {
 
-		if ($this->getRequest()->getParam('back') === 'order') {
-			$this->_redirect('*/sales_order/view',
-				array('order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_grid_order'));
-		}
-		else if ($this->getRequest()->getParam('back') === 'customer') {
-			$this->_redirect('*/customer/edit',
-				array('id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_grid_customer'));
-		}
-		else {
+		if ($this->getRequest()->getParam('back') == 'order')
+			$this->_redirect('*/sales_order/view', array('order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_order_grid'));
+		else if ($this->getRequest()->getParam('back') == 'customer')
+			$this->_redirect('*/customer/edit', array('id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_customer_grid'));
+		else
 			$this->_redirect('*/*/index');
-		}
 	}
 }

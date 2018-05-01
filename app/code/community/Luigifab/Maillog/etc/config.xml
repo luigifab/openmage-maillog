@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated M/08/11/2016
+ * Updated S/24/02/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -20,7 +21,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>3.0.0</version>
+			<version>3.1.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -39,46 +40,38 @@
 				<class>Luigifab_Maillog_Model</class>
 				<resourceModel>maillog_resource</resourceModel>
 			</maillog>
-			<core>
-				<rewrite>
-					<email_queue>Luigifab_Maillog_Model_Rewrite_Queue</email_queue><!-- Magento 1.9.1.0 et + -->
-				</rewrite>
-			</core>
 			<maillog_resource>
 				<class>Luigifab_Maillog_Model_Resource</class>
 				<entities>
 					<email>
 						<table>luigifab_maillog</table>
 					</email>
-					<bounce>
-						<table>luigifab_maillog_bounce</table>
-					</bounce>
 					<sync>
 						<table>luigifab_maillog_sync</table>
 					</sync>
 				</entities>
 			</maillog_resource>
+			<core>
+				<rewrite>
+					<email_queue>Luigifab_Maillog_Model_Rewrite_Queue</email_queue><!-- Magento 1.9.1.0 et + -->
+				</rewrite>
+			</core>
+			<newsletter>
+				<rewrite>
+					<subscriber>Luigifab_Maillog_Model_Rewrite_Subscriber</subscriber>
+				</rewrite>
+			</newsletter>
 		</models>
 		<resources>
 			<maillog_setup>
 				<setup>
 					<module>Luigifab_Maillog</module>
-					<class>Mage_Core_Model_Resource_Setup</class>
+					<class>Mage_Eav_Model_Entity_Setup</class>
 				</setup>
 				<connection>
 					<use>core_setup</use>
 				</connection>
 			</maillog_setup>
-			<maillog_write>
-				<connection>
-					<use>core_write</use>
-				</connection>
-			</maillog_write>
-			<maillog_read>
-				<connection>
-					<use>core_read</use>
-				</connection>
-			</maillog_read>
 		</resources>
 		<template>
 			<email>
@@ -166,7 +159,7 @@
 			<adminhtml>
 				<args>
 					<modules>
-						<luigifab_maillog before="Mage_Adminhtml">Luigifab_Maillog</luigifab_maillog>
+						<Luigifab_Maillog before="Mage_Adminhtml">Luigifab_Maillog</Luigifab_Maillog>
 					</modules>
 				</args>
 			</adminhtml>
@@ -223,6 +216,11 @@
 					<model>maillog/observer::sendEmailReport</model>
 				</run>
 			</maillog_send_report>
+			<maillog_clean_old_data>
+				<run>
+					<model>maillog/observer::cleanOldData</model>
+				</run>
+			</maillog_clean_old_data>
 			<maillog_bounces_import>
 				<run>
 					<model>maillog/observer::bouncesFileImport</model>
@@ -246,14 +244,21 @@
 				<enabled>0</enabled>
 				<recipient_email>hello@example.org</recipient_email>
 				<sender_email_identity>general</sender_email_identity>
-				<template>maillog_email_template</template>
 			</email>
 			<bounces>
 				<cron_expr>30 2 * * *</cron_expr>
+				<unmark>1</unmark>
 			</bounces>
 			<unsubscribers>
 				<cron_expr>30 2 * * *</cron_expr>
+				<subscribe>1</subscribe>
 			</unsubscribers>
 		</maillog>
+		<newsletter>
+			<subscription>
+				<success_send>1</success_send>
+				<un_send>1</un_send>
+			</subscription>
+		</newsletter>
 	</default>
 </config>

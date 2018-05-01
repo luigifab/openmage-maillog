@@ -1,10 +1,11 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated M/08/11/2016
+ * Updated M/27/02/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -17,31 +18,39 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Block_Adminhtml_History_Tab extends Luigifab_Maillog_Block_Adminhtml_History_Grid
- implements Mage_Adminhtml_Block_Widget_Tab_Interface {
+use Mage_Adminhtml_Block_Widget_Tab_Interface as Mage_Adminhtml_BWT_Interface;
+class Luigifab_Maillog_Block_Adminhtml_History_Tab extends Luigifab_Maillog_Block_Adminhtml_History_Grid implements Mage_Adminhtml_BWT_Interface {
 
 	public function getTabLabel() {
-		return $this->__('Transactionnal emails');
+		return $this->__('Transactional emails');
 	}
 
 	public function getTabTitle() {
 		return null;
 	}
 
+	public function isHidden() {
+		return false;
+	}
+
 	public function canShowTab() {
 
 		if (!Mage::getSingleton('admin/session')->isAllowed('tools/maillog'))
 			return false;
-		else if (is_object(Mage::registry('current_order')))
+		else if (is_object(Mage::registry('current_order')) && !empty(Mage::registry('current_order')->getId()))
 			return true;
-		else if (is_object(Mage::registry('current_customer')) && (Mage::registry('current_customer')->getId() > 0))
+		else if (is_object(Mage::registry('current_customer')) && !empty(Mage::registry('current_customer')->getId()))
 			return true;
 		else
 			return false;
 	}
 
-	public function isHidden() {
-		return false;
+	public function getId() {
+
+		if (is_object($order = Mage::registry('current_order')))
+			return 'maillog_order_grid_'.$order->getId();
+		else if (is_object($customer = Mage::registry('current_customer')))
+			return 'maillog_customer_grid_'.$customer->getId();
 	}
 
 
@@ -49,24 +58,24 @@ class Luigifab_Maillog_Block_Adminhtml_History_Tab extends Luigifab_Maillog_Bloc
 
 		parent::__construct();
 
-		if (!is_object(Mage::registry('current_order')) && ($this->getRequest()->getParam('back') === 'order')) {
+		if (!is_object(Mage::registry('current_order')) && ($this->getRequest()->getParam('back') == 'order')) {
 			$order = Mage::getModel('sales/order')->load($this->getRequest()->getParam('bid'));
 			Mage::register('current_order', $order);
 		}
-		else if (!is_object(Mage::registry('current_customer')) && ($this->getRequest()->getParam('back') === 'customer')) {
+		else if (!is_object(Mage::registry('current_customer')) && ($this->getRequest()->getParam('back') == 'customer')) {
 			$customer = Mage::getModel('customer/customer')->load($this->getRequest()->getParam('bid'));
 			Mage::register('current_customer', $customer);
 		}
 
-		if (is_object(Mage::registry('current_order'))) {
-			$this->setId('maillog_grid_order');
-			$this->back = array('back' => 'order', 'bid' => Mage::registry('current_order')->getId());
-			$this->_defaultFilter = array('mail_subject' => Mage::registry('current_order')->getIncrementId());
+		if (is_object($order = Mage::registry('current_order'))) {
+			$this->setId('maillog_order_grid_'.$order->getId());
+			$this->back = array('back' => 'order', 'bid' => $order->getId());
+			$this->_defaultFilter = array('mail_subject' => $order->getData('increment_id'));
 		}
-		else if (is_object(Mage::registry('current_customer'))) {
-			$this->setId('maillog_grid_customer');
-			$this->back = array('back' => 'customer', 'bid' => Mage::registry('current_customer')->getId());
-			$this->_defaultFilter = array('mail_recipients' => Mage::registry('current_customer')->getEmail());
+		else if (is_object($customer = Mage::registry('current_customer'))) {
+			$this->setId('maillog_customer_grid_'.$customer->getId());
+			$this->back = array('back' => 'customer', 'bid' => $customer->getId());
+			$this->_defaultFilter = array('mail_recipients' => $customer->getData('email'));
 		}
 	}
 
@@ -74,12 +83,12 @@ class Luigifab_Maillog_Block_Adminhtml_History_Tab extends Luigifab_Maillog_Bloc
 
 		$collection = Mage::getResourceModel('maillog/email_collection');
 
-		if (is_object(Mage::registry('current_order'))) {
-			$collection->addFieldToFilter('mail_recipients', array('like' => '%'.Mage::registry('current_order')->getCustomerEmail().'%'));
-			//$collection->addFieldToFilter('mail_subject', array('like' => '%'.Mage::registry('current_order')->getIncrementId().'%'));
+		if (is_object($order = Mage::registry('current_order'))) {
+			$collection->addFieldToFilter('mail_recipients', array('like' => '%'.$order->getData('customer_email').'%'));
+			//$collection->addFieldToFilter('mail_subject',  array('like' => '%'.$order->getData('increment_id').'%'));
 		}
-		else if (is_object(Mage::registry('current_customer'))) {
-			$collection->addFieldToFilter('mail_recipients', array('like' => '%'.Mage::registry('current_customer')->getEmail().'%'));
+		else if (is_object($customer = Mage::registry('current_customer'))) {
+			$collection->addFieldToFilter('mail_recipients', array('like' => '%'.$customer->getData('email').'%'));
 		}
 
 		$this->setCollection($collection);
@@ -96,10 +105,6 @@ class Luigifab_Maillog_Block_Adminhtml_History_Tab extends Luigifab_Maillog_Bloc
 
 
 	public function _toHtml() {
-
-		if ($this->getRequest()->getParam('isAjax', false))
-			return parent::_toHtml();
-		else
-			return Mage::getBlockSingleton('core/template')->setTemplate('luigifab/maillog/customer.phtml')->toHtml().parent::_toHtml();
+		return ($this->getLayout()->getBlock('info')) ? $this->getLayout()->getBlock('info')->toHtml().parent::_toHtml() : parent::_toHtml();
 	}
 }

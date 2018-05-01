@@ -1,10 +1,11 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated V/11/11/2016
+ * Updated J/29/03/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -25,7 +26,7 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 		parent::__construct();
 
-		$this->setId('maillogsync_grid');
+		$this->setId('maillog_sync_grid');
 		$this->setDefaultSort('sync_id');
 		$this->setDefaultDir('desc');
 
@@ -33,12 +34,34 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 		$this->setSaveParametersInSession(true);
 		$this->setPagerVisibility(true);
 		$this->setFilterVisibility(true);
-		$this->setDefaultLimit(max($this->_defaultLimit, 200));
+		$this->setDefaultLimit(max($this->_defaultLimit, intval(Mage::getStoreConfig('maillog/general/number'))));
 	}
 
 	protected function _prepareCollection() {
 		$this->setCollection(Mage::getResourceModel('maillog/sync_collection'));
 		return parent::_prepareCollection();
+	}
+
+	protected function _addColumnFilterToCollection($column) {
+
+		if (in_array($column->getId(), array('details'))) {
+			$infos = Mage::getVersionInfo();
+			$words = explode(' ', $column->getFilter()->getValue());
+			if (version_compare(Mage::getVersion(), '1.7', '>=') || ($infos['minor'] == 5)) { // Magento 1.5 ou Magento 1.7 et +
+				foreach ($words as $word)
+					$this->getCollection()->addFieldToFilter(array('email', 'details'),
+						array(array('like' => '%'.$word.'%'), array('like' => '%'.$word.'%')));
+			}
+			else {
+				foreach ($words as $word)
+					$this->getCollection()->addFieldToFilter('details', array('like' => '%'.$word.'%'));
+			}
+		}
+		else {
+			parent::_addColumnFilterToCollection($column);
+		}
+
+		return $this;
 	}
 
 	protected function _prepareColumns() {
@@ -51,13 +74,10 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 			'frame_callback' => array($this, 'decorateId')
 		));
 
-		$this->addColumn('email', array(
-			'header'    => $this->__('Email'),
-			'index'     => 'email'
-		));
-
+		$infos = Mage::getVersionInfo();
 		$this->addColumn('details', array(
-			'header'    => $this->__('Details'),
+			'header'    => (version_compare(Mage::getVersion(), '1.7', '>=') || ($infos['minor'] == 5)) ?
+				$this->__('Email').' / '.$this->__('Details') : $this->__('Details'),
 			'index'     => 'details',
 			'frame_callback' => array($this, 'decorateDetails')
 		));
@@ -98,10 +118,10 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 			'type'      => 'options',
 			'options'   => array(
 				'pending' => $this->__('Pending'),
+				'running' => $this->__('Running'),
 				'success' => $this->__('Success'),
 				'error'   => $this->helper('maillog')->_('Error')
 			),
-			'align'     => 'status',
 			'width'     => '125px',
 			'frame_callback' => array($this, 'decorateStatus')
 		));
@@ -121,7 +141,7 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 
 	public function getRowClass($row) {
-		return (intval($this->getRequest()->getParam('id', 0)) === intval($row->getData('sync_id'))) ? 'active' : '';
+		return '';
 	}
 
 	public function getRowUrl($row) {
@@ -130,27 +150,18 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 		if (!array_key_exists($email, $this->cache))
 			$id = Mage::getResourceModel('customer/customer_collection')->addAttributeToFilter('email', $email)->getFirstItem()->getId();
-		if (isset($id) && ($id > 0))
+		if (!empty($id))
 			$this->cache[$email] = array('id' => $id);
 
-		return (isset($this->cache[$email])) ? $this->getUrl('*/customer/edit', $this->cache[$email]) : null;
+		return (!empty($this->cache[$email])) ? $this->getUrl('*/customer/edit', $this->cache[$email]) : false;
 	}
 
 	public function decorateAction($value, $row, $column, $isExport) {
-
-		$email = $row->getData('email');
-
-		if (!array_key_exists($email, $this->cache))
-			$id = Mage::getResourceModel('customer/customer_collection')->addAttributeToFilter('email', $email)->getFirstItem()->getId();
-		if (isset($id) && ($id > 0))
-			$this->cache[$email] = array('id' => $id);
-
-		if (isset($this->cache[$email]))
-			return '<a href="'.$this->getUrl('*/customer/edit', $this->cache[$email]).'">'.$this->__('Edit').'</a>';
+		return (!empty($url = $this->getRowUrl($row))) ? sprintf('<a href="%s">%s</a>', $url, $this->__('View')) : '';
 	}
 
 	public function decorateStatus($value, $row, $column, $isExport) {
-		return '<span class="grid-'.$row->getData('status').'">'.$value.'</span>';
+		return sprintf('<span class="maillog-status grid-%s">%s</span>', $row->getData('status'), $value);
 	}
 
 	public function decorateDuration($value, $row, $column, $isExport) {
@@ -163,20 +174,20 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 	public function decorateId($value, $row, $column, $isExport) {
 		return (intval($this->getRequest()->getParam('id', 0)) === intval($row->getData('sync_id'))) ?
-			'<strong>'.$row->getData('sync_id').'</strong>' : $row->getData('sync_id');
+			sprintf('<strong>%s</strong>', $value) : $value;
 	}
 
 	public function decorateDetails($value, $row, $column, $isExport) {
 
-		$text = nl2br(htmlspecialchars($row->getData('details')));
+		$text = 'For '.$row->getData('email').' '.$row->getData('store_id').' / '.nl2br(htmlspecialchars($row->getData('details')));
 
-		// http://stackoverflow.com/a/19907844
-		// on remplace le deuxième br s'il y en a au moins 7 par la div (d'où le 2-1)
-		if (substr_count($text, '<br />') >= 7) {
+		// on remplace le second br s'il y en a au moins 8 (d'où le 2-1)
+		// https://stackoverflow.com/a/19907844
+		if (substr_count($text, '<br />') >= 8) {
 			preg_match_all('#<br \/>#', $text, $matches, PREG_OFFSET_CAPTURE);
 			return substr_replace($text, '<div class="details2">', $matches[0][2-1][1], strlen('<br \/>')).'</div>';
 		}
-		else if (substr_count($text, '<br />') >= 2) {
+		else if (substr_count($text, '<br />') >= 3) {
 			preg_match_all('#<br \/>#', $text, $matches, PREG_OFFSET_CAPTURE);
 			return substr_replace($text, '<div class="details1">', $matches[0][2-1][1], strlen('<br \/>')).'</div>';
 		}

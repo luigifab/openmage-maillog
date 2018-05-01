@@ -1,10 +1,11 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/08/11/2016
+ * Updated J/22/03/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -25,7 +26,7 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 
 	public function indexAction() {
 
-		if (!is_null($this->getRequest()->getParam('isAjax')))
+		if ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax')))
 			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_sync_grid')->toHtml());
 		else
 			$this->loadLayout()->_setActiveMenu('tools/maillog_sync')->renderLayout();
@@ -33,15 +34,26 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 
 	public function downloadAction() {
 
-		$basedir = realpath(Mage::getBaseDir('var').'/'.Mage::getStoreConfig('maillog/'.$this->getRequest()->getParam('file').'/directory')).'/';
+		$basedir = Mage::getBaseDir('var').'/'.Mage::getStoreConfig('maillog/'.$this->getRequest()->getParam('file').'/directory').'/';
 
 		if (is_file($basedir.'status.dat') && is_readable($basedir.'status.dat')) {
 
-			$file = unserialize(file_get_contents($basedir.'status.dat'));
-			$file = (isset($file['file'])) ? $basedir.$file['file'] : null;
+			$file = @unserialize(file_get_contents($basedir.'status.dat'));
 
-			if (is_file($file) && is_readable($file))
-				$this->_prepareDownloadResponse(basename($file), file_get_contents($file), mime_content_type($file));
+			if (!empty($file['file'])) {
+
+				$file = $file['file'];
+				$file = $basedir.'done/'.substr($file, 0, strpos($file, '-') - 2).'/'.$file;
+
+				$ip = (!empty(getenv('HTTP_X_FORWARDED_FOR'))) ? explode(',', getenv('HTTP_X_FORWARDED_FOR')) : false;
+				$ip = (!empty($ip)) ? array_pop($ip) : getenv('REMOTE_ADDR');
+				$ip = (preg_match('#^::ffff:[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$#', $ip) === 1) ? substr($ip, 7) : $ip;
+
+				Mage::log(sprintf('Client %s download %s', $ip, $file), Zend_Log::DEBUG, 'maillog.log');
+
+				if (is_file($file) && is_readable($file))
+					$this->_prepareDownloadResponse(basename($file), file_get_contents($file), mime_content_type($file));
+			}
 		}
 	}
 }

@@ -1,10 +1,11 @@
 <?php
 /**
  * Created D/05/04/2015
- * Updated M/08/11/2016
+ * Updated M/27/02/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -22,12 +23,13 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 	public function addMessageToQueue() {
 
 		// ci-dessous une partie de la méthode Mage_Core_Model_Email_Queue::send()
-		// cela permet d'envoyer immédiatement l'email et donc de désactiver la fil d'attente de Magento 1.9.1.0+
+		// cela permet d'envoyer immédiatement l'email et donc de désactiver la file d'attente de Magento 1.9.1.0 et +
 		if (Mage::getStoreConfigFlag('maillog/general/enabled')) {
 
-			$parameters = new Varien_Object($this->getMessageParameters());
-			if ($parameters->getReturnPathEmail() !== null) {
-				$mailTransport = new Zend_Mail_Transport_Sendmail('-f'.$parameters->getReturnPathEmail());
+			$parameters = $this->getMessageParameters();
+
+			if (!empty($parameters['return_path_email'])) {
+				$mailTransport = new Zend_Mail_Transport_Sendmail('-f'.$parameters['return_path_email']);
 				Zend_Mail::setDefaultTransport($mailTransport);
 			}
 
@@ -47,21 +49,20 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 				}
 			}
 
-			if ($parameters->getIsPlain())
-				$mailer->setBodyText($this->getMessageBody());
+			if (!empty($parameters['is_plain']) && $parameters['is_plain'])
+				$mailer->setBodyText($this->getData('message_body'));
 			else
-				$mailer->setBodyHTML($this->getMessageBody());
+				$mailer->setBodyHTML($this->getData('message_body'));
 
-			$mailer->setSubject('=?utf-8?B?'.base64_encode($parameters->getSubject()).'?=');
-			$mailer->setFrom($parameters->getFromEmail(), $parameters->getFromName());
+			$mailer->setSubject('=?utf-8?B?'.base64_encode($parameters['subject']).'?=');
+			$mailer->setFrom($parameters['from_email'], (!empty($parameters['from_name'])) ? $parameters['from_name'] : null);
 
-			if ($parameters->getReplyTo() !== null)
-				$mailer->setReplyTo($parameters->getReplyTo());
-			if ($parameters->getReturnTo() !== null)
-				$mailer->setReturnPath($parameters->getReturnTo());
+			if (!empty($parameters['reply_to']))
+				$mailer->setReplyTo($parameters['reply_to']);
+			if (!empty($parameters['return_to']))
+				$mailer->setReturnPath($parameters['return_to']);
 
 			$mailer->send();
-
 			return $this;
 		}
 		else {
@@ -72,7 +73,7 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 	public function send() {
 
 		if (Mage::getStoreConfigFlag('maillog/general/enabled'))
-			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_send_all" cron job. For more informations, read: https://redmine.luigifab.info/projects/magento/wiki/maillog');
+			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_send_all" cron job. For more information read: https://www.luigifab.info/magento/maillog');
 		else
 			return parent::send();
 	}
@@ -80,7 +81,7 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 	public function cleanQueue() {
 
 		if (Mage::getStoreConfigFlag('maillog/general/enabled'))
-			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_clean_up" cron job. For more informations, read: https://redmine.luigifab.info/projects/magento/wiki/maillog');
+			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_clean_up" cron job. For more information read: https://www.luigifab.info/magento/maillog');
 		else
 			return parent::cleanQueue();
 	}

@@ -1,10 +1,11 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/08/11/2016
+ * Updated S/03/03/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -23,12 +24,12 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		parent::__construct();
 
-		$email  = Mage::registry('current_email');
-		$params = array('id' => $email->getId(), 'back' => $this->getRequest()->getParam('back'), 'bid' => $this->getRequest()->getParam('bid'));
+		$object = Mage::registry('current_email');
+		$params = array('id' => $object->getId(), 'back' => $this->getRequest()->getParam('back'), 'bid' => $this->getRequest()->getParam('bid'));
 
 		$this->_controller = 'adminhtml_history';
 		$this->_blockGroup = 'emaillog';
-		$this->_headerText = $this->__('Email number %d - %s', $email->getId(), htmlentities($email->getMailSubject()));
+		$this->_headerText = $this->__('Email number %d - %s', $object->getId(), htmlentities($object->getData('mail_subject')));
 
 		$this->_removeButton('add');
 
@@ -44,7 +45,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 			'class'   => 'delete'
 		));
 
-		if (Mage::getStoreConfigFlag('maillog/general/send') && !in_array($email->getStatus(), array('notsent', 'bounce'))) {
+		if (Mage::getStoreConfigFlag('maillog/general/send') && empty($object->getData('deleted')) &&
+		    !in_array($object->getData('status'), array('notsent', 'bounce'))) {
 			$this->_addButton('resend', array(
 				'label'   => $this->__('Resend email'),
 				'onclick' => "deleteConfirm('".addslashes($this->__('Are you sure?'))."', '".$this->getUrl('*/*/resend', $params)."');",
@@ -54,61 +56,60 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$this->_addButton('view', array(
 			'label'   => $this->__('View'),
-			'onclick' => "window.open('".$email->getEmbedUrl('index', array('nomark' => 1, '_store' => Mage::app()->getWebsite(true)->getDefaultGroup()->getDefaultStoreId()))."');",
+			'onclick' => "window.open('".$object->getEmbedUrl('index', array('nomark' => 1, '_store' => Mage::app()->getDefaultStoreView()->getId()))."');",
 			'class'   => 'go'
 		));
 	}
 
 	public function getGridHtml() {
 
-		$help  = $this->helper('maillog');
-		$email = Mage::registry('current_email');
-		$date  = Mage::getSingleton('core/locale'); //date($date, $format, $locale = null, $useTimezone = null)
+		$object = Mage::registry('current_email');
+		$class  = 'class="maillog-status grid-'.$object->getData('status').'"';
+		$help   = $this->helper('maillog');
 
-		$data  = str_replace(
-			array('adminhtml/base/default/images/luigifab/maillog', '<body style="'),
-			array('frontend/default/default/images/luigifab/maillog', '<body style="overflow-y:hidden; '),
-			$email->toHtml(true) // true pour nomark
-		);
-
-		if ($email->getStatus() === 'read')
+		// status
+		if ($object->getData('status') == 'read')
 			$status = $this->__('Open/read');
-		else if ($email->getStatus() === 'error')
+		else if ($object->getData('status') == 'error')
 			$status = $this->helper('maillog')->_('Error');
-		else if ($email->getStatus() === 'notsent')
+		else if ($object->getData('status') == 'notsent')
 			$status = $this->__('Unsent');
-		else if ($email->getStatus() === 'bounce')
-			$status = $this->__('<span>Blocked</span> Invalid (bounce)');
+		else if ($object->getData('status') == 'bounce')
+			$status = $this->__('Blocked');
 		else
-			$status = $this->__(ucfirst($email->getStatus()));
+			$status = $this->__(ucfirst($object->getData('status')));
 
-		$html = array();
+		// html
+		$html   = array();
 		$html[] = '<div class="content">';
 		$html[] = '<div>';
 		$html[] = '<ul>';
-		$html[] = '<li>'.$this->__('Created At: %s', $date->date($email->getCreatedAt(), Zend_Date::ISO_8601)).'</li>';
+		$html[] = '<li>'.$this->__('Created At: %s', $this->formatDate($object->getData('created_at'))).'</li>';
 
-		if (!in_array($email->getSentAt(), array('', '0000-00-00 00:00:00', null))) {
+		if (!in_array($object->getData('sent_at'), array('', '0000-00-00 00:00:00', null))) {
 
-			$html[] = '<li><strong>'.$this->__('Sent At: %s', $date->date($email->getSentAt(), Zend_Date::ISO_8601)).'</strong></li>';
+			$html[] = '<li><strong>'.$this->__('Sent At: %s', $this->formatDate($object->getData('sent_at'))).'</strong></li>';
 
-			$duration = $help->getHumanDuration($email);
-			if (strlen($duration) > 0)
+			$duration = $help->getHumanDuration($object);
+			if (!empty($duration))
 				$html[] = '<li>'.$this->__('Duration: %s', $duration).'</li>';
 		}
 
 		$html[] = '</ul>';
 		$html[] = '<ul>';
-		$html[] = '<li><strong class="status-'.$email->getStatus().'">'.$this->__('Status: <span>%s</span>', $status).'</strong></li>';
+		$html[] = '<li><strong">'.$this->__('Status: <span %s>%s</span>', $class, $status).'</strong></li>';
 
-		if ($email->getSize() > 0)
-			$html[] = '<li>'.$this->__('Approximate size: %s', $help->getNumberToHumanSize($email->getSize())).'</li>';
+		if (!empty($object->getSize()))
+			$html[] = '<li>'.$this->__('Approximate size: %s', $help->getNumberToHumanSize($object->getSize())).'</li>';
+		if ($object->getData('mail_sender'))
+			$html[] = '<li>'.$this->__('Sender: %s', $help->getHumanEmailAddress($object->getData('mail_sender'))).'</li>';
 
-		$html[] = '<li>'.$this->__('Recipient(s): %s', $help->getHumanRecipients($email)).'</li>';
+		$html[] = '<li>'.$this->__('Recipient(s): %s', $help->getHumanEmailAddress($object->getData('mail_recipients'))).'</li>';
 		$html[] = '</ul>';
 		$html[] = '</div>';
 
-		$html[] = '<iframe srcdoc="data:text/html;base64,'.base64_encode('<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>').'" type="text/html" onload="this.contentDocument.body.parentNode.innerHTML = decodeURIComponent(escape(window.atob(this.firstChild.nodeValue))); this.style.height = (this.contentDocument.body.scrollHeight + 40) + \'px\';">'.base64_encode($data).'</iframe>';
+		$data = str_replace('<body style="', '<body style="overflow-y:hidden; ', $object->toHtml(true)); // true pour nomark
+		$html[] = '<iframe srcdoc="data:text/html;base64,'.base64_encode('<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>').'" type="text/html" scrolling="no" onload="this.contentDocument.body.parentNode.innerHTML = decodeURIComponent(escape(window.atob(this.firstChild.nodeValue))); this.style.height = this.contentDocument.body.scrollHeight + \'px\';">'.base64_encode($data).'</iframe>';
 		$html[] = '</div>';
 
 		return implode("\n", $html);
@@ -116,17 +117,22 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 	private function getBackUrl() {
 
-		if ($this->getRequest()->getParam('back') === 'order')
+		if ($this->getRequest()->getParam('back') == 'order')
 			return $this->getUrl('*/sales_order/view',
-				array('order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_grid_order'));
-		else if ($this->getRequest()->getParam('back') === 'customer')
+				array('order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_order_grid'));
+		else if ($this->getRequest()->getParam('back') == 'customer')
 			return $this->getUrl('*/customer/edit',
-				array('id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_grid_customer'));
+				array('id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_customer_grid'));
 		else
 			return $this->getUrl('*/*/index');
 	}
 
 	protected function _prepareLayout() {
 		//return parent::_prepareLayout();
+	}
+
+	public function formatDate($date = null, $format = Zend_Date::DATETIME_LONG, $showTime = false) {
+		$object = Mage::getSingleton('core/locale');
+		return str_replace($object->date($date)->toString(Zend_Date::TIMEZONE), '', $object->date($date)->toString($format));
 	}
 }

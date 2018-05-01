@@ -1,0 +1,108 @@
+<?php
+/**
+ * Created D/13/08/2017
+ * Updated D/01/04/2018
+ *
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
+ *
+ * This program is free software, you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL) as published
+ * by the free software foundation, either version 2 of the license, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but without any warranty, without even the implied warranty of
+ * merchantability or fitness for a particular purpose. See the
+ * GNU General Public License (GPL) for more details.
+ */
+
+$config = $this->getConfig();
+$types  = $this->getTypes();
+
+$bgColor   = Mage::getSingleton('maillog/email')->getDefaultBgColor();
+$textColor = Mage::getSingleton('maillog/email')->getDefaultTxtColor();
+?>
+
+<tr id="<?php echo $this->getHtmlId() ?>">
+	<td colspan="4" style="padding-right:0;">
+		<ul class="cool">
+			<?php foreach ($types as $type):
+				if ($type == '--')
+					continue;
+			?>
+				<li>
+					<span>
+						<?php echo (in_array($type, array('without', 'all'))) ? $this->__('<b>'.$type.'</b>') : $type ?>
+						<?php //echo $this->__('<b>without</b>') pour le translate.php ?>
+						<?php //echo $this->__('<b>all</b>')     pour le translate.php ?>
+					</span>
+
+					<?php $key = str_replace(' ', '_', $type).'_data' ?>
+					<select name="groups[general][fields][special_config][value][<?php echo $key ?>]" title="<?php echo $this->__('Emails content and attachments') ?>">
+						<option>--</option>
+						<?php for ($i = 2; $i <= 12; $i++): ?>
+							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
+								<option value="<?php echo $i ?>" selected="selected">
+									<?php echo $this->__('%d months', $i) ?>
+								</option>
+							<?php else: ?>
+								<option value="<?php echo $i ?>">
+									<?php echo $this->__('%d months', $i) ?>
+								</option>
+							<?php endif ?>
+						<?php endfor ?>
+						<?php for ($i = 2 * 12; $i <= 8 * 12; $i += 12): ?>
+							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
+								<option value="<?php echo $i ?>" selected="selected">
+									<?php echo $this->__('%d years', $i / 12) ?>
+								</option>
+							<?php else: ?>
+								<option value="<?php echo $i ?>">
+									<?php echo $this->__('%d years', $i / 12) ?>
+								</option>
+							<?php endif ?>
+						<?php endfor ?>
+					</select>
+
+					<?php $key = str_replace(' ', '_', $type).'_all' ?>
+					<select name="groups[general][fields][special_config][value][<?php echo $key ?>]" title="<?php echo $this->__('All emails data') ?>">
+						<option>--</option>
+						<?php for ($i = 2; $i <= 12; $i++): ?>
+							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
+								<option value="<?php echo $i ?>" selected="selected">
+									<?php echo $this->__('%d months', $i) ?>
+								</option>
+							<?php else: ?>
+								<option value="<?php echo $i ?>">
+									<?php echo $this->__('%d months', $i) ?>
+								</option>
+							<?php endif ?>
+						<?php endfor ?>
+						<?php for ($i = 2 * 12; $i <= 8 * 12; $i += 12): ?>
+							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
+								<option value="<?php echo $i ?>" selected="selected">
+									<?php echo $this->__('%d years', $i / 12) ?>
+								</option>
+							<?php else: ?>
+								<option value="<?php echo $i ?>">
+									<?php echo $this->__('%d years', $i / 12) ?>
+								</option>
+							<?php endif ?>
+						<?php endfor ?>
+					</select>
+
+					<?php $key = str_replace(' ', '_', $type) ?>
+					<input type="color" name="groups[general][fields][special_config][value][<?php echo $key ?>_back_color]"
+						value="<?php echo (!empty($config[$key.'_back_color'])) ? $config[$key.'_back_color'] : $bgColor ?>"
+						title="<?php echo $this->__('Background color') ?>" />
+					<input type="color" name="groups[general][fields][special_config][value][<?php echo $key ?>_text_color]"
+						value="<?php echo (!empty($config[$key.'_text_color'])) ? $config[$key.'_text_color'] : $textColor ?>"
+						title="<?php echo $this->__('Text color') ?>" />
+				</li>
+			<?php endforeach ?>
+		</ul>
+		<p class="cool note"><span><?php echo $this->__('Default background color: %s.', $bgColor) ?></span></p>
+	</td>
+</tr>

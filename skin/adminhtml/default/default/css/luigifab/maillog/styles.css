@@ -1,7 +1,7 @@
 /**
- * Copyright 2015-2017 | Fabrice Creuzot (luigifab) <code~luigifab~info>
- * Created D/22/03/2015, updated M/08/11/2016
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Created D/22/03/2015, Updated D/01/04/2018
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL).
@@ -9,45 +9,15 @@
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& global &&& */
 body.adminhtml-maillog-history-index h3.icon-head, body.adminhtml-maillog-history-view h3.icon-head,
-body.adminhtml-maillog-sync-index h3.icon-head, body.adminhtml-maillog-bounce-index h3.icon-head {
+body.adminhtml-maillog-sync-index h3.icon-head {
 	min-height:19px; background:url("../../../images/fam_lorry.gif") no-repeat left center;
 }
 
-body.adminhtml-customer-edit #loading-mask,
-body.adminhtml-sales-order-view #loading-mask,
-body.adminhtml-maillog-history-index #loading-mask { background-color:rgba(255,255,255, 0.5); }
-
-body.adminhtml-customer-edit #loading_mask_loader,
-body.adminhtml-sales-order-view #loading_mask_loader,
-body.adminhtml-maillog-history-index #loading_mask_loader { margin-left:-120px; margin-top:-30px; }
-
-/* &&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/history/index &&& **
- * utilise table.data.adminhtml-maillog-history au lieu de body.adminhtml-maillog-history-index et body.adminhtml-sales-order-view
- * pour maillog/history/index ET customer/edit ET sales/order/view
- */
-body table.data.adminhtml-maillog-history tr:hover { background-color:#DEDEDE; }
-
 body table.data.adminhtml-maillog-history tr.parts td.a-right {
-	background:url("../../../images/luigifab/maillog/gnome-mail-attachment.png") no-repeat center left;
+	background:url("../../../images/luigifab/maillog/mail-attachment.svg") no-repeat -7px center;
 }
-
-body table.data.adminhtml-maillog-history td.a-status > span, body.adminhtml-maillog-history-view div.content li strong > span {
-	display:block; height:17px; line-height:17px; text-align:center;
-	font-size:10px; font-weight:700; text-transform:uppercase; color:white; border-radius:10px;
-}
-
-body table.data.adminhtml-maillog-history td.a-status span.grid-pending { background-color:#B3B4B3; }
-body table.data.adminhtml-maillog-history td.a-status span.grid-sending { background-color:#FF9C00; }
-body table.data.adminhtml-maillog-history td.a-status span.grid-sent { background-color:#FFC700; }
-body table.data.adminhtml-maillog-history td.a-status span.grid-success { background-color:#3CB861; }
-body table.data.adminhtml-maillog-history td.a-status span.grid-read { background-color:#3CB861; }
-body table.data.adminhtml-maillog-history td.a-status span.grid-error { background-color:#E41101; }
-body table.data.adminhtml-maillog-history td.a-status span.grid-notsent { background-color:purple; }
-body table.data.adminhtml-maillog-history td.a-status span.grid-bounce { background-color:black; overflow:hidden; }
-body table.data.adminhtml-maillog-history td.a-status span.grid-bounce span:first-child { display:block; overflow:hidden; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/history/view &&& */
-body.adminhtml-maillog-history-view div.content-header td { width:auto !important; }
 body.adminhtml-maillog-history-view div.content div { display:table; margin:1.4em auto; width:100%; border-spacing:1em 0; border-collapse:separate; }
 body.adminhtml-maillog-history-view div.content ul + ul { width:62%; }
 
@@ -56,16 +26,8 @@ body.adminhtml-maillog-history-view div.content ul {
 	font-size:13px; border-radius:1em; border:1px solid #DDD; background-color:#EFEFEF; background-clip:padding-box;
 }
 
-body.adminhtml-maillog-history-view div.content li strong { height:17px; line-height:17px; }
-body.adminhtml-maillog-history-view div.content li strong > span { display:inline-block; margin:0 0.5em; width:13em; vertical-align:top; }
-body.adminhtml-maillog-history-view div.content li strong.status-pending span { background-color:#B3B4B3; }
-body.adminhtml-maillog-history-view div.content li strong.status-sending span { background-color:#FF9C00; }
-body.adminhtml-maillog-history-view div.content li strong.status-sent span { background-color:#FFC700; }
-body.adminhtml-maillog-history-view div.content li strong.status-read span { background-color:#3CB861; }
-body.adminhtml-maillog-history-view div.content li strong.status-error span { background-color:#E41101; }
-body.adminhtml-maillog-history-view div.content li strong.status-notsent span { background-color:purple; }
-body.adminhtml-maillog-history-view div.content li strong.status-bounce span { background-color:black; overflow:hidden; }
-body.adminhtml-maillog-history-view div.content li strong.status-bounce span span:first-child { display:block; overflow:hidden; }
+body.adminhtml-maillog-history-view div.content li strong { height:17px; line-height:18px; }
+body.adminhtml-maillog-history-view span.maillog-status { display:inline-block; margin:0 0.5em; width:13em; vertical-align:top; }
 
 body.adminhtml-maillog-history-view div.content iframe {
 	display:block; margin:1em auto; width:calc(100% - 2em); min-height:26em; overflow:hidden;
@@ -73,38 +35,41 @@ body.adminhtml-maillog-history-view div.content iframe {
 }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/sync/index &&& */
-body.adminhtml-maillog-sync-index table.data tr.active td:first-child { border-left:2px solid red; }
-body.adminhtml-maillog-sync-index table.data tr.active td:first-child strong { display:inline-block; padding-top:0.5em; font-size:1.3em; }
-
 body.adminhtml-maillog-sync-index table.data div.details1 { margin-top:0.3em; }
 body.adminhtml-maillog-sync-index table.data div.details2 { margin-top:0.3em; column-count:2; -moz-column-count:2; -webkit-column-count:2; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& system/config &&& */
-#config_edit_form[action*="system_config/save/section/maillog"] p.note { padding-top:4px; line-height:125%; }
-#config_edit_form[action*="system_config/save/section/maillog"] fieldset a[onclick]:before { content:"[↗] "; font-size:0.85em; }
-#config_edit_form[action*="system_config/save/section/maillog"] tr[id*="_stats_"] td.scope-label { display:none; }
+#config_edit_form[action*="system_config/save/section/maillog"] [for="maillog_general_special_label"] { padding-right:0; width:230%; }
+#config_edit_form[action*="system_config/save/section/maillog"] ul.cool li span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
+#config_edit_form[action*="system_config/save/section/maillog"] ul.cool li select { margin-right:5px; width:136px; }
+#config_edit_form[action*="system_config/save/section/maillog"] p.cool.note { margin-top:-4px; margin-left:210px; }
+#config_edit_form[action*="system_config/save/section/maillog"] option.has { font-weight:700; }
 
-#config_edit_form[action*="system_config/save/section/maillog"] #maillog_sync .comment { padding-bottom:1.4em; }
-#config_edit_form[action*="system_config/save/section/maillog"] #maillog_sync .comment p { margin-bottom:0; line-height:150%; }
-#config_edit_form[action*="system_config/save/section/maillog"] #maillog_sync .comment ul { margin:0.4em 0; }
-#config_edit_form[action*="system_config/save/section/maillog"] #maillog_sync .comment li { margin:0; line-height:1.5em; }
-#config_edit_form[action*="system_config/save/section/maillog"] #maillog_sync .comment li:before { content:"→ "; }
-#config_edit_form[action*="system_config/save/section/maillog"] #maillog_sync option.has { font-weight:700; }
+#config_edit_form[action*="system_config/save/section/maillog"] .comment { padding-bottom:1.4em; }
+#config_edit_form[action*="system_config/save/section/maillog"] .comment p { margin-bottom:0; line-height:150%; }
+#config_edit_form[action*="system_config/save/section/maillog"] .comment ul { margin:0.4em 0; }
+#config_edit_form[action*="system_config/save/section/maillog"] .comment li { margin:0; line-height:1.5em; }
+#config_edit_form[action*="system_config/save/section/maillog"] .comment li:before { content:"➤\0000A0"; }
 
-/* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& animations &&& */
-body table.data.adminhtml-maillog-history td.a-status span.grid-error,
-body.adminhtml-maillog-history-view div.content li strong.status-error span {
+/* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& statut &&& */
+body span.maillog-status {
+	display:block; height:17px; line-height:18px; text-align:center;
+	font-size:10px; font-weight:700; text-transform:uppercase; color:white; border-radius:10px;
+}
+
+body span.maillog-status.grid-pending  { background-color:#B3B4B3; }
+body span.maillog-status.grid-sending  { background-color:#FF9C00; }
+body span.maillog-status.grid-running  { background-color:#FF9C00; }
+body span.maillog-status.grid-sent     { background-color:#FFC700; }
+body span.maillog-status.grid-success  { background-color:#3CB861; }
+body span.maillog-status.grid-read     { background-color:#3CB861; }
+body span.maillog-status.grid-error    { background-color:#E41101; }
+body span.maillog-status.grid-notsent  { background-color:purple; }
+body span.maillog-status.grid-bounce   { background-color:black; }
+
+body span.maillog-status.grid-error, body span.maillog-status.grid-bounce {
 	animation:maillogBlink 1s step-start 0s infinite; -webkit-animation:maillogBlink 1s step-start 0s infinite;
 }
 
 @keyframes maillogBlink { 30% { color:transparent; } }
 @-webkit-keyframes maillogBlink { 30% { color:transparent; } }
-
-body table.data.adminhtml-maillog-history td.a-status span.grid-bounce span:first-child,
-body.adminhtml-maillog-history-view div.content li strong.status-bounce span span:first-child {
-	animation:maillogMove 5s linear 0s infinite, maillogBlink 1s step-start 0s infinite;
-	-webkit-animation:maillogMove 5s linear 0s infinite, maillogBlink 1s step-start 0s infinite;
-}
-
-@keyframes maillogMove { 0% { max-height:17px; } 55% { max-height:17px; } 70% { max-height:0; } 100% { max-height:0; } }
-@-webkit-keyframes maillogMove { 0% { max-height:17px; } 55% { max-height:17px; } 70% { max-height:0; } 100% { max-height:0; } }

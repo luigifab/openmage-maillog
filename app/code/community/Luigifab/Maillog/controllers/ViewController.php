@@ -1,10 +1,11 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated M/08/11/2016
+ * Updated D/25/02/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -21,26 +22,32 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 	public function indexAction() {
 
-		$email = $this->getEmail();
+		$email = Mage::getResourceModel('maillog/email_collection')
+			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
+			->setPageSize(1)
+			->getFirstItem();
 
-		if ($email->getId() > 0) {
-			$html = $email->toHtml(($this->getRequest()->getParam('nomark') !== '1') ? false : true);
+		if (!empty($email->getId())) {
+			$html = $email->toHtml(($this->getRequest()->getParam('nomark') != '1') ? false : true);
 			$this->getResponse()->setBody($html);
 		}
 	}
 
 	public function downloadAction() {
 
-		$email = $this->getEmail();
+		$email = Mage::getResourceModel('maillog/email_collection')
+			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
+			->setPageSize(1)
+			->getFirstItem();
 
-		if (($email->getId() > 0) && !is_null($email->getMailParts())) {
+		if (!empty($email->getId()) && !empty($email->getData('mail_parts'))) {
 
-			$parts = unserialize(gzdecode($email->getMailParts()));
+			$parts = unserialize(gzdecode($email->getData('mail_parts')));
 			$nb = intval($this->getRequest()->getParam('part', 0));
 
 			foreach ($parts as $key => $part) {
 
-				if ($key === $nb) {
+				if ($key == $nb) {
 
 					$data = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
 					$data = base64_decode($data);
@@ -51,7 +58,6 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 					$this->getResponse()->setHeader('Content-Disposition', 'attachment; filename="'.$part->filename.'"');
 					$this->getResponse()->setHeader('Last-Modified', date('r'));
 					$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);
-					$this->getResponse()->setHeader('Pragma', 'no-cache', true);
 					$this->getResponse()->setBody($data);
 
 					return;
@@ -64,10 +70,13 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 	public function markAction() {
 
-		$email = $this->getEmail();
+		$email = Mage::getResourceModel('maillog/email_collection')
+			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
+			->setPageSize(1)
+			->getFirstItem();
 
-		if (($email->getId() > 0) && ($email->getStatus() !== 'read'))
-			$email->setStatus('read')->save();
+		if (!empty($email->getId()) && ($email->getData('status') != 'read'))
+			$email->setData('status', 'read')->save();
 
 		// read.gif (image de 1x1 pixel transparente)
 		$data = base64_decode('R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==');
@@ -78,14 +87,6 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 		$this->getResponse()->setHeader('Content-Disposition', 'inline; filename="pixel.gif"');
 		$this->getResponse()->setHeader('Last-Modified', date('r'));
 		$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);
-		$this->getResponse()->setHeader('Pragma', 'no-cache', true);
 		$this->getResponse()->setBody($data);
-	}
-
-	private function getEmail() {
-
-		return Mage::getResourceModel('maillog/email_collection')
-			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->getFirstItem();
 	}
 }

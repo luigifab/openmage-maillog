@@ -1,10 +1,11 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/08/11/2016
+ * Updated M/27/02/2018
  *
- * Copyright 2015-2017 | Fabrice Creuzot <fabrice.creuzot~label-park~com>, Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://redmine.luigifab.info/projects/magento/wiki/maillog
+ * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * https://www.luigifab.info/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -17,11 +18,11 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Model_Source_Type extends Luigifab_Maillog_Helper_Data {
+class Luigifab_Maillog_Model_Source_Type {
 
 	public function toOptionArray() {
 
-		$models = $this->searchFiles(BP.'/app/code/community/Luigifab/Maillog/Model/System');
+		$models  = $this->searchFiles(Mage::getModuleDir('', 'Luigifab_Maillog').'/Model/System');
 		$options = array();
 
 		foreach ($models as $model) {
@@ -41,7 +42,7 @@ class Luigifab_Maillog_Model_Source_Type extends Luigifab_Maillog_Helper_Data {
 		while (($file = readdir($ressource)) !== false) {
 
 			if ((strpos($file, '.') !== 0) && is_file($source.'/'.$file))
-				$files[] = 'maillog/system_'.strtolower(substr($file, 0, -4));
+				array_push($files, 'maillog/system_'.strtolower(substr($file, 0, -4)));
 		}
 
 		closedir($ressource);
