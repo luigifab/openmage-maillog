@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/28/02/2017
+ * Updated S/25/08/2018
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published

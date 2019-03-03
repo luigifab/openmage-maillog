@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/22/03/2018
+ * Updated M/05/02/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -24,7 +25,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 		$result = parent::_validateSecretKey();
 
-		if (Mage::getSingleton('admin/session')->isLoggedIn() && ($this->getFullActionName() == 'adminhtml_maillog_history_view') && !$result) {
+		if (!$result && ($this->getFullActionName() == 'adminhtml_maillog_history_view') && Mage::getSingleton('admin/session')->isLoggedIn()) {
 			$this->getRequest()->setParam(Mage_Adminhtml_Model_Url::SECRET_KEY_PARAM_NAME, Mage::getSingleton('adminhtml/url')->getSecretKey());
 			$result = parent::_validateSecretKey();
 		}
@@ -38,11 +39,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 	public function indexAction() {
 
-		$isAjax = ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax'))) ? true : false;
-
-		if ($isAjax && !empty($this->getRequest()->getParam('back')))
-			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_history_tab')->toHtml());
-		else if ($isAjax)
+		if ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax')))
 			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_history_grid')->toHtml());
 		else
 			$this->loadLayout()->_setActiveMenu('tools/maillog')->renderLayout();
@@ -92,8 +89,8 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 				if (empty($id = $this->getRequest()->getParam('id')) || !is_numeric($id))
 					Mage::throwException($this->__('The <em>%s</em> field is a required field.', 'id'));
 
-				Mage::getModel('maillog/email')->load($id)->setData('status', 'pending')->save()->send();
-				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d will be resent (warning, dates are not updated).', $id));
+				Mage::getModel('maillog/email')->load($id)->setData('status', 'pending')->save();
+				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Email number %d will be resent.', $id));
 			}
 		}
 		catch (Exception $e) {

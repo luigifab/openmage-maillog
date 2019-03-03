@@ -1,11 +1,12 @@
 <?php
 /**
  * Created W/28/12/2016
- * Updated S/31/03/2018
+ * Updated S/22/12/2018
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -19,20 +20,21 @@
  */
 
 // de manière à empécher de lancer cette procédure plusieurs fois car Magento en est capable
-ignore_user_abort(true);
 $lock = Mage::getModel('index/process')->setId('maillog_setup');
 if ($lock->isLocked())
-	throw new Exception('Please wait, upgrade is already in progress...');
+	Mage::throwException('Please wait, upgrade is already in progress...');
 
 $lock->lockAndBlock();
 $this->startSetup();
+
+// de manière à continuer quoi qu'il arrive
+ignore_user_abort(true);
+set_time_limit(0);
 
 try {
 	// remet à jour la liste des status
 	$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').'
 		MODIFY COLUMN status ENUM("pending","sent","error","read","notsent","bounce","sending") NOT NULL DEFAULT "pending"');
-	$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog_sync').'
-		MODIFY COLUMN status ENUM("pending","success","error","running") NOT NULL DEFAULT "pending"');
 
 	// remplace :address_ par :address_shipping_
 	$this->run('
@@ -44,12 +46,12 @@ try {
 			SET value = REPLACE(value, ":address_shipping_billing_", ":address_billing_") WHERE path = "maillog/sync/mapping_config";
 	');
 
-	// ajoute la colonne mail_sender et deleted et les index fulltext
+	// ajoute la colonne mail_sender et deleted
 	// ADD COLUMN IF NOT EXISTS, à partir de MariaDB 10.0.2, n'existe pas dans MySQL 8.0
 	// https://mariadb.com/kb/en/mariadb/alter-table/
 	// https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
 	$sql = Mage::getSingleton('core/resource')->getConnection('core_read')->fetchOne('SELECT VERSION()');
-	if ((stripos($sql, 'MariaDB') !== false) && version_compare($sql, '10.0.2', '>=')) {
+	if ((mb_stripos($sql, 'MariaDB') !== false) && version_compare($sql, '10.0.2', '>=')) {
 		$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' ADD COLUMN IF NOT EXISTS mail_sender varchar(255) NOT NULL DEFAULT ""');
 		$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' ADD COLUMN IF NOT EXISTS deleted tinyint(1) unsigned NOT NULL DEFAULT 0');
 	}
@@ -67,15 +69,6 @@ try {
 	$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' MODIFY COLUMN mail_header             text         NULL DEFAULT NULL');
 	$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' MODIFY COLUMN mail_parameters         text         NULL DEFAULT NULL');
 	$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' MODIFY COLUMN mail_parts              longblob     NULL DEFAULT NULL');
-
-	// dégage d'anciennes configurations
-	// vu que la version 3.1 arrive quelques mois après la version 3 des petits copains, on pense à eux
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path = "maillog/sync/background"');
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path = "maillog/general/background"');
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/general/lifetime%"');
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path = "maillog/email/template"');
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path = "modules/email/template"');
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path = "cronlog/email/template"');
 
 	// remplace la table bounce par un attribut client
 	// une idée lumineuse, je crois que j'ai deux neurones qui se sont connectés aujourd'hui
@@ -111,7 +104,7 @@ try {
 }
 catch (Exception $e) {
 	$lock->unlock();
-	throw new Exception($e);
+	throw $e;
 }
 
 $this->endSetup();

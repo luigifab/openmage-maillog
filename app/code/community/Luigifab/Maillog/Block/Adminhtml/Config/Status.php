@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/15/05/2016
- * Updated V/15/09/2017
+ * Updated S/22/12/2018
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -26,7 +27,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Status extends Mage_Adminhtml_Bloc
 	}
 
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		$key = (strpos($element->getHtmlId(), 'bounces') !== false) ? 'bounces' : 'unsubscribers';
+		$key = (mb_strpos($element->getHtmlId(), 'bounces') !== false) ? 'bounces' : 'unsubscribers';
 		return $this->helper('maillog')->getImportStatus($key, $element->getHtmlId());
 	}
 }

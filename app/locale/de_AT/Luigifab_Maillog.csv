@@ -1,10 +1,8 @@
 "Transactional emails","Transaktions-E-Mails"
 "Customers synchronization","Kundensynchronisierung"
 "Sent email report","Gesendete E-Mails-Bericht"
-"Send emails","E-Mails versenden"
 "Minify <abbr title=""HyperText Markup Language"">HTML</abbr> code","Kode verkleinern <abbr title=""Hypertext-Auszeichnungssprache (HyperText Markup Language)"">HTML</abbr>"
-"May require <a href=""http://us.php.net/manual/en/book.tidy.php"">PHP-TIDY</a>.","Benötigt eventuell <a href=""http://de.php.net/manual/de/book.tidy.php"">PHP-TIDY</a>."
-"Sending method","Sendenmethode"
+"Send emails","E-Mails versenden"
 "Number of emails per page","E-Mails pro Seite"
 "Show the subject column","Die Betreffspalte anzeigen"
 "Show the size column","Die Grössenspalte anzeigen"
@@ -15,7 +13,7 @@
 "Separate addresses by a space.","E-Mail-Adressen durch einen Abstand trennen."
 "<abbr title=""Application Programming Interface"">API</abbr> synchronization","Synchronisierung <abbr title=""Programmierschnittstelle (Application Programming Interface)"">API</abbr>"
 "
-						<p>Synchronization allow to synchronize customer data from <strong>Magento</strong> to your <strong>System</strong>.<br />It is performed in real time on the following events (whether from the backend or from the frontend):</p>
+						<p>Synchronization allow to synchronize customer data from <strong>Magento</strong> to your <strong>System</strong>.<br />It is performed every minutes by cron job on the following events (whether from the backend or from the frontend):</p>
 						<ul>
 							<li>when customer login,</li>
 							<li>when saving or deleting a customer,</li>
@@ -24,7 +22,7 @@
 							<li>when invoicing an order.</li>
 						</ul>
 						<p><strong>Warning! We must enable synchronization only when configuring the synchronization is complete.</strong></p>
-					","<p>Die Synchronisation ermöglicht, die Daten der Kunden von <strong>Magento</strong> zu Ihrem <strong>System</strong> zu synchronisieren.<br />Sie wird in Realzeit auf den folgenden Ereignissen realisiert (entweder aus dem Frontend oder aus dem Backend):</p>
+					","<p>Die Synchronisation ermöglicht, die Daten der Kunden von <strong>Magento</strong> zu Ihrem <strong>System</strong> zu synchronisieren.<br />Sie wird every minutes by cron job auf den folgenden Ereignissen realisiert (entweder aus dem Frontend oder aus dem Backend):</p>
 <ul>
 <li>bei der Verbindung eines Kunden,</li>
 <li>bei der Registrierung oder der Abschaffung eines Kunden,</li>
@@ -41,7 +39,7 @@
 "Files location","Dateienlokalisierung"
 "In <strong>var</strong> folder.","Im Ordner <strong>var</strong>."
 "File format","Dateiformat"
-"Examples: <strong>txt</strong> / <strong>csv;2</strong> / <strong>csv,3</strong> / <strong>csv,3""</strong>...<br />The file must be in <strong>utf-8</strong> (with or without BOM).<br />Use <strong>→</strong> for the tabulation.","Beispiele: <strong>txt</strong> / <strong>csv;2</strong> / <strong>csv,3</strong> / <strong>csv,3""</strong>...<br />Die Datei soll in <strong>utf-8</strong> sein (mit oder ohne BOM).<br />Verwenden <strong>→</strong> für dien Tabulator."
+"Examples: <b>txt</b> / <b>csv;2</b> / <b>csv,3</b> / <b>csv,3""</b>...<br />The file must be in <b>utf-8</b> (with or without BOM).<br />Use <b>→</b> for the tabulation. Whatever the format is, the module looks for an email address (the rest is ignored).","Beispiele: <b>txt</b> / <b>csv;2</b> / <b>csv,3</b> / <b>csv,3""</b>...<br />Die Datei soll in <b>utf-8</b> sein (mit oder ohne BOM).<br />Verwenden <b>→</b> für dien Tabulator."
 "Cron expression","Cron-Ausdruck"
 "By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Maximum once per day.","Standardmäßig jeden Tag um 2.30 (<strong>30 2 * * *</strong>).<br />Höchstens einmal täglich."
 "Validate email addresses not present in the file","Die E-Mail-Adressen bestätigen, die in der Datei nicht anwesenden Kunden."
@@ -56,9 +54,6 @@
 "Number of subscribers","Abonnentenanzahl"
 "Transactional emails / Tools / Magento Admin","Transaktions-E-Mails / Hilfsmittel / Magento Administration"
 "Customers synchronization / Tools / Magento Admin","Kundensynchronisierung / Hilfsmittel / Magento Administration"
-"read only","schreibgeschützt"
-"Customer Id field","Kunden-ID-Feld"
-"In case of a change of email address, the customer identification in the system will be done with the customer id.","Bei E-Mail-Adresseänderung Kundenidentifikation auf dem System mit den Kunden-ID erfolgen."
 "Recipient(s)","Empfänger"
 "Sent At","Am gesendet"
 "Duration","Dauer"
@@ -80,13 +75,17 @@
 "%s kB","%s kB"
 "%s MB","%s MB"
 "%s GB","%s GB"
-"Cron job #<a %s>%d</a>: %s.","Kron-Task Nummer <a %s>%d</a>: %s."
+"Customer data will be synchronized (%s).","Alle Kundendaten synchronisiert werden (%s)."
 "Manual import: %s.","Handimport: %s."
+"Cron job #<a %s>%d</a> finished at %s (%s).","Kron-Task Nummer <a %s>%d</a> beendet am %s (%s)."
+"An import is in progress (cron job #<a %s>%d</a>).","An import is in progress (Kron-Task Nummer <a %s>%d</a>)."
+"last process: cron job #<a %s>%d</a> finished at %s","last process: Kron-Task Nummer <a %s>%d</a> beendet am %s"
 "Subject: %s","Betreff: %s"
 "<a %s>Print</a> this email only if necessary.","Nur bei Bedarf diese Nachricht <a %s>ausdrucken</a>."
 "Sorry, your email is too old, it is not available online anymore.","Entschuldigung, Ihre E-Mail ist zu alt, so ist sie nicht mehr online verfügbar."
 "Email %d: %s","E-Mail %d: %s"
 "Status: %s","Zustand: %s"
+"Week %d","Woche %d"
 "Can not send the report by email to %s.","Unmöglich den Bericht per E-Mail zu senden bei %s."
 " monthly","monatlich"
 " weekly","wöchentlich"
@@ -99,18 +98,22 @@
 "%d days (%d month)","%d Tage (%d Monat)"
 "%d days (%d months)","%d Tage (%d Monate)"
 "not available","nicht verfügbar"
-"With PHP-TIDY (%s)","Mit PHP-TIDY (%s)"
-"All customer data WILL BE synchronized with %s (%s).","Alle Kundendaten WERDEN mit %s synchronisiert werden (%s)."
+"Yes with PHP-TIDY (%s)","Ja mit PHP-TIDY (%s)"
 "The <em>%s</em> field is a required field.","Das Feld <em>%s</em> ist ein obligatorisches Feld."
 "Email number %d has been successfully deleted.","Die E-Mail Nummer %d wurde gelöscht."
-"Email number %d will be resent (warning, dates are not updated).","Die E-Mail Nummer %d wurde zurückgegeben (beachten Sie, dass die Daten nicht aktualisiert)."
+"Email number %d will be resent.","Die E-Mail Nummer %d wurde zurückgegeben."
 "Invalid email (hard bounce)","Ungültiges E-Mail (hard bounce)"
 "Transactional emails - %s","Transaktions-E-Mails - %s"
 "Email address is invalid!","Die E-Mail-Adresse ist ungültig!"
 "Email address is valid.","Die E-Mail-Adresse ist gültig."
 "%d email(s), %d send, %d open/read.","%d E-Mail(s), %d gesendet, %d geöffnet/gelesen."
 "Customer is subscribed to the newsletter.","Der Kunde hat den Newsletter abonniert."
+"Customer Id field","Kunden-ID-Feld"
+"In case of a change of email address, the customer identification in the system will be done with the customer id.","Bei E-Mail-Adresseänderung Kundenidentifikation auf dem System mit den Kunden-ID erfolgen."
+"read only","schreibgeschützt"
 "<b>without</b>","<b>ohne</b>"
 "<b>all</b>","<b>alle</b>"
 "%d months","%d Monate"
 "%d years","%d Jahren"
+"Background color","Hintergrundfarbe"
+"Text color","Textfarbe"

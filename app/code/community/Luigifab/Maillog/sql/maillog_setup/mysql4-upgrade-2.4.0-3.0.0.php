@@ -1,11 +1,12 @@
 <?php
 /**
  * Created L/09/11/2015
- * Updated D/25/02/2018
+ * Updated M/08/01/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -19,70 +20,50 @@
  */
 
 // de manière à empécher de lancer cette procédure plusieurs fois car Magento en est capable
-ignore_user_abort(true);
 $lock = Mage::getModel('index/process')->setId('maillog_setup');
 if ($lock->isLocked())
-	throw new Exception('Please wait, upgrade is already in progress...');
+	Mage::throwException('Please wait, upgrade is already in progress...');
 
 $lock->lockAndBlock();
 $this->startSetup();
 
+// de manière à continuer quoi qu'il arrive
+ignore_user_abort(true);
+set_time_limit(0);
+
 try {
-	Mage::log('Update v3.0! START', Zend_Log::INFO, 'maillog.log');
+	// ADD COLUMN IF NOT EXISTS, à partir de MariaDB 10.0.2, n'existe pas dans MySQL 8.0
+	// https://mariadb.com/kb/en/mariadb/alter-table/
+	// https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
+	$sql = Mage::getSingleton('core/resource')->getConnection('core_read')->fetchOne('SELECT VERSION()');
+	if ((mb_stripos($sql, 'MariaDB') !== false) && version_compare($sql, '10.0.2', '>='))
+		$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' ADD COLUMN IF NOT EXISTS mail_parts longblob NULL DEFAULT NULL');
+	else
+		$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' ADD COLUMN mail_parts longblob NULL DEFAULT NULL');
 
-	// ajoute la table sync
-	$this->run('
-		DROP TABLE IF EXISTS '.$this->getTable('luigifab_maillog_sync').';
-		CREATE TABLE '.$this->getTable('luigifab_maillog_sync').' (
-			sync_id    int(11) unsigned NOT NULL auto_increment,
-			status     ENUM("pending","success","error") NOT NULL DEFAULT "pending",
-			created_at datetime         NULL DEFAULT NULL,
-			sync_at    datetime         NULL DEFAULT NULL,
-			email      varchar(255)     NULL DEFAULT NULL,
-			details    text             NULL DEFAULT NULL,
-			PRIMARY KEY (sync_id)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	');
-
-	// dégage d'anciennes configurations utilisées dans les versions 3.0.0-dev
-	$this->run('
-		DELETE FROM '.$this->getTable('core_config_data').' WHERE
-			   path LIKE "crontab/jobs/maillog_%_import/schedule/cron_expr"
-			OR path LIKE "maillog/general/block"
-			OR path LIKE "maillog/sync/mapping_customeridfield"
-			OR path LIKE "maillog/sync/mapping_unique_attribute"
-			OR path LIKE "maillog/sync/%uniqfield"
-			OR path LIKE "maillog/sync/mapping_uniquefield"
-			OR path LIKE "maillog/sync/mapping_fields"
-			OR path LIKE "maillog/sync/maping_%"
-			OR path LIKE "maillog/unsubscribers/%"
-			OR path LIKE "maillog/newsletter/%"
-			OR path LIKE "maillog/bounces/%"
-			OR path LIKE "maillog/bounce/%"
-			OR path LIKE "maillog/system/%"
-			OR path LIKE "maillog/content/%";
-	');
-
-	// 10 minutes svp
-	$ini = intval(ini_get('max_execution_time'));
-	if (($ini > 0) && ($ini < 600))
-		ini_set('max_execution_time', 600);
+	$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' MODIFY COLUMN type varchar(50) NOT NULL DEFAULT "--"');
+	$this->run('UPDATE '.$this->getTable('luigifab_maillog').' SET type = "--" WHERE type = ""');
 
 	// EN CAS D'INTERRUPTION IL SUFFIT SIMPLEMENT DE RELANCER SI L'ENSEMBLE DES EMAILS À AU MAXIMUM 1 SEULE PIÈCE JOINTE
 	// suppression de la première pièce jointe qui correspond au contenu de l'email uniquement s'il y a au moins 2 pièces jointes
-	// par lot de 1000 pour éviter un memory_limit (ce qui est le plus long, c'est le MYSQL OPTIMIZE TABLE)
-	$emails = Mage::getResourceModel('maillog/email_collection')->addFieldToFilter('mail_parts', array('notnull' => true));
-	$p = ceil($emails->getSize() / 1000);
+	// par lot de 1000 pour éviter un memory_limit
+	$total = Mage::getResourceModel('maillog/email_collection')
+		->addFieldToFilter('mail_parts', array('notnull' => true))
+		->getSize();
+
+	$p = ceil($total / 1000);
 	$i = 0;
 
-	Mage::log('Update v3.0! Starting update of '.$emails->getSize().' emails in '.$p.' steps of 1000 emails...', Zend_Log::INFO, 'maillog.log');
+	Mage::log('Update v3.0! Starting update of '.$total.' emails in '.$p.' steps of 1000 emails...', Zend_Log::INFO, 'maillog.log');
+
 	while ($p > 0) {
 
-		$emails = Mage::getResourceModel('maillog/email_collection');
-		$emails->addFieldToFilter('mail_parts', array('notnull' => true));
-		$emails->setOrder('email_id', 'desc');
-		$emails->setPageSize(1000);
-		$emails->setCurPage($p);
+		$emails = Mage::getResourceModel('maillog/email_collection')
+			->addFieldToFilter('mail_parts', array('notnull' => true))
+			->setOrder('email_id', 'desc')
+			->setPageLimit(1000, $p);
+
+		Mage::log('Update v3.0! Starting update of '.$emails->getSize().' emails (from #'.$emails->getLastItem()->getId().' to #'.$emails->getFirstItem()->getId().') of step '.$p.'...', Zend_Log::INFO, 'maillog.log');
 
 		foreach ($emails as $email) {
 
@@ -91,7 +72,7 @@ try {
 			if (($parts !== false) && (count($parts) >= 2)) {
 
 				array_shift($parts);
-				$parts = gzencode(serialize($parts), 9, FORCE_GZIP);
+				$parts = gzencode(serialize($parts), 9);
 
 				Mage::log('Update v3.0! Removing body part from email #'.$email->getId().' (step '.$p.')', Zend_Log::INFO, 'maillog.log');
 				$email->setData('mail_parts', $parts)->save();
@@ -110,19 +91,11 @@ try {
 		$p -= 1;
 	}
 
-	Mage::log('Update v3.0! done! ('.$i.' emails updated)', Zend_Log::INFO, 'maillog.log');
-	Mage::log('Update v3.0! Starting optimize table...', Zend_Log::INFO, 'maillog.log');
-
-	$this->run('OPTIMIZE TABLE '.$this->getTable('luigifab_maillog'));
-
-	Mage::log('Update v3.0! done!', Zend_Log::INFO, 'maillog.log');
-	Mage::log('Update v3.0! '.ceil(memory_get_peak_usage(true) / 1024 / 1024).' MB used (memory_get_peak_usage)', Zend_Log::INFO, 'maillog.log');
-	Mage::log('Update v3.0! END', Zend_Log::INFO, 'maillog.log');
+	Mage::log('Update v3.0! Done', Zend_Log::INFO, 'maillog.log');
 }
 catch (Exception $e) {
 	$lock->unlock();
-	Mage::log('Update v3.0! FATAL! '.$e->getMessage(), Zend_Log::CRIT, 'maillog.log');
-	throw new Exception($e);
+	throw $e;
 }
 
 $this->endSetup();

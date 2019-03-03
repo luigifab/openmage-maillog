@@ -1,11 +1,12 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/22/03/2018
+ * Updated M/15/01/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -26,34 +27,48 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 
 	public function indexAction() {
 
-		if ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax')))
+		if ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax'))) {
 			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_sync_grid')->toHtml());
-		else
+		}
+		else {
+			$this->setUsedModuleName('Luigifab_Maillog');
+			$lock = Mage::helper('maillog')->getLock();
+
+			if (is_file($lock)) {
+				Mage::getSingleton('adminhtml/session')->addNotice($this->__('All customers data synchronization is in progress.'));
+				Mage::getSingleton('adminhtml/session')->addNotice('➤ '.file_get_contents($lock).' <script type="text/javascript">self.setTimeout(function () { self.location.reload(); }, 5000);</script>');
+			}
+
+			$last = ''; /* Mage::getResourceModel('maillog/sync_collection')
+				->addFieldToSort('created_at', 'desc')
+				->addFieldToFilter('batch', array('notnull' => true))
+				->setPageLimit(1)
+				->getFirstItem()
+				->getData('batch'); */
+
+			if (!empty($last))
+				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Last full synchronization (key %s) finished at %s, %d%% success.', $last, '--', 95));
+
 			$this->loadLayout()->_setActiveMenu('tools/maillog_sync')->renderLayout();
+		}
+	}
+
+	public function syncallAction() {
+		$this->_redirect('*/*/index');
 	}
 
 	public function downloadAction() {
 
-		$basedir = Mage::getBaseDir('var').'/'.Mage::getStoreConfig('maillog/'.$this->getRequest()->getParam('file').'/directory').'/';
+		$file = Mage::helper('maillog')->getImportStatus($this->getRequest()->getParam('file'));
 
-		if (is_file($basedir.'status.dat') && is_readable($basedir.'status.dat')) {
+		if (!empty($file)) {
 
-			$file = @unserialize(file_get_contents($basedir.'status.dat'));
+			$ip = !empty(getenv('HTTP_X_FORWARDED_FOR')) ? explode(',', getenv('HTTP_X_FORWARDED_FOR')) : false;
+			$ip = !empty($ip) ? trim(array_pop($ip)) : trim(getenv('REMOTE_ADDR'));
+			$ip = (preg_match('#^::f{4}:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#', $ip) === 1) ? mb_substr($ip, 7) : $ip;
 
-			if (!empty($file['file'])) {
-
-				$file = $file['file'];
-				$file = $basedir.'done/'.substr($file, 0, strpos($file, '-') - 2).'/'.$file;
-
-				$ip = (!empty(getenv('HTTP_X_FORWARDED_FOR'))) ? explode(',', getenv('HTTP_X_FORWARDED_FOR')) : false;
-				$ip = (!empty($ip)) ? array_pop($ip) : getenv('REMOTE_ADDR');
-				$ip = (preg_match('#^::ffff:[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$#', $ip) === 1) ? substr($ip, 7) : $ip;
-
-				Mage::log(sprintf('Client %s download %s', $ip, $file), Zend_Log::DEBUG, 'maillog.log');
-
-				if (is_file($file) && is_readable($file))
-					$this->_prepareDownloadResponse(basename($file), file_get_contents($file), mime_content_type($file));
-			}
+			Mage::log(sprintf('Client %s download %s', $ip, $file), Zend_Log::DEBUG, 'maillog.log');
+			$this->_prepareDownloadResponse(basename($file), file_get_contents($file), mime_content_type($file));
 		}
 	}
 }

@@ -1,13 +1,12 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated L/26/03/2018
+ * Updated S/16/02/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * Copyright 2016      | Pierre-Alexandre Rouanet <pierre-alexandre.rouanet~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * https://www.luigifab.info/magento/maillog
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -27,214 +26,218 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 	}
 
 	public function getSystem() {
-		return (is_object($this->model)) ? $this->model : $this->model = Mage::getSingleton('maillog/system_'.Mage::getStoreConfig('maillog/sync/type'));
+		if (!is_object($this->model))
+			$this->model = Mage::getSingleton('maillog/system_'.Mage::getStoreConfig('maillog/sync/type'));
+		return $this->model;
 	}
 
 
 	// effectue la synchronisation
-	// runSync lance la synchro en arrière plan
-	// l'email peut contenir 2 emails en cas de changement d'adresse email
-	// pour le moment (v3.1) le store sert uniquement à identifier le website du client
-	public function runSync($observer, $store, $email, $action) {
+	public function updateNow($send = true) {
 
-		//Mage::log('runSync '.$observer->getData('event')->getData('name').' '.$store.' '.$email);
-		$srcEmail = $email;
+		$now = time();
+		if (empty($this->getId()))
+			Mage::throwException('You must load a sync before trying to sync it.');
 
-		// email ou ancienEmail:nouvelEmail
-		$oldEmail = (stripos($email, ':') !== false) ? explode(':', $email) : false;
-		if (!empty($oldEmail)) {
-			$email    = $oldEmail[1]; // nouvel email
-			$oldEmail = $oldEmail[0]; // ancien email
-		}
+		// 0 action : 1 type : 2 id : 3 ancien-email : 4 email
+		// 0 action : 1 type : 2 id : 3              : 4 email
+		$dat = explode(':', $this->getData('action'));
 
-		// action
-		if ((Mage::registry('maillog_no_sync') !== true) && (Mage::registry('maillog_sync_'.$email) !== true) && empty($this->getId())) {
+		try {
+			$this->setData('status', 'running');
+			$this->save();
 
-			Mage::unregister('maillog_sync_'.$email);
-			Mage::register('maillog_sync_'.$email, true);
+			$allow = Mage::helper('maillog')->canSend('sync', $dat);
 
-			exec(sprintf('php %s %s %d %s %d %s %s >/dev/null 2>&1 &',
-				str_replace('Maillog/etc', 'Maillog/lib/sync.php', Mage::getModuleDir('etc', 'Luigifab_Maillog')),
-				escapeshellarg($action),
-				intval($store),
-				escapeshellarg($srcEmail),
-				intval(Mage::getIsDeveloperMode() ? 1 : 0),
-				escapeshellarg(Mage::app()->getStore()->getData('code')),
-				escapeshellarg($this->searchAdminUsername())
-			));
+			// chargement des objets du client
+			if ($dat[1] == 'customer') {
 
-			if (Mage::app()->getStore()->isAdmin()) {
-				$text  = Mage::helper('maillog')->__('All customer data WILL BE synchronized with %s (%s).', $this->getSystem()->getType(), $email);
-				Mage::getSingleton('adminhtml/session')->addNotice($text);
-			}
-		}
-	}
+				$customer   = Mage::getModel('customer/customer')->load($dat[2]);
+				$billing    = $customer->getDefaultBillingAddress();
+				$shipping   = $customer->getDefaultShippingAddress();
+				$subscriber = Mage::getModel('newsletter/subscriber')->loadByEmail($customer->getData('email'), $customer->getData('store_id'));
+				$object     = $this->initSpecialObject($customer);
 
-	public function updateNow($store, $email) {
-
-		//Mage::log('updateNow '.$store.' '.$email);
-		$srcEmail = $email;
-
-		// email ou ancienEmail:nouvelEmail
-		$oldEmail = (stripos($email, ':') !== false) ? explode(':', $email) : false;
-		if (!empty($oldEmail)) {
-			$email    = $oldEmail[1]; // nouvel email
-			$oldEmail = $oldEmail[0]; // ancien email
-		}
-
-		// action
-		if ((Mage::registry('maillog_no_sync') !== true) && (Mage::registry('maillog_sync_'.$email) !== true) && empty($this->getId())) {
-
-			Mage::unregister('maillog_sync_'.$email);
-			Mage::register('maillog_sync_'.$email, true);
-
-			try {
-				// chargement des objets du client
-				$customer = Mage::getModel('customer/customer')
-					->setWebsiteId(Mage::app()->getStore($store)->getWebsiteId())
-					->loadByEmail($email);
-
-				$billing  = $customer->getDefaultBillingAddress();
-				$shipping = $customer->getDefaultShippingAddress();
-				$subscriber = Mage::getModel('newsletter/subscriber')->loadByEmail($email);
-				$object   = $this->initSpecialObject($customer);
-
-				if (!empty($oldEmail))
-					$customer->setOrigData('email', $oldEmail);
+				if (!empty($dat[3])) {
+					$customer->setOrigData('email', $dat[3]);
+					$customer->setData('email', $dat[4]);
+				}
 
 				if (is_object($billing) && empty($billing->getData('is_default_billing')))
 					$billing->setData('is_default_billing', 1);
 				if (is_object($shipping) && empty($shipping->getData('is_default_shipping')))
 					$shipping->setData('is_default_shipping', 1);
+			}
+			else if ($dat[1] == 'subscriber') {
 
-				// action
-				// note très très importante, le + fait en sorte que ce qui est déjà présent n'est pas écrasé
-				// par exemple, si entity_id est trouvé dans $customer, même si entity_id est trouvé dans $billing,
-				// c'est bien l'entity_id de customer qui est utilisé
-				$data   = $this->getSystem()->mapFields($customer);
-				$data  += $this->getSystem()->mapFields($billing);
-				$data  += $this->getSystem()->mapFields($shipping);
-				$data  += $this->getSystem()->mapFields($subscriber);
-				$data  += $this->getSystem()->mapFields($object);
+				$subscriber = Mage::getModel('newsletter/subscriber')->load($dat[2]);
+				$customer   = Mage::getModel('customer/customer');
+
+				$customer->setOrigData('email', $subscriber->getOrigData('subscriber_email'));
+				$customer->setData('email', $subscriber->getData('subscriber_email'));
+				$customer->setData('store_id', $subscriber->getData('store_id'));
+
+				$billing    = null;
+				$shipping   = null;
+				$object     = $this->initSpecialObject($customer);
+			}
+			else {
+				Mage::throwException('Unknown sync type.');
+			}
+
+			// action
+			// note très très importante, le + fait en sorte que ce qui est déjà présent n'est pas écrasé
+			// par exemple, si entity_id est trouvé dans $customer, même si entity_id est trouvé dans $billing,
+			// c'est bien l'entity_id de customer qui est utilisé
+			$data  = $this->getSystem()->mapFields($customer);
+			$data += $this->getSystem()->mapFields($billing);
+			$data += $this->getSystem()->mapFields($shipping);
+			$data += $this->getSystem()->mapFields($subscriber);
+			$data += $this->getSystem()->mapFields($object);
+
+			if ($allow !== true) {
+				$this->setData('duration', time() - $now);
+				$this->saveAllData($data, null, false);
+				$this->setData('status', 'notsync');
+				$this->setData('response', $allow);
+				$this->save();
+			}
+			else if ($send) {
 				$result = $this->getSystem()->updateCustomer($data);
+				$this->setData('duration', time() - $now);
+				$this->saveAllData($data, $result);
 			}
-			catch (Exception $e) {
-				Mage::logException($e);
+			else {
+				$this->saveAllData($data, null);
 			}
-
-			$this->addToHistory(
-				(!empty($customer))   ? $customer : $store.':'.$srcEmail,
-				(!empty($billing))    ? $billing : null,
-				(!empty($shipping))   ? $shipping : null,
-				(!empty($subscriber)) ? $subscriber : null,
-				(!empty($data))       ? $data : null,
-				(!empty($e))          ? $e->getMessage() : $result);
 		}
+		catch (Exception $e) {
+			Mage::logException($e);
+		}
+
+		return !empty($data) ? $data : null;
 	}
 
-	public function deleteNow($store, $email) {
+	public function deleteNow() {
 
-		//Mage::log('deleteNow '.$store.' '.$email);
-		$srcEmail = $email;
+		$now = time();
+		if (empty($this->getId()))
+			Mage::throwException('You must load a sync before trying to sync it.');
 
-		// email ou ancienEmail:nouvelEmail
-		$oldEmail = (stripos($email, ':') !== false) ? explode(':', $email) : false;
-		if (!empty($oldEmail)) {
-			$email    = $oldEmail[1]; // nouvel email
-			$oldEmail = $oldEmail[0]; // ancien email
-		}
+		// 0 action : 1 type : 2 id : 3 ancien-email : 4 email
+		// 0 action : 1 type : 2 id : 3              : 4 email
+		$dat = explode(':', $this->getData('action'));
 
-		// action
-		if ((Mage::registry('maillog_no_sync') !== true) && (Mage::registry('maillog_sync_'.$email) !== true) && empty($this->getId())) {
+		try {
+			$this->setData('status', 'running');
+			$this->save();
 
-			Mage::unregister('maillog_sync_'.$email);
-			Mage::register('maillog_sync_'.$email, true);
+			// simulation du client
+			$customer = Mage::getModel('customer/customer');
+			$customer->setOrigData('email', $dat[4]);
+			$customer->setData('email', $dat[4]);
 
-			try {
-				// simulation du client
-				$customer = new Varien_Object(array('store_id' => $store, 'email' => $email));
+			$allow = Mage::helper('maillog')->canSend('sync', $dat);
+			$data  = $this->getSystem()->mapFields($customer);
 
-				// action
-				$data   = $this->getSystem()->mapFields($customer);
+			if ($allow !== true) {
+				$this->setData('duration', time() - $now);
+				$this->saveAllData($data, null, false);
+				$this->setData('status', 'notsync');
+				$this->setData('response', $allow);
+				$this->save();
+			}
+			else {
 				$result = $this->getSystem()->deleteCustomer($data);
+				$this->setData('duration', time() - $now);
+				$this->saveAllData($data, $result);
 			}
-			catch (Exception $e) {
-				Mage::logException($e);
-			}
-
-			$this->addToHistory(
-				(!empty($customer))   ? $customer : $store.':'.$srcEmail,
-				(!empty($billing))    ? $billing : null,
-				(!empty($shipping))   ? $shipping : null,
-				(!empty($subscriber)) ? $subscriber : null,
-				(!empty($data))       ? $data : null,
-				(!empty($e))          ? $e->getMessage() : $result);
 		}
+		catch (Exception $e) {
+			Mage::logException($e);
+		}
+
+		return !empty($data) ? $data : null;
 	}
 
 
 	// gestion des données des objets et de l'historique
-	// pour updateNow/deleteNow
-	private function searchAdminUsername() {
-		return (is_object(Mage::getSingleton('admin/session')->getData('user'))) ?
-			Mage::getSingleton('admin/session')->getData('user')->getData('username') : '';
-	}
-
+	// si le saveAllData est fait dans une transaction, s'il y a un rollback, tout est perdu
+	// dans ce cas ne pas oublier de refaire un save, par exemple
 	private function initSpecialObject($customer) {
 
 		$object = new Varien_Object();
 		$object->setData('last_sync_date', date('Y-m-d H:i:s'));
 
-		if (!empty($customer->getId())) {
+		if (!empty($id = $customer->getId())) {
 
-			// connexion (lecture express depuis la base de données)
-			// si non disponible, utilise la date d'inscription du client
 			$database = Mage::getSingleton('core/resource');
 			$read     = $database->getConnection('core_read');
-			$select   = $read->select()
+
+			// customer_group_code (lecture express depuis la base de données)
+			$select = $read->select()
+				->from($database->getTableName('customer_group'), 'customer_group_code')
+				->where('customer_group_id = ?', $customer->getGroupId())
+				->limit(1);
+
+			$name = $read->fetchOne($select);
+			$object->setData('group_name', $name);
+
+			// login_at (lecture express depuis la base de données)
+			// si non disponible, utilise la date d'inscription du client
+			$select = $read->select()
 				->from($database->getTableName('log_customer'), 'login_at')
-				->where('customer_id = ?', $customer->getId())
+				->where('customer_id = ?', $id)
 				->order('log_id desc')
 				->limit(1);
 
 			$last = $read->fetchOne($select);
-			$object->setData('last_login_date', (strlen($last) > 10) ? $last : $customer->getData('created_at'));
+			$object->setData('last_login_date', (mb_strlen($last) > 10) ? $last : $customer->getData('created_at'));
 
 			// commandes
-			// date, total, montant moyen
 			$orders = Mage::getResourceModel('sales/order_collection');
-			$orders->addFieldToFilter('customer_id', $customer->getId());
+			$orders->addFieldToFilter('customer_id', $id);
 			$orders->addFieldToFilter('status', array('in' => array('processing', 'complete', 'closed')));
 			$orders->setOrder('created_at', 'desc');
 
 			if (!empty($numberOfOrders = $orders->getSize())) {
 
-				$object->setData('last_order_date',  $orders->getFirstItem()->getData('created_at'));
-				$object->setData('last_order_total', number_format($orders->getFirstItem()->getData('base_grand_total'), 2));
+				$last = $orders->getLastItem();
+				$object->setData('first_order_date',        $last->getData('created_at'));
+				$object->setData('first_order_total',       floatval($last->getData('base_grand_total')));
+				$object->setData('first_order_total_notax', floatval($last->getData('base_grand_total') - $last->getData('base_tax_amount')));
+
+				$first = $orders->getFirstItem();
+				$object->setData('last_order_date',        $first->getData('created_at'));
+				$object->setData('last_order_total',       floatval($first->getData('base_grand_total')));
+				$object->setData('last_order_total_notax', floatval($first->getData('base_grand_total') - $first->getData('base_tax_amount')));
 
 				$orders->clear();
-				$orders->getSelect()->columns(array('total_sales' => 'SUM(main_table.base_grand_total)'))->group('customer_id');
+				$orders->getSelect()->columns(array(
+					'sumincltax' => 'SUM(main_table.base_grand_total)',
+					'sumexcltax' => 'SUM(main_table.base_grand_total) - SUM(main_table.base_tax_amount)'
+				))->group('customer_id');
 
-				$object->setData('average_order_amount', number_format($orders->getFirstItem()->getData('total_sales') / $numberOfOrders, 2));
-			}
-			else {
-				$object->setData('last_order_date', '');
-				$object->setData('last_order_total', '');
-				$object->setData('average_order_amount', '');
+				$item = $orders->getFirstItem();
+				$object->setData('average_order_amount',       floatval($item->getData('sumincltax') / $numberOfOrders));
+				$object->setData('average_order_amount_notax', floatval($item->getData('sumexcltax') / $numberOfOrders));
+				$object->setData('total_order_amount',         floatval($item->getData('sumincltax')));
+				$object->setData('total_order_amount_notax',   floatval($item->getData('sumexcltax')));
+				$object->setData('number_of_orders',           $numberOfOrders);
 			}
 		}
 
 		return $object;
 	}
 
-	private function transformDataForHistory($data) {
+	private function transformDataForHistory($data, $asString = true) {
 
 		$inline = array();
 
 		if (is_array($data)) {
 			foreach ($data as $key => $value) {
 				if (is_array($value)) {
-					$subdata = $this->transformDataForHistory($value);
+					$subdata = $this->transformDataForHistory($value, false);
 					foreach ($subdata as $subvalue)
 						$inline[] = sprintf('[%s]%s', $key, $subvalue);
 				}
@@ -244,110 +247,49 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			}
 		}
 		else {
-			$inline[] = (empty($data)) ? '(no result)' : $data;
+			$inline[] = empty($data) ? '(no result)' : $data;
 		}
 
-		return $inline;
+		return $asString ? trim(implode($inline)) : $inline;
 	}
 
-	protected function addToHistory($customer, $billing, $shipping, $subscriber, $request, $response, $extra = '') {
+	public function saveAllData($request, $response, $save = true) {
 
-		// calcul l'état en fonction des données
-		// s'il y a des résultats ($response), alors la synchronisation a été faite (normlement il y a des données dans $request)
-		// sinon, c'est que la synchronisation sera faire plus tard
-		if (!empty($response)) {
+		if (!empty($request) && is_array($request)) {
 
-			$status = $this->getSystem()->checkResponse($response) ? 'success' : 'error';
-			$response = $this->getSystem()->extractResponseData($response, true);
-			$response = implode($this->transformDataForHistory($response));
+			ksort($request);
+			$mapping = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/sync/mapping_config')));
+			$lines   = explode("\n", $this->transformDataForHistory($request));
 
-			if (is_array($request) && Mage::getIsDeveloperMode()) {
-
-				ksort($request);
-				$mapping = preg_split('#\s#', Mage::getStoreConfig('maillog/sync/mapping_config'));
-
-				foreach ($request as $key => &$value) {
-					foreach ($mapping as $map) {
-						$map = explode(':', $map);
-						if ($map[0] == $key) {
-							$value = (($value != '') ? $value : '--').' ('.$map[1].')';
-							break;
-						}
+			foreach ($mapping as $map) {
+				$map = explode(':', $map);
+				$tmp = trim(array_shift($map));
+				foreach ($lines as &$line) {
+					// emarsys  [2] Test
+					if (mb_strpos($line, '['.$tmp.']') !== false) {
+						$line = $line.((mb_substr($line, -2) == '] ') ? ' --' : '').' ('.implode(' ', $map).')';
+						break;
+					}
+					// dolist   [Fields][x][Name] lastname
+					else if (mb_strpos($line, '][Name] '.$tmp) !== false) {
+						$line = $line.' ('.implode(' ', $map).')';
+						break;
 					}
 				}
-
-				$response = implode($this->transformDataForHistory($request))."\n".$response;
+				unset($line);
 			}
 
-			$response = trim($response);
-		}
-		else {
-			$status = 'pending';
+			$this->setData('request', implode("\n", $lines));
 		}
 
-		$store = Mage::app()->getStore()->getData('code');
-		if (($store == 'admin') && !empty($user = $this->searchAdminUsername()))
-			$store .= ' ('.$user.')';
+		$status   = $this->getSystem()->checkResponse($response) ? 'success' : 'error';
+		$response = $this->getSystem()->extractResponseData($response, true);
 
-		if ($status == 'pending') {
-			$this->setData('customer_id', $customer->getId());
-			$this->setData('store_id', $customer->getData('store_id'));
-			$this->setData('email', $customer->getData('email'));
-			$this->setData('created_at', date('Y-m-d H:i:s'));
-			$this->setData('details', trim(
-				'Sync from '.$store."\n".
-				'Customer '.((is_object($customer) && !empty($customer->getId())) ? $customer->getId() : 'notset').' / '.
-				'Billing '.((is_object($billing) && !empty($billing->getId())) ? $billing->getId() : 'notset').' / '.
-				'Shipping '.((is_object($shipping) && !empty($shipping->getId())) ? $shipping->getId() : 'notset').' / '.
-				'Subscriber '.((is_object($subscriber) && !empty($subscriber->getId())) ? $subscriber->getId() : 'notset')
-			));
-		}
-		else {
-			$this->setData('status', $status);
-			$this->setData('customer_id', $customer->getId());
-			$this->setData('store_id', $customer->getData('store_id'));
-			$this->setData('email', $customer->getData('email'));
-			$this->setData('sync_at', date('Y-m-d H:i:s'));
-			$this->setData('details', trim(
-				'Sync from '.$store."\n".
-				'Customer '.((is_object($customer) && !empty($customer->getId())) ? $customer->getId() : 'notset').' / '.
-				'Billing '.((is_object($billing) && !empty($billing->getId())) ? $billing->getId() : 'notset').' / '.
-				'Shipping '.((is_object($shipping) && !empty($shipping->getId())) ? $shipping->getId() : 'notset').' / '.
-				'Subscriber '.((is_object($subscriber) && !empty($subscriber->getId())) ? $subscriber->getId() : 'notset')."\n".
-				$response."\n".
-				$extra
-			));
+		$this->setData('response', $this->transformDataForHistory($response));
+		$this->setData('sync_at', date('Y-m-d H:i:s'));
+		$this->setData('status', $status);
 
-			// si pas de traitement en arrière plan
-			if (in_array($this->getData('created_at'), array('', '0000-00-00 00:00:00', null)))
-				$this->setData('created_at', $this->getData('sync_at'));
-		}
-
-		// enregistre et oublie
-		$this->save();
-
-		$last = $this->getData();
-		$this->setData(array());
-
-		if (stripos(getenv('PHP_SELF'), 'lib/sync.php') === false) {
-			unset($last['sync_id']);
-			$this->lastSyncData = $last;
-		}
-	}
-
-
-	// si le addToHistory est fait dans une transaction, s'il y a un rollback, tout est perdu
-	public function reAddToHistory($return = false) {
-
-		$data = $this->lastSyncData;
-		if (is_array($data)) {
-
-			$this->setData($data);
+		if ($save)
 			$this->save();
-			$this->setData(array());
-
-			if ($return)
-				return $data;
-		}
 	}
 }

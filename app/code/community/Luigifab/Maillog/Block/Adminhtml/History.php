@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/05/08/2017
+ * Updated D/27/01/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -26,7 +27,7 @@ class Luigifab_Maillog_Block_Adminhtml_History extends Mage_Adminhtml_Block_Widg
 
 		$this->_controller = 'adminhtml_history';
 		$this->_blockGroup = 'maillog';
-		$this->_headerText = $this->__('Transactional emails');
+		$this->_headerText = $this->__('Transactional emails').' '.$this->helper('maillog')->getSpecialCronStatus();
 
 		$this->_removeButton('add');
 	}

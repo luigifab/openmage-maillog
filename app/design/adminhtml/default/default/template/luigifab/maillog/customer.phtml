@@ -1,11 +1,12 @@
 <?php
 /**
  * Created S/14/11/2015
- * Updated S/09/09/2017
+ * Updated L/14/01/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -21,7 +22,7 @@
 $customer = Mage::registry('current_customer');
 ?>
 
-<?php if (Mage::getStoreConfigFlag('maillog/general/enabled') && is_object($customer)): ?>
+<?php if (is_object($customer) && Mage::getStoreConfigFlag('maillog/general/enabled')): ?>
 	<div class="entry-edit">
 		<div class="entry-edit-head">
 			<h4 class="icon-head head-customer-view"><?php echo $this->__('Transactional emails - %s', $customer->getData('email')) ?></h4>

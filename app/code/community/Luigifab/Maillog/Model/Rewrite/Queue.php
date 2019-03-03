@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/05/04/2015
- * Updated M/27/02/2018
+ * Updated M/15/01/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -55,7 +56,7 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 				$mailer->setBodyHTML($this->getData('message_body'));
 
 			$mailer->setSubject('=?utf-8?B?'.base64_encode($parameters['subject']).'?=');
-			$mailer->setFrom($parameters['from_email'], (!empty($parameters['from_name'])) ? $parameters['from_name'] : null);
+			$mailer->setFrom($parameters['from_email'], !empty($parameters['from_name']) ? $parameters['from_name'] : null);
 
 			if (!empty($parameters['reply_to']))
 				$mailer->setReplyTo($parameters['reply_to']);
@@ -73,7 +74,7 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 	public function send() {
 
 		if (Mage::getStoreConfigFlag('maillog/general/enabled'))
-			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_send_all" cron job. For more information read: https://www.luigifab.info/magento/maillog');
+			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_send_all" cron job. For more information read: https://www.luigifab.fr/magento/maillog');
 		else
 			return parent::send();
 	}
@@ -81,8 +82,12 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 	public function cleanQueue() {
 
 		if (Mage::getStoreConfigFlag('maillog/general/enabled'))
-			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_clean_up" cron job. For more information read: https://www.luigifab.info/magento/maillog');
+			Mage::throwException('Hello! This is the Luigifab/Maillog module. Please disable the "core_email_queue_clean_up" cron job. For more information read: https://www.luigifab.fr/magento/maillog');
 		else
 			return parent::cleanQueue();
+	}
+
+	public function specialCheckRewrite() {
+		return true;
 	}
 }

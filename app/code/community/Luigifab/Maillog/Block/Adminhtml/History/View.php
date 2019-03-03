@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/03/03/2018
+ * Updated D/03/02/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -56,7 +57,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$this->_addButton('view', array(
 			'label'   => $this->__('View'),
-			'onclick' => "window.open('".$object->getEmbedUrl('index', array('nomark' => 1, '_store' => Mage::app()->getDefaultStoreView()->getId()))."');",
+			'onclick' => "self.open('".$object->getEmbedUrl('index', array('nomark' => 1, '_store' => Mage::app()->getDefaultStoreView()->getId()))."');",
 			'class'   => 'go'
 		));
 	}
@@ -84,11 +85,11 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		$html[] = '<div class="content">';
 		$html[] = '<div>';
 		$html[] = '<ul>';
-		$html[] = '<li>'.$this->__('Created At: %s', $this->formatDate($object->getData('created_at'))).'</li>';
+		$html[] = '<li>'.$this->__('Created At: %s', $help->formatDate($object->getData('created_at'))).'</li>';
 
 		if (!in_array($object->getData('sent_at'), array('', '0000-00-00 00:00:00', null))) {
 
-			$html[] = '<li><strong>'.$this->__('Sent At: %s', $this->formatDate($object->getData('sent_at'))).'</strong></li>';
+			$html[] = '<li><strong>'.$this->__('Sent At: %s', $help->formatDate($object->getData('sent_at'))).'</strong></li>';
 
 			$duration = $help->getHumanDuration($object);
 			if (!empty($duration))
@@ -97,7 +98,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$html[] = '</ul>';
 		$html[] = '<ul>';
-		$html[] = '<li><strong">'.$this->__('Status: <span %s>%s</span>', $class, $status).'</strong></li>';
+		$html[] = '<li><strong>'.$this->__('Status: <span %s>%s</span>', $class, $status).'</strong></li>';
 
 		if (!empty($object->getSize()))
 			$html[] = '<li>'.$this->__('Approximate size: %s', $help->getNumberToHumanSize($object->getSize())).'</li>';
@@ -107,9 +108,9 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		$html[] = '<li>'.$this->__('Recipient(s): %s', $help->getHumanEmailAddress($object->getData('mail_recipients'))).'</li>';
 		$html[] = '</ul>';
 		$html[] = '</div>';
-
-		$data = str_replace('<body style="', '<body style="overflow-y:hidden; ', $object->toHtml(true)); // true pour nomark
-		$html[] = '<iframe srcdoc="data:text/html;base64,'.base64_encode('<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>').'" type="text/html" scrolling="no" onload="this.contentDocument.body.parentNode.innerHTML = decodeURIComponent(escape(window.atob(this.firstChild.nodeValue))); this.style.height = this.contentDocument.body.scrollHeight + \'px\';">'.base64_encode($data).'</iframe>';
+		$html[] = '<iframe type="text/html" srcdoc="data:text/html;base64,'.base64_encode('<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>').'" onload="this.contentDocument.body.parentNode.innerHTML = decodeURIComponent(escape(self.atob(this.firstChild.nodeValue))); this.style.height = this.contentDocument.body.scrollHeight + \'px\';" scrolling="no">'.
+			base64_encode(str_replace('<body style="', '<body style="overflow-y:hidden; ', $object->toHtml(true))).
+		'</iframe>'; // true pour nomark
 		$html[] = '</div>';
 
 		return implode("\n", $html);
@@ -129,10 +130,5 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 	protected function _prepareLayout() {
 		//return parent::_prepareLayout();
-	}
-
-	public function formatDate($date = null, $format = Zend_Date::DATETIME_LONG, $showTime = false) {
-		$object = Mage::getSingleton('core/locale');
-		return str_replace($object->date($date)->toString(Zend_Date::TIMEZONE), '', $object->date($date)->toString($format));
 	}
 }

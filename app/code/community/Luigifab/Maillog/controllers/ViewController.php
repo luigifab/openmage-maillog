@@ -1,11 +1,12 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated D/25/02/2018
+ * Updated J/10/01/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -24,11 +25,11 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageSize(1)
+			->setPageLimit(1)
 			->getFirstItem();
 
 		if (!empty($email->getId())) {
-			$html = $email->toHtml(($this->getRequest()->getParam('nomark') != '1') ? false : true);
+			$html = $email->toHtml($this->getRequest()->getParam('nomark') == '1');
 			$this->getResponse()->setBody($html);
 		}
 	}
@@ -37,12 +38,14 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageSize(1)
+			->setPageLimit(1)
 			->getFirstItem();
 
 		if (!empty($email->getId()) && !empty($email->getData('mail_parts'))) {
 
-			$parts = unserialize(gzdecode($email->getData('mail_parts')));
+			$parts = @unserialize(gzdecode($email->getData('mail_parts')));
+			$parts = (!empty($parts) && is_array($parts)) ? $parts : array();
+
 			$nb = intval($this->getRequest()->getParam('part', 0));
 
 			foreach ($parts as $key => $part) {
@@ -52,10 +55,19 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 					$data = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
 					$data = base64_decode($data);
 
+					$type = $part->type;
+					$disp = 'attachment; filename="'.$part->filename.'"';
+
+					// affichage pdf dans le navigateur
+					if (($type == 'application/octet-stream') && (mb_substr($part->filename, -4) == '.pdf'))
+						$type = 'application/pdf';
+					if ($type == 'application/pdf')
+						$disp = 'inline; filename="'.$part->filename.'"';
+
 					$this->getResponse()->setHttpResponseCode(200);
-					$this->getResponse()->setHeader('Content-Type', $part->type, true);
-					$this->getResponse()->setHeader('Content-Length', strlen($data));
-					$this->getResponse()->setHeader('Content-Disposition', 'attachment; filename="'.$part->filename.'"');
+					$this->getResponse()->setHeader('Content-Type', $type, true);
+					$this->getResponse()->setHeader('Content-Length', mb_strlen($data));
+					$this->getResponse()->setHeader('Content-Disposition', $disp);
 					$this->getResponse()->setHeader('Last-Modified', date('r'));
 					$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);
 					$this->getResponse()->setBody($data);
@@ -72,7 +84,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageSize(1)
+			->setPageLimit(1)
 			->getFirstItem();
 
 		if (!empty($email->getId()) && ($email->getData('status') != 'read'))
@@ -83,7 +95,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		$this->getResponse()->setHttpResponseCode(200);
 		$this->getResponse()->setHeader('Content-Type', 'image/gif', true);
-		$this->getResponse()->setHeader('Content-Length', strlen($data));
+		$this->getResponse()->setHeader('Content-Length', mb_strlen($data));
 		$this->getResponse()->setHeader('Content-Disposition', 'inline; filename="pixel.gif"');
 		$this->getResponse()->setHeader('Last-Modified', date('r'));
 		$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);

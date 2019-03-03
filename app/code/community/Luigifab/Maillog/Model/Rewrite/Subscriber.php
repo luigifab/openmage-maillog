@@ -1,12 +1,12 @@
 <?php
 /**
  * Created L/27/11/2017
- * Updated M/27/02/2018
+ * Updated W/26/09/2018
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * https://www.luigifab.info/magento/maillog
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -20,6 +20,11 @@
  */
 
 class Luigifab_Maillog_Model_Rewrite_Subscriber extends Mage_Newsletter_Model_Subscriber {
+
+	public function loadByEmail($subscriberEmail, $storeId = 0) {
+		$this->addData($this->getResource()->loadByEmail($subscriberEmail, $storeId));
+		return $this;
+	}
 
 	public function sendConfirmationRequestEmail() {
 
@@ -134,5 +139,9 @@ class Luigifab_Maillog_Model_Rewrite_Subscriber extends Mage_Newsletter_Model_Su
 
 		$translate->setTranslateInline(true);
 		return $this;
+	}
+
+	public function specialCheckRewrite() {
+		return true;
 	}
 }

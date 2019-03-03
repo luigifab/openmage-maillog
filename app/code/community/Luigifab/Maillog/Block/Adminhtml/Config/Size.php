@@ -1,11 +1,12 @@
 <?php
 /**
  * Created V/19/06/2015
- * Updated M/12/12/2017
+ * Updated S/22/12/2018
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -34,7 +35,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Size extends Mage_Adminhtml_Block_
 		$select = $read->select()
 			->from('information_schema.TABLES', '(data_length + index_length) AS size_bytes')
 			->where('table_schema = ?', $conf['dbname'])
-			->where('table_name = ?', $database->getTableName('luigifab_maillog'));
+			->where('table_name = ?', $database->getTableName((mb_strpos($element->getHtmlId(), 'sync') !== false) ? 'luigifab_maillog_sync' : 'luigifab_maillog'));
 
 		$element->setValue(floatval($read->fetchOne($select)));
 

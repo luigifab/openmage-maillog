@@ -16,45 +16,13 @@
 "var import_unsubscribers":"Last import of unsubscribed emails",
 "var sync":"Synchronization status",
 
-"var cur_week_period":"Statistics of the current week, dates",
-"var cur_week_total_email":"Statistics of the current week, number of email",
-"var cur_week_percent_sent":"Statistics of the current week, percent of email sent",
-"var cur_week_percent_read":"Statistics of the current week, percent of email open/read",
-"var cur_week_percent_unsent":"Statistics of the current week, percent of email unsent",
-"var cur_week_total_sync":"Statistics of the current week, number of synchronization",
-"var cur_week_percent_sync":"Statistics of the current week, percent of successful synchronization",
-
-"var last_week_period":"Statistics of the last week, dates",
-"var last_week_total_email":"Statistics of the last week, number of email",
-"var last_week_percent_sent":"Statistics of the last week, percent of email sent",
-"var last_week_percent_read":"Statistics of the last week, percent of email open/read",
-"var last_week_percent_unsent":"Statistics of the last week, percent of email unsent",
-"var last_week_total_sync":"Statistics of the last week, number of synchronization",
-"var last_week_percent_sync":"Statistics of the last week, percent of successful synchronization",
-
-"var old_week_period":"Statistics of the week before, dates",
-"var old_week_total_email":"Statistics of the week before, number of email",
-"var old_week_percent_sent":"Statistics of the week before, percent of email sent",
-"var old_week_percent_read":"Statistics of the week before, percent of email open/read",
-"var old_week_percent_unsent":"Statistics of the week before, percent of email unsent",
-"var old_week_total_sync":"Statistics of the week before, number of synchronization",
-"var old_week_percent_sync":"Statistics of the week before, percent of successful synchronization",
-
-"var last_month_period":"Statistics of the last month, dates",
-"var last_month_total_email":"Statistics of the last month, number of email",
-"var last_month_percent_sent":"Statistics of the last month, percent of email sent",
-"var last_month_percent_read":"Statistics of the last month, percent of email open/read",
-"var last_month_percent_unsent":"Statistics of the last month, percent of email unsent",
-"var last_month_total_sync":"Statistics of the last month, number of synchronization",
-"var last_month_percent_sync":"Statistics of the last month, percent of successful synchronization",
-
-"var old_month_period":"Statistics of the month before, dates",
-"var old_month_total_email":"Statistics of the month before, number of email",
-"var old_month_percent_sent":"Statistics of the month before, percent of email sent",
-"var old_month_percent_read":"Statistics of the month before, percent of email open/read",
-"var old_month_percent_unsent":"Statistics of the month before, percent of email unsent",
-"var old_month_total_sync":"Statistics of the month before, number of synchronization",
-"var old_month_percent_sync":"Statistics of the month before, percent of successful synchronization",
+"var items.period":"Statistics, dates",
+"var items.total_email":"Statistics, number of email",
+"var items.percent_sent":"Statistics, percent of email sent",
+"var items.percent_read":"Statistics, percent of email open/read",
+"var items.percent_unsent":"Statistics, percent of email unsent",
+"var items.total_sync":"Statistics, number of synchronization",
+"var items.percent_sync":"Statistics, percent of successful synchronization",
 
 "var error_list":"List of emails on error",
 "var config":"Configuration address"
@@ -84,92 +52,32 @@
 	<table style="margin-bottom:1em;">
 		<tr>
 			<th></th>
-			<td style="font-size:12px;">|</td>
-			<th scope="col" style="padding:2px 5px; font-size:12px;">Correo electrónico</th>
-			<th scope="col" style="padding:2px 5px; font-size:12px;">enviado</th>
-			<th scope="col" style="padding:2px 5px; font-size:12px;">abierto/leído</th>
-			<th scope="col" style="padding:2px 5px; font-size:12px;">no enviado</th>
+			<td style="font-size:12px; line-height:15px;">|</td>
+			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">Correo electrónico</th>
+			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">enviado</th>
+			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">abierto/leído</th>
+			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">no enviado</th>
 			{{depend sync}}
-			<td style="font-size:12px;">|</td>
-			<th scope="col" style="padding:2px 5px; font-size:12px;" title="Sincronización">Sinc.</th>
-			<th scope="col" style="padding:2px 5px; font-size:12px;">lograda</th>
+			<td style="font-size:12px; line-height:15px;">|</td>
+			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;" title="Sincronización">Sinc.</th>
+			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">lograda</th>
 			{{/depend}}
 		</tr>
-		{{if cur_week_total_email}}
+		{{foreach items}}
 			<tr>
-				<th scope="row" style="padding:2px 5px; font-size:12px; font-weight:400;">Semana actual<br /><small>{{var cur_week_period}}</small></th>
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;"><strong>{{var cur_week_total_email}}</strong></td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var cur_week_percent_sent}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var cur_week_percent_read}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var cur_week_percent_unsent}}</td>
+				<th scope="row" style="padding:2px 5px; line-height:15px; font-size:12px; font-weight:400;">{{var items.period}}</th>
+				<td style="font-size:12px;">|<br />|</td>
+				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;"><strong>{{var items.total_email}}</strong></td>
+				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.percent_sent}}</td>
+				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.percent_read}}</td>
+				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.percent_unsent}}</td>
 				{{depend sync}}
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var cur_week_total_sync}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var cur_week_percent_sync}}</td>
+				<td style="font-size:12px;">|<br />|</td>
+				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.total_sync}}</td>
+				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.percent_sync}}</td>
 				{{/depend}}
 			</tr>
-		{{/if}}
-		{{if last_week_total_email}}
-			<tr>
-				<th scope="row" style="padding:2px 5px; font-size:12px; font-weight:400;">Semana pasada<br /><small>{{var last_week_period}}</small></th>
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;"><strong>{{var last_week_total_email}}</strong></td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_week_percent_sent}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_week_percent_read}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_week_percent_unsent}}</td>
-				{{depend sync}}
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_week_total_sync}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_week_percent_sync}}</td>
-				{{/depend}}
-			</tr>
-		{{/if}}
-		{{if old_week_total_email}}
-			<tr>
-				<th scope="row" style="padding:2px 5px; font-size:12px; font-weight:400;">Semana antes<br /><small>{{var old_week_period}}</small></th>
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;"><strong>{{var old_week_total_email}}</strong></td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_week_percent_sent}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_week_percent_read}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_week_percent_unsent}}</td>
-				{{depend sync}}
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_week_total_sync}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_week_percent_sync}}</td>
-				{{/depend}}
-			</tr>
-		{{/if}}
-		{{if last_month_total_email}}
-			<tr>
-				<th scope="row" style="padding:2px 5px; font-size:12px; font-weight:400;">Mes pasado<br /><small>{{var last_month_period}}</small></th>
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;"><strong>{{var last_month_total_email}}</strong></td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_month_percent_sent}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_month_percent_read}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_month_percent_unsent}}</td>
-				{{depend sync}}
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_month_total_sync}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var last_month_percent_sync}}</td>
-				{{/depend}}
-			</tr>
-		{{/if}}
-		{{if old_month_total_email}}
-			<tr>
-				<th scope="row" style="padding:2px 5px; font-size:12px; font-weight:400;">Mes antes<br /><small>{{var old_month_period}}</small></th>
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;"><strong>{{var old_month_total_email}}</strong></td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_month_percent_sent}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_month_percent_read}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_month_percent_unsent}}</td>
-				{{depend sync}}
-				<td style="font-size:12px;">|</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_month_total_sync}}</td>
-				<td style="padding:2px 5px; font-size:12px; text-align:left;">{{var old_month_percent_sync}}</td>
-				{{/depend}}
-			</tr>
-		{{/if}}
+		{{/foreach}}
 	</table>
 
 	{{depend error_list}}

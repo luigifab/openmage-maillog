@@ -1,11 +1,12 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated M/27/02/2018
+ * Updated J/06/09/2018
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -28,7 +29,7 @@ class Luigifab_Maillog_Model_Source_Minify {
 
 		return array(
 			array('value' => 0, 'label' => $help->__('No')),
-			array('value' => 1, 'label' => $help->__('With PHP-TIDY (%s)', $tidy))
+			array('value' => 1, 'label' => $help->__('Yes with PHP-TIDY (%s)', $tidy))
 		);
 	}
 }

@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated D/01/04/2018
+ * Updated M/15/01/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -21,10 +22,17 @@
 $config = $this->getConfig();
 $types  = $this->getTypes();
 
+$textAsk   = addslashes($this->__('Are you sure?'));
 $bgColor   = Mage::getSingleton('maillog/email')->getDefaultBgColor();
-$textColor = Mage::getSingleton('maillog/email')->getDefaultTxtColor();
+$txtColor  = Mage::getSingleton('maillog/email')->getDefaultTxtColor();
+$canDelete = false;
 ?>
 
+<tr id="<?php echo $this->getHtmlId() ?>_head">
+	<td class="label" colspan="2"><?php echo $this->getLabel() ?></td>
+	<td class="scope-label"><?php echo $this->getScopeLabel() ?></td>
+	<td></td>
+</tr>
 <tr id="<?php echo $this->getHtmlId() ?>">
 	<td colspan="4" style="padding-right:0;">
 		<ul class="cool">
@@ -34,7 +42,7 @@ $textColor = Mage::getSingleton('maillog/email')->getDefaultTxtColor();
 			?>
 				<li>
 					<span>
-						<?php echo (in_array($type, array('without', 'all'))) ? $this->__('<b>'.$type.'</b>') : $type ?>
+						<?php echo in_array($type, array('without', 'all')) ? $this->__('<b>'.$type.'</b>') : $type ?>
 						<?php //echo $this->__('<b>without</b>') pour le translate.php ?>
 						<?php //echo $this->__('<b>all</b>')     pour le translate.php ?>
 					</span>
@@ -95,14 +103,24 @@ $textColor = Mage::getSingleton('maillog/email')->getDefaultTxtColor();
 
 					<?php $key = str_replace(' ', '_', $type) ?>
 					<input type="color" name="groups[general][fields][special_config][value][<?php echo $key ?>_back_color]"
-						value="<?php echo (!empty($config[$key.'_back_color'])) ? $config[$key.'_back_color'] : $bgColor ?>"
+						value="<?php echo mb_strtolower(!empty($config[$key.'_back_color']) ? $config[$key.'_back_color'] : $bgColor) ?>"
 						title="<?php echo $this->__('Background color') ?>" />
 					<input type="color" name="groups[general][fields][special_config][value][<?php echo $key ?>_text_color]"
-						value="<?php echo (!empty($config[$key.'_text_color'])) ? $config[$key.'_text_color'] : $textColor ?>"
+						value="<?php echo mb_strtolower(!empty($config[$key.'_text_color']) ? $config[$key.'_text_color'] : $txtColor) ?>"
 						title="<?php echo $this->__('Text color') ?>" />
+
+					<button type="button" onclick="maillog.reset(this, '<?php echo $bgColor ?>');">
+						<?php echo __('Reset') ?>
+					</button>
+					<?php if ($canDelete): ?>
+						<input type="hidden" name="groups[general][fields][special_config][value][<?php echo $key ?>_delete]" value="0" />
+						<button type="button" onclick="maillog.remove(this, '<?php echo $textAsk ?>');">
+							<?php echo __('Delete') ?>
+						</button>
+					<?php endif ?>
+					<?php if ($type == 'all') { $canDelete = true; } ?>
 				</li>
 			<?php endforeach ?>
 		</ul>
-		<p class="cool note"><span><?php echo $this->__('Default background color: %s.', $bgColor) ?></span></p>
 	</td>
 </tr>

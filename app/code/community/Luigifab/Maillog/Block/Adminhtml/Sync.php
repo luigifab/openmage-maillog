@@ -1,11 +1,12 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/07/12/2017
+ * Updated D/27/01/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -26,8 +27,14 @@ class Luigifab_Maillog_Block_Adminhtml_Sync extends Mage_Adminhtml_Block_Widget_
 
 		$this->_controller = 'adminhtml_sync';
 		$this->_blockGroup = 'maillog';
-		$this->_headerText = $this->__('Customers synchronization');
+		$this->_headerText = $this->__('Customers synchronization').' '.$this->helper('maillog')->getSpecialCronStatus();
 
 		$this->_removeButton('add');
+
+		//$this->_addButton('syncall', array(
+		//	'label'   => $this->__('Synchronize all customers'),
+		//	'onclick' => "maillog.confirm('".addslashes($this->__('Are you sure?'))."', '".addslashes($this->__('Be careful, all customers will be synchronized.'))."', '".$this->getUrl('*/*/syncall')."')",
+		//	'class'   => 'add'
+		//));
 	}
 }

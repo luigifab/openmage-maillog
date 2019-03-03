@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated S/31/03/2018
+ * Updated M/05/02/2019
  *
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
- * https://www.luigifab.info/magento/maillog
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -18,7 +19,9 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Block_Adminhtml_Config_Special extends Mage_Adminhtml_Block_System_Config_Form_Field_Array_Abstract {
+class Luigifab_Maillog_Block_Adminhtml_Config_Special extends Mage_Adminhtml_Block_System_Config_Form_Field {
+
+	protected $_template = 'luigifab/maillog/special.phtml';
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
@@ -30,17 +33,18 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Special extends Mage_Adminhtml_Blo
 		if (!empty($config) && is_array($config)) {
 			// ajoute les types configurés ayant disparus
 			foreach ($config as $key => $value) {
-				$type = substr($key, 0, strpos($key, '_'));
+				$type = mb_substr($key, 0, mb_strpos($key, '_'));
 				if (!in_array($type, $types))
-					array_push($types, $type);
+					$types[] = $type;
 			}
 		}
 
-		return $this->getLayout()->createBlock('core/template')
-			->setTemplate('luigifab/maillog/special.phtml')
-			->setHtmlId('row_'.$element->getHtmlId())
-			->setConfig($config)
-			->setTypes($types)
-			->toHtml();
+		$this->setHtmlId('row_'.$element->getHtmlId());
+		$this->setScopeLabel($element->getScopeLabel());
+		$this->setLabel($element->getLabel());
+		$this->setConfig($config);
+		$this->setTypes($types);
+
+		return $this->toHtml();
 	}
 }

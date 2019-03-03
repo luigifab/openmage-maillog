@@ -1,21 +1,40 @@
 /**
- * Created D/22/03/2015, Updated D/01/04/2018
- * Copyright 2015-2018 | Fabrice Creuzot (luigifab) <code~luigifab~info>
- * https://www.luigifab.info/magento/maillog
+ * Created D/22/03/2015
+ * Updated D/03/02/2019
+ *
+ * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
  *
  * This program is free software, you can redistribute it or modify
- * it under the terms of the GNU General Public License (GPL).
+ * it under the terms of the GNU General Public License (GPL) as published
+ * by the free software foundation, either version 2 of the license, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but without any warranty, without even the implied warranty of
+ * merchantability or fitness for a particular purpose. See the
+ * GNU General Public License (GPL) for more details.
  */
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& global &&& */
 body.adminhtml-maillog-history-index h3.icon-head, body.adminhtml-maillog-history-view h3.icon-head,
 body.adminhtml-maillog-sync-index h3.icon-head {
-	min-height:19px; background:url("../../../images/fam_lorry.gif") no-repeat left center;
+	float:none; min-height:19px; background:url("../../../images/fam_lorry.gif") no-repeat left center;
 }
 
 body table.data.adminhtml-maillog-history tr.parts td.a-right {
 	background:url("../../../images/luigifab/maillog/mail-attachment.svg") no-repeat -7px center;
 }
+
+body.adminhtml-maillog-history-index h3.icon-head span,
+body.adminhtml-maillog-sync-index h3.icon-head span {
+	float:right; font-size:12px; font-weight:400;
+}
+
+body.adminhtml-maillog-history-index h3.icon-head span a,
+body.adminhtml-maillog-sync-index h3.icon-head span a { color:inherit; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/history/view &&& */
 body.adminhtml-maillog-history-view div.content div { display:table; margin:1.4em auto; width:100%; border-spacing:1em 0; border-collapse:separate; }
@@ -35,15 +54,20 @@ body.adminhtml-maillog-history-view div.content iframe {
 }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/sync/index &&& */
-body.adminhtml-maillog-sync-index table.data div.details1 { margin-top:0.3em; }
-body.adminhtml-maillog-sync-index table.data div.details2 { margin-top:0.3em; column-count:2; -moz-column-count:2; -webkit-column-count:2; }
+body.adminhtml-maillog-sync-index table.data div.details { column-count:2; -moz-column-count:2; -webkit-column-count:2; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& system/config &&& */
-#config_edit_form[action*="system_config/save/section/maillog"] [for="maillog_general_special_label"] { padding-right:0; width:230%; }
-#config_edit_form[action*="system_config/save/section/maillog"] ul.cool li span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
-#config_edit_form[action*="system_config/save/section/maillog"] ul.cool li select { margin-right:5px; width:136px; }
-#config_edit_form[action*="system_config/save/section/maillog"] p.cool.note { margin-top:-4px; margin-left:210px; }
 #config_edit_form[action*="system_config/save/section/maillog"] option.has { font-weight:700; }
+
+#config_edit_form[action*="system_config/save/section/maillog"] .cool li span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
+#config_edit_form[action*="system_config/save/section/maillog"] .cool li input { margin-right:5px; width:60px; height:15px; cursor:pointer; }
+#config_edit_form[action*="system_config/save/section/maillog"] .cool li select { margin-right:5px; width:136px; }
+#config_edit_form[action*="system_config/save/section/maillog"] .cool li:hover { background-color:#DEDEDE; }
+
+#config_edit_form[action*="system_config/save/section/maillog"] .cool li button {
+	margin:0 5px 0 0; padding:0; vertical-align:middle;
+	font-size:12px; font-weight:400; color:inherit; border:0; background:none;
+}
 
 #config_edit_form[action*="system_config/save/section/maillog"] .comment { padding-bottom:1.4em; }
 #config_edit_form[action*="system_config/save/section/maillog"] .comment p { margin-bottom:0; line-height:150%; }
@@ -51,21 +75,27 @@ body.adminhtml-maillog-sync-index table.data div.details2 { margin-top:0.3em; co
 #config_edit_form[action*="system_config/save/section/maillog"] .comment li { margin:0; line-height:1.5em; }
 #config_edit_form[action*="system_config/save/section/maillog"] .comment li:before { content:"➤\0000A0"; }
 
+#config_edit_form[action*="system_config/save/section/maillog"] code {
+	display:inline-block; margin:6px 0; width:100%;
+	line-height:110%; white-space:pre-wrap;
+}
+
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& statut &&& */
 body span.maillog-status {
 	display:block; height:17px; line-height:18px; text-align:center;
 	font-size:10px; font-weight:700; text-transform:uppercase; color:white; border-radius:10px;
 }
 
-body span.maillog-status.grid-pending  { background-color:#B3B4B3; }
-body span.maillog-status.grid-sending  { background-color:#FF9C00; }
-body span.maillog-status.grid-running  { background-color:#FF9C00; }
-body span.maillog-status.grid-sent     { background-color:#FFC700; }
-body span.maillog-status.grid-success  { background-color:#3CB861; }
-body span.maillog-status.grid-read     { background-color:#3CB861; }
-body span.maillog-status.grid-error    { background-color:#E41101; }
-body span.maillog-status.grid-notsent  { background-color:purple; }
-body span.maillog-status.grid-bounce   { background-color:black; }
+body span.maillog-status.grid-pending { background-color:#B3B4B3; }
+body span.maillog-status.grid-sending { background-color:#FF9C00; }
+body span.maillog-status.grid-running { background-color:#FF9C00; }
+body span.maillog-status.grid-sent    { background-color:#FFC700; }
+body span.maillog-status.grid-success { background-color:#3CB861; }
+body span.maillog-status.grid-read    { background-color:#3CB861; }
+body span.maillog-status.grid-error   { background-color:#E41101; }
+body span.maillog-status.grid-bounce  { background-color:black; }
+body span.maillog-status.grid-notsent { background-color:black; }
+body span.maillog-status.grid-notsync { background-color:black; }
 
 body span.maillog-status.grid-error, body span.maillog-status.grid-bounce {
 	animation:maillogBlink 1s step-start 0s infinite; -webkit-animation:maillogBlink 1s step-start 0s infinite;
