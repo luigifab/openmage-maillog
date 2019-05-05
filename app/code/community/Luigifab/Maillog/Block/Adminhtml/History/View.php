@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/03/02/2019
+ * Updated V/12/04/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -30,7 +30,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$this->_controller = 'adminhtml_history';
 		$this->_blockGroup = 'emaillog';
-		$this->_headerText = $this->__('Email number %d - %s', $object->getId(), htmlentities($object->getData('mail_subject')));
+		$this->_headerText = $this->__('Email number %d - %s', $object->getId(), $object->getSubject());
 
 		$this->_removeButton('add');
 
@@ -108,7 +108,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		$html[] = '<li>'.$this->__('Recipient(s): %s', $help->getHumanEmailAddress($object->getData('mail_recipients'))).'</li>';
 		$html[] = '</ul>';
 		$html[] = '</div>';
-		$html[] = '<iframe type="text/html" srcdoc="data:text/html;base64,'.base64_encode('<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>').'" onload="this.contentDocument.body.parentNode.innerHTML = decodeURIComponent(escape(self.atob(this.firstChild.nodeValue))); this.style.height = this.contentDocument.body.scrollHeight + \'px\';" scrolling="no">'.
+		$base   = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>';
+		$html[] = '<iframe type="text/html" srcdoc="data:text/html;base64,'.base64_encode($base).'" onload="maillog.iframe(this)" scrolling="no">'.
 			base64_encode(str_replace('<body style="', '<body style="overflow-y:hidden; ', $object->toHtml(true))).
 		'</iframe>'; // true pour nomark
 		$html[] = '</div>';

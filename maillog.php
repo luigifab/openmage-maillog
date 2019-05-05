@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated M/15/01/2019
+ * Updated V/08/03/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -19,7 +19,7 @@
  * GNU General Public License (GPL) for more details.
  */
 
-chdir(realpath(__DIR__));
+chdir(dirname(__FILE__));
 if ((PHP_SAPI != 'cli') || is_file('maintenance.flag') || is_file('upgrade.flag'))
 	exit(0);
 

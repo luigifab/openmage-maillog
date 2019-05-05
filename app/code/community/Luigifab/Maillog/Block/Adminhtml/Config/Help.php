@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/14/02/2019
+ * Updated S/23/03/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -76,7 +76,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 			return 'lib/Zend/Mail/Transport/Sendmail.php';
 
 		$varien = file_get_contents(BP.'/lib/Varien/Filter/Template.php');
-		if (mb_strpos($varien, '$value = Mage::helper(\'maillog\')->filterMail($this, $value);') === false)
+		if (mb_strpos($varien, '$value = Mage::helper(\'maillog\')->filterMail($this, $value, $this->_templateVars);') === false)
 			return 'lib/Varien/Filter/Template.php';
 		if (mb_strpos($varien, 'return Mage::helper(\'maillog\')->variableMail($this, $value, $default);') === false)
 			return 'lib/Varien/Filter/Template.php';

@@ -37,13 +37,13 @@ try {
 		CREATE TABLE '.$this->getTable('luigifab_maillog_sync').' (
 			sync_id                 int(11) unsigned NOT NULL AUTO_INCREMENT,
 			status                  enum("pending","success","error","running","notsync") NOT NULL DEFAULT "pending",
-			created_at              datetime        NULL DEFAULT NULL,
-			sync_at                 datetime        NULL DEFAULT NULL,
-			duration                int(4)          NOT NULL DEFAULT -1,
-			user                    varchar(50)     NULL DEFAULT NULL,
-			action                  varchar(250)    NULL DEFAULT NULL,
-			request                 text            NULL DEFAULT NULL,
-			response                text            NULL DEFAULT NULL,
+			created_at              datetime         NULL DEFAULT NULL,
+			sync_at                 datetime         NULL DEFAULT NULL,
+			duration                int(4)           NOT NULL DEFAULT -1,
+			user                    varchar(50)      NULL DEFAULT NULL,
+			action                  varchar(250)     NULL DEFAULT NULL,
+			request                 text             NULL DEFAULT NULL,
+			response                text             NULL DEFAULT NULL,
 			PRIMARY KEY (sync_id)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

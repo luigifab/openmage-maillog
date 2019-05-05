@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/25/08/2018
+ * Updated S/09/03/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -23,6 +23,16 @@ class Luigifab_Maillog_Model_Resource_Email_Collection extends Mage_Core_Model_M
 
 	public function _construct() {
 		$this->_init('maillog/email');
+	}
+
+	protected function _beforeLoad() {
+		$this->getConnection()->query('SET NAMES utf8mb4;');
+		return $this;
+	}
+
+	protected function _afterLoad() {
+		$this->getConnection()->query('SET NAMES '.$this->getResource()->_getCharacterSet().';');
+		return $this;
 	}
 
 	public function addFieldToSort($field, $direction) {

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/15/01/2019
+ * Updated V/03/05/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -164,6 +164,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 					}
 					else if (($current == $customer) && ($magento == 'store_id')) {
 						$value = $object->getData('store_id');
+						// spécial
 						if (!is_null($value) && array_key_exists(Mage::getStoreConfig('general/locale/code', $value), $this->locales))
 							$fields[$system] = $this->locales[Mage::getStoreConfig('general/locale/code', $value)];
 						else

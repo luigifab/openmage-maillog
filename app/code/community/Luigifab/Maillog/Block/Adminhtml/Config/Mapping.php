@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated V/01/03/2019
+ * Updated D/17/03/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -116,7 +116,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$options['magento'][] = array('value' => 'subscriber_status');
 
 			foreach ($options['magento'] as &$option) {
-				if (mb_strpos($values, '|'.$option['value'].'|') !== false)
+				if ((mb_strpos($values, ':'.$option['value'].'|') !== false) || (mb_strpos($values, ':'.$option['value'].':') !== false))
 					$option['selected'] = true;
 			}
 

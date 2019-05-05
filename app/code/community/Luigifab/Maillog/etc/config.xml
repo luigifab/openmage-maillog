@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated S/16/02/2019
+ * Updated L/15/04/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,7 +22,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>3.2.0</version>
+			<version>3.3.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -99,10 +99,14 @@
 			</customer_save_commit_after>
 			<customer_delete_after>
 				<observers>
-					<maillog_customer_delete>
+					<maillog_customer_delete_sync>
 						<class>maillog/observer</class>
 						<method>customerDeleteSync</method>
-					</maillog_customer_delete>
+					</maillog_customer_delete_sync>
+					<maillog_customer_delete_clean>
+						<class>maillog/observer</class>
+						<method>customerDeleteClean</method>
+					</maillog_customer_delete_clean>
 				</observers>
 			</customer_delete_after>
 			<newsletter_subscriber_save_after>
@@ -243,18 +247,17 @@
 		<maillog>
 			<general>
 				<send>1</send>
-				<notbaseurl>dev test preprod</notbaseurl>
 				<subject>1</subject>
 				<created>1</created>
 			</general>
+			<filters>
+				<notbaseurl>dev test preprod</notbaseurl>
+			</filters>
 			<email>
 				<enabled>0</enabled>
 				<recipient_email>hello@example.org</recipient_email>
 				<sender_email_identity>general</sender_email_identity>
 			</email>
-			<sync>
-				<notbaseurl>dev test preprod</notbaseurl>
-			</sync>
 			<bounces>
 				<cron_expr>30 2 * * *</cron_expr>
 			</bounces>

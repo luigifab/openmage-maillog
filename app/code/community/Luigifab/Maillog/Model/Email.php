@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/16/02/2019
+ * Updated V/03/05/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -25,6 +25,16 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		$this->_init('maillog/email');
 	}
 
+	protected function _beforeLoad() {
+		$this->getResource()->getReadConnection()->query('SET NAMES utf8mb4;');
+		return $this;
+	}
+
+	protected function _afterLoad() {
+		$this->getResource()->getReadConnection()->query('SET NAMES '.$this->getResource()->_getCharacterSet().';');
+		return $this;
+	}
+
 	public function getDefaultBgColor() {
 		return '#F6F6F6';
 	}
@@ -34,7 +44,10 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 	}
 
 
-	// traitement des données
+	public function getSubject() {
+		return htmlentities($this->getData('mail_subject'));
+	}
+
 	public function setMailSender($data) {
 		$this->setData('mail_sender', iconv_mime_decode($data, 0, 'utf-8'));
 	}
@@ -139,8 +152,6 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		), $html);
 	}
 
-
-	// envoi de l'email
 	public function sendNow() {
 
 		$now = time();
@@ -151,15 +162,19 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			$this->setData('status', 'sending');
 			$this->save();
 
+			$heads = $this->getData('mail_header');
 			$email = $this->getData('mail_recipients');
-			$allow = Mage::helper('maillog')->canSend('general', $email); // general pour email
+			$allow = Mage::getStoreConfigFlag('maillog/general/send') ? Mage::helper('maillog')->canSend($email) : false;
+
+			if (is_array($heads))
+				$heads['X-Maillog'] = $this->getData('uniqid');
 
 			// préparation des données
 			if (empty($this->getData('mail_parts'))) {
 				$body = quoted_printable_encode($this->getData('mail_body'));
 			}
 			else {
-				preg_match('#boundary="([^"]+)"#', $this->getData('mail_header'), $bound);
+				preg_match('#boundary="([^"]+)"#', $heads, $bound);
 				$bound = $bound[1];
 
 				$body = $this->getData('mail_body');
@@ -191,7 +206,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				mb_strlen($this->getData('encoded_mail_recipients')) + // utilise les destinataires originaux
 				mb_strlen($this->getData('encoded_mail_subject')) +    // utilise le sujet original
 				mb_strlen($body) +                                     // utilise la nouvelle version encodée du contenu
-				mb_strlen($this->getData('mail_header')) +             // utilise les entêtes originaux
+				mb_strlen($heads) +                                    // utilise les entêtes originaux (où presque)
 				mb_strlen($this->getData('mail_parameters'))           // utilise les paramètres originaux
 			);
 
@@ -206,7 +221,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					$this->getData('encoded_mail_recipients'), // version originale
 					$this->getData('encoded_mail_subject'),    // version originale
 					$body,
-					$this->getData('mail_header'),             // version originale
+					$heads,                                    // version originale (où presque)
 					$this->getData('mail_parameters')          // version originale
 				);
 
@@ -222,7 +237,6 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			Mage::logException($e);
 		}
 	}
-
 
 
 	// prépare l'email pour un affichage dans une page web
@@ -247,24 +261,24 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 			foreach ($config as $key => $value) {
 				if (!empty($value) && ($key == $this->getData('type').'_back_color'))
-					$bgColor  = $value;
+					$bgColor = $value;
 				if (!empty($value) && ($key == $this->getData('type').'_text_color'))
-					$txtColor = $value;
+					$ttColor = $value;
 			}
 
 			if (empty($bgColor) && !empty($config['without_back_color']) && in_array($this->getData('type'), array('--', '', null)))
-				$bgColor  = $config['without_back_color'];
-			if (empty($txtColor) && !empty($config['without_text_color']) && in_array($this->getData('type'), array('--', '', null)))
-				$txtColor = $config['without_text_color'];
+				$bgColor = $config['without_back_color'];
+			if (empty($ttColor) && !empty($config['without_text_color']) && in_array($this->getData('type'), array('--', '', null)))
+				$ttColor = $config['without_text_color'];
 
 			if (empty($bgColor) && !empty($config['all_back_color']))
-				$bgColor  = $config['all_back_color'];
-			if (empty($txtColor) && !empty($config['all_text_color']))
-				$txtColor = $config['all_text_color'];
+				$bgColor = $config['all_back_color'];
+			if (empty($ttColor) && !empty($config['all_text_color']))
+				$ttColor = $config['all_text_color'];
 		}
 
-		$bgColor  = !empty($bgColor) ? $bgColor : $this->getDefaultBgColor();
-		$txtColor = !empty($txtColor) ? $txtColor : $this->getDefaultTxtColor();
+		$bgColor = !empty($bgColor) ? $bgColor : $this->getDefaultBgColor();
+		$ttColor = !empty($ttColor) ? $ttColor : $this->getDefaultTxtColor();
 
 		// gestion de la langue
 		// soit la langue du back-office, soit la langue du front-office
@@ -285,7 +299,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">'."\n".
 			'<html lang="'.mb_substr($newLocale, 0, 2).'">'."\n".
 			'<head>'."\n".
-				'<title>'.htmlentities($this->getData('mail_subject')).'</title>'."\n".
+				'<title>'.$this->getSubject().'</title>'."\n".
 				'<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'."\n".
 				'<meta name="robots" content="noindex,nofollow">'."\n".
 				'<link rel="icon" type="image/x-icon" href="'.Mage::getDesign()->getSkinUrl('favicon.ico').'">'."\n".
@@ -293,17 +307,17 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				'body { margin:0; padding:0 2rem 2rem !important; overflow-y:scroll; }'."\n".
 				'body > ul.attachments {'."\n".
 				' display:flex; justify-content:center; margin:0 -2rem 2.4em;'."\n".
-				' list-style:none; font-size:0.7rem; color:'.$txtColor.'; background-color:'.$bgColor.';'."\n".
+				' list-style:none; font-size:0.7rem; color:'.$ttColor.'; background-color:'.$bgColor.';'."\n".
 				'}'."\n".
 				'body > ul.attachments li { margin:1em 0; line-height:142%; }'."\n".
 				'body > ul.attachments li:first-child {'."\n".
 				' display:flex; flex-direction:column; justify-content:center; padding:0 4em 0 58px; height:60px;'."\n".
 				' background:url("'.$design->getSkinUrl('images/luigifab/maillog/humanity-mail.svg').'") no-repeat left center;'."\n".
 				'}'."\n".
-				'body > ul.attachments li:first-child a { text-decoration:underline; color:'.$txtColor.'; }'."\n".
+				'body > ul.attachments li:first-child a { text-decoration:underline; color:'.$ttColor.'; }'."\n".
 				'body > ul.attachments li a[type] {'."\n".
 				' display:flex; flex-direction:column; justify-content:center; padding:0 1.7em 0 50px; height:60px;'."\n".
-				' color:'.$txtColor.'; text-decoration:none; cursor:pointer; background-repeat:no-repeat; background-position:left center;'."\n".
+				' color:'.$ttColor.'; text-decoration:none; cursor:pointer; background-repeat:no-repeat; background-position:left center;'."\n".
 				'}'."\n".
 				'body > ul.attachments li a[type] { background-image:url("'.
 					$design->getSkinUrl('images/luigifab/maillog/humanity-file.svg').'"); }'."\n".
@@ -339,7 +353,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			// informations du mail
 			// sujet, date d'envoi, expéditeur, lien d'impression
 			if (!in_array($sentat, array('', '0000-00-00 00:00:00', null))) {
-				$html[] = '<li><strong>'.$help->__('Subject: %s', htmlentities($this->getData('mail_subject')))."</strong>\n".
+				$html[] = '<li><strong>'.$help->__('Subject: %s', $this->getSubject())."</strong>\n".
 					'<span>'.$help->__('Sent At: %s', $date->date($sentat)->toString(Zend_Date::DATETIME_FULL))."</span>\n".
 					(!empty($sender) ? '<span>'.$help->__('Sender: %s', $help->getHumanEmailAddress($sender))."</span>\n" : '').
 					'<span class="print">'.
@@ -347,7 +361,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					'</span></li>';
 			}
 			else {
-				$html[] = '<li><strong>'.$help->__('Subject: %s', htmlentities($this->getData('mail_subject')))."</strong>\n".
+				$html[] = '<li><strong>'.$help->__('Subject: %s', $this->getSubject())."</strong>\n".
 					(!empty($sender) ? '<span>'.$help->__('Sender: %s', $help->getHumanEmailAddress($sender))."</span>\n" : '').
 					'<span class="print">'.
 						$help->__('<a %s>Print</a> this email only if necessary.', 'href="javascript:self.print();"').

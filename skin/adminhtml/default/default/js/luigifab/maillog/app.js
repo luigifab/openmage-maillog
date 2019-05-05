@@ -1,6 +1,6 @@
 /**
  * Created J/03/12/2015
- * Updated J/28/02/2019
+ * Updated V/12/04/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -93,6 +93,21 @@ var maillog = {
 	remove: function (elem, txt) {
 		if (confirm(txt))
 			elem.parentNode.parentNode.removeChild(elem.parentNode);
+	},
+
+	iframe: function (elem) {
+		try {
+			elem.removeAttribute('onload');
+			elem.contentDocument.body.parentNode.innerHTML = decodeURIComponent(escape(self.atob(elem.firstChild.nodeValue)));
+			elem.style.height = elem.contentDocument.body.scrollHeight + 'px';
+			self.setTimeout(function () {
+				var elem = document.querySelector('div.content iframe');
+				elem.style.height = elem.contentDocument.body.scrollHeight + 'px';
+			}, 1000);
+		}
+		catch (e) {
+			elem.contentDocument.body.textContent = e;
+		}
 	}
 };
 

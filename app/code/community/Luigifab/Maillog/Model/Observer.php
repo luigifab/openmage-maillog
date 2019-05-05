@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated J/28/02/2019
+ * Updated M/30/04/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -103,7 +103,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			// email de test
 			if (!empty(Mage::app()->getRequest()->getPost('maillog_test_email')))
-				$this->sendEmailReport();
+				$this->sendEmailReport(null, true);
 		}
 		else {
 			$config->delete();
@@ -112,7 +112,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 
 	// CRON maillog_send_report
-	public function sendEmailReport() {
+	public function sendEmailReport($cron = null, $test = false) {
 
 		$oldLocale = Mage::getSingleton('core/translate')->getLocale();
 		$newLocale = Mage::app()->getStore()->isAdmin() ? $oldLocale : Mage::getStoreConfig('general/locale/code');
@@ -152,7 +152,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			if (!in_array($email->getData('status'), array('error', 'pending')))
 				continue;
 
-			$link = '<a href="'.$this->getEmailUrl('adminhtml/maillog_history/view', array('id' => $email->getId())).'" style="font-weight:700; color:red; text-decoration:none;">'.$this->__('Email %d: %s', $email->getId(), $email->getData('mail_subject')).'</a>';
+			$link = '<a href="'.$this->getEmailUrl('adminhtml/maillog_history/view', array('id' => $email->getId())).'" style="font-weight:700; color:red; text-decoration:none;">'.$this->__('Email %d: %s', $email->getId(), $email->getSubject()).'</a>';
 
 			$state = $this->__('Status: %s', $this->__(ucfirst($email->getData('status'))));
 			$hour  = $this->__('Created At: %s', Mage::helper('maillog')->formatDate($email->getData('created_at')));
@@ -160,7 +160,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$errors[] = sprintf('(%d) %s / %s / %s', count($errors) + 1, $link, $hour, $state);
 		}
 
-		$data = array(
+		$vars = array(
 			'frequency'            => $frequency,
 			'date_period_from'     => $dates['start']->toString(Zend_Date::DATETIME_FULL),
 			'date_period_to'       => $dates['end']->toString(Zend_Date::DATETIME_FULL),
@@ -179,9 +179,10 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			'items'                => &$items
 		);
 
-		$replace = array('<br>',').<br><span style="font-size:11px; line-height:14px;">');
-		$data['import_bounces']       = str_replace(array("\n",').<br>'), $replace, $data['import_bounces']).'</span>';
-		$data['import_unsubscribers'] = str_replace(array("\n",').<br>'), $replace, $data['import_unsubscribers']).'</span>';
+		$search  = array("\n",   ').<br>',                                                 '.Sorry,');
+		$replace = array('<br>', ').<br><span style="font-size:11px; line-height:14px;">', '.<br>Sorry,');
+		$vars['import_bounces']       = str_replace($search, $replace, $vars['import_bounces']).'</span>';
+		$vars['import_unsubscribers'] = str_replace($search, $replace, $vars['import_unsubscribers']).'</span>';
 
 		// chargement des statistiques des emails et des synchronisations
 		// optimisation maximale de manière à ne faire que des COUNT en base de données
@@ -255,7 +256,14 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 
 		// envoi des emails
-		$this->sendReportToRecipients($newLocale, $data);
+		$vars['test'] = $test;
+		if ($vars['test']) {
+			$vars['variable'] = 50;
+			$vars['variable2'] = array(array('abc' => 4), array('abc' => 6));
+			$vars['variable3'] = Mage::getResourceModel('catalog/product_collection')->setPageSize(3);
+		}
+
+		$this->sendReportToRecipients($newLocale, $vars);
 
 		if ($newLocale != $oldLocale)
 			Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);
@@ -384,6 +392,30 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 
 	// EVENT customer_delete_after (global)
+	public function customerDeleteClean($observer) {
+
+		$customer = $observer->getData('customer');
+
+		$emails = Mage::getResourceModel('maillog/email_collection');
+		$emails->addFieldToFilter('deleted', array('neq' => 1));
+		$emails->addFieldToFilter('mail_recipients', array('like' => '%<'.$customer->getData('email').'>%'));
+
+		// même chose que cleanOldData ou presque
+		foreach ($emails as $email) {
+			$email->setData('mail_recipients', 'customer@removed');
+			$email->setData('mail_subject', str_replace($customer->getData('lastname'), 'Removed', $email->getData('mail_subject')));
+			$email->setData('encoded_mail_recipients', null);
+			$email->setData('encoded_mail_subject', null);
+			$email->setData('mail_body', null);
+			$email->setData('mail_header', null);
+			$email->setData('mail_parameters', null);
+			$email->setData('mail_parts', null);
+			$email->setData('deleted', 1);
+			$email->save();
+		}
+	}
+
+	// EVENT customer_delete_after (global)
 	public function customerDeleteSync($observer) {
 
 		if (Mage::getStoreConfigFlag('maillog/sync/enabled') && (Mage::registry('maillog_no_sync') !== true)) {
@@ -496,6 +528,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	public function cleanOldData($cron = null) {
 
 		$msg = array();
+		$total = 0;
 
 		$val = Mage::getStoreConfig('maillog/sync/lifetime');
 		if (!empty($val) && is_numeric($val)) {
@@ -503,7 +536,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$syncs = Mage::getResourceModel('maillog/sync_collection');
 			$syncs->addFieldToFilter('status', array('eq' => 'success'));
 			$syncs->addFieldToFilter('created_at', array('lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$val.' MINUTE)')));
-			$total = $syncs->getSize();
+			$total += $syncs->getSize();
 			$syncs->deleteAll();
 
 			$syncs = Mage::getResourceModel('maillog/sync_collection');
@@ -524,15 +557,14 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 				if (is_numeric($months) && ($months >= 2)) {
 
-					$cut  = mb_strpos($key, '_');
-					$type = mb_substr($key, 0, $cut);
+					$cut    = mb_strpos($key, '_');
+					$type   = mb_substr($key, 0, $cut);
 					$action = mb_substr($key, $cut + 1);
 
 					$emails = Mage::getResourceModel('maillog/email_collection');
 					$emails->addFieldToFilter('deleted', array('neq' => 1));
-					$emails->addFieldToFilter('created_at', array('lt' =>
-						new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$months.' MONTH)')
-					));
+					$emails->addFieldToFilter('created_at', array('lt' => new Zend_Db_Expr(
+						'DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$months.' MONTH)')));
 
 					// tous les emails
 					if ($key == 'all_data') {
@@ -575,6 +607,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 						$emails->deleteAll();
 					}
 					else if (!empty($total) && ($action == 'data')) {
+						// même chose que customerDeleteClean
 						foreach ($emails as $email) {
 							$email->setData('encoded_mail_recipients', null);
 							$email->setData('encoded_mail_subject', null);
@@ -736,13 +769,14 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$separ = mb_substr($config, 4, 1);
 		}
 
+		$colum = ($colum > 1) ? $colum - 1 : 1;
 		$items = array();
-		$lines = trim(file_get_contents($folder.$source));
+		$lines = trim(str_replace("\xEF\xBB\xBF", '', file_get_contents($folder.$source)));
 
 		if (mb_detect_encoding($lines, 'utf-8', true) === false)
 			Mage::throwException('Sorry, the file "'.$folder.$source.'" is not an utf-8 file.');
 
-		$lines = explode("\n", str_replace("\xEF\xBB\xBF", '', $lines));
+		$lines = explode("\n", $lines);
 		foreach ($lines as $line) {
 
 			$line = trim($line);
@@ -753,8 +787,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			else if ($type == 'csv') {
 				$delim = ($delim == '→') ? "\t" : $delim;
 				$data  = explode($delim, $line);
-				if (!empty($data[$colum - 1]) && (mb_strpos($data[$colum - 1], '@') !== false))
-					$items[] = trim(str_replace($separ, '', $data[$colum - 1]));
+				if (!empty($data[$colum]) && (mb_strpos($data[$colum], '@') !== false))
+					$items[] = trim(str_replace($separ, '', $data[$colum]));
 			}
 			else if ($type == 'txt') {
 				if (mb_strpos($line, '@') !== false)
@@ -939,7 +973,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$name = $date->toString('YMMdd-HHmmss').'.'.$type;
 		rename($folder.$source, $donedir.$name.'.gz');
 		file_put_contents($donedir.$name.'.gz', gzencode(file_get_contents($donedir.$name.'.gz'), 9));
-		$source = $donedir.$name.'.gz'; // splendide avec le &
+		$source = $donedir.$name.'.gz';
 
 		// déplace et compresse les fichiers ignorés
 		// reste silencieux en cas d'erreur (car si le fichier n'est pas déplaçable, le fichier ne sera jamais traité)
@@ -986,6 +1020,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 		$diff['errors']      = !empty($diff['errors'])       ? count($diff['errors'])       : 0;
 		$diff['finished_at'] = date('Y-m-d H:i:s');
+
+		if (!is_dir($folder))
+			mkdir($folder, 0755, true);
 
 		file_put_contents($folder.'status.dat', serialize($diff));
 	}

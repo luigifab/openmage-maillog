@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/01/03/2019
+ * Updated D/05/05/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -89,10 +89,10 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 	}
 
 
-	public function filterMail($varien, $html) {
+	public function filterMail($varien, $html, $vars) {
 
-		// foreach
-		$pattern = str_replace('depend', 'foreach', Varien_Filter_Template::CONSTRUCTION_DEPEND_PATTERN);
+		// foreach/forelse
+		$pattern = '/{{foreach\s*(.*?)}}(.*?)({{forelse}}(.*?))?{{\\/foreach\s*}}/si';
 		if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
 
 			foreach ($matches as $match) {
@@ -119,6 +119,9 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 					}
 					unset($item);
 				}
+				else if (isset($match[4])) {
+					$replaced = $match[4];
+				}
 
 				$html = str_replace($match[0], $replaced, $html);
 			}
@@ -127,7 +130,6 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		// if elseif/elsif else
 		$pattern1 = '/{{if\s*(.*?)}}(.*?)((?:{{else?if\s*.*?}}.*?)*)({{else}}(.*?))?{{\\/if\s*}}/si';
 		$pattern2 = '/{{else?if\s*(.*?)}}(.*?)(?={{else?if|$)/si';
-
 		if (preg_match_all($pattern1, $html, $matches, PREG_SET_ORDER)) {
 
 			foreach ($matches as $match) {
@@ -154,6 +156,14 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 				$html = str_replace($match[0], $replaced, $html);
 			}
+		}
+
+		// dump
+		$pattern = '/{{\s*dump\s*}}/si';
+		if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
+			$replaced = '<pre>dump:'.trim(print_r($this->dumpData($vars), true)).'</pre>';
+			foreach ($matches as $match)
+				$html = str_replace($match[0], $replaced, $html);
 		}
 
 		return $html;
@@ -209,131 +219,141 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		}
 	}
 
+	private function dumpData($vars) {
+		$data = array();
+		foreach ($vars as $key => $var) {
+			$type = gettype($var);
+			if ($type == 'object')
+				$data[$key.' '.get_class($var)] = $this->dumpObject($var);
+			else if ($type == 'array')
+				$data[$key] = $this->dumpData($var);
+			else
+				$data[$key] = $type;
+		}
+		ksort($data);
+		return $data;
+	}
 
-	public function canSend($type, $email) {
+	private function dumpObject($object) {
+		$vars = $object->getData();
+		$data = array();
+		foreach ($vars as $key => $var) {
+			$type = gettype($var);
+			$data[$key] = ($type == 'array') ? $this->dumpData($var) : $type;
+		}
+		ksort($data);
+		return $data;
+	}
 
-		if (!Mage::getStoreConfigFlag('maillog/'.$type.'/send'))
-			return false;
 
-		// L'adresse email ne doit pas contenir
-		$ignores = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/'.$type.'/ignore')));
+	public function canSend($email) {
+
+		// l'adresse email ne doit pas contenir
+		$ignores = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/filters/ignore')));
 		foreach ($ignores as $ignore) {
 			if (is_string($email) && (stripos($email, $ignore) !== false))
 				return sprintf('STOP! Email address not allowed by keyword: %s', $ignore);
-			else if ((stripos($email[4], $ignore) !== false) || (!empty($email[3]) && (stripos($email[3], $ignore) !== false)))
+			if ((stripos($email[4], $ignore) !== false) || (!empty($email[3]) && (stripos($email[3], $ignore) !== false)))
 				return sprintf('STOP! Email address not allowed by keyword: %s', $ignore);
 		}
 
-		// Toutes les base_url doivent contenir
-		// $found = false, alors c'est qu'il y a un problème
-		$key   = $this->loadMemory('maillog/'.$type.'/baseurl');
-		$found = Mage::registry($key);
-		$error = Mage::registry($key.'_txt');
+		// toutes les base_url doivent contenir
+		$key = 'maillog/filters/baseurl';
+		$msg = $this->loadMemory($key);
 
-		if (!is_bool($found)) {
+		if (empty($msg)) {
 
 			$domains = array_filter(preg_split('#\s+#', Mage::getStoreConfig($key)));
 			if (!empty($domains)) {
 
-				// cherche si tous les domaines sont autorisés
+				// vérifie les domaines
+				// si on trouve pas un domaine, c'est qu'il y a un problème
+				$cansend  = true;
 				$storeIds = Mage::getResourceModel('core/store_collection')->setOrder('store_id', 'asc')->getAllIds();
 				foreach ($storeIds as $storeId) {
 					$baseurl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
 					$baseurl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
-					$found    = false;
 					foreach ($domains as $domain) {
-						if ((stripos($baseurl1, $domain) !== false) || (stripos($baseurl2, $domain) !== false)) {
-							$found = true;
-							break;
+						if ((stripos($baseurl1, $domain) === false) || (stripos($baseurl2, $domain) === false)) {
+							$cansend = false;
+							break 2;
 						}
 					}
-					if (!$found)
-						break;
 				}
 
 				// met en cache le résultat
-				// prépare toujours l'éventuel message d'erreur
-				$error = $this->memorizeData($key, $found, sprintf('STOP! For store %d (%s %s), required domain was not found (%s).',
-					$storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
+				$msg = $this->saveMemory($key, $cansend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), required domain was not found (%s).', $storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
 			}
 			else {
-				// pas d'erreur
-				$error = $this->memorizeData($key, true, 'ok');
+				// met en cache le résultat
+				$msg = $this->saveMemory($key, 'ok-can-send');
 			}
 		}
 
-		if (!$found)
-			return $error;
+		if (stripos($msg, 'ok-can-send') === false)
+			return $msg;
 
-		// Toutes les base_url ne doivent pas contenir
-		// $found = true, alors c'est qu'il y a un problème
-		$key   = $this->loadMemory('maillog/'.$type.'/notbaseurl');
-		$found = Mage::registry($key);
-		$error = Mage::registry($key.'_txt');
+		// toutes les base_url ne doivent pas contenir
+		$key = 'maillog/filters/notbaseurl';
+		$msg = $this->loadMemory($key);
 
-		if (!is_bool($found)) {
+		if (empty($msg)) {
 
 			$domains = array_filter(preg_split('#\s+#', Mage::getStoreConfig($key)));
 			if (!empty($domains)) {
 
-				// cherche si tous les domaines sont autorisés
+				// vérifie les domaines
+				// si on trouve un domaine, c'est qu'il y a un problème
+				$cansend  = true;
 				$storeIds = Mage::getResourceModel('core/store_collection')->setOrder('store_id', 'asc')->getAllIds();
 				foreach ($storeIds as $storeId) {
 					$baseurl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
 					$baseurl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
-					$found    = false;
 					foreach ($domains as $domain) {
 						if ((stripos($baseurl1, $domain) !== false) || (stripos($baseurl2, $domain) !== false)) {
-							$found = true;
-							break;
+							$cansend = false;
+							break 2;
 						}
 					}
-					if ($found)
-						break;
 				}
 
 				// met en cache le résultat
-				// prépare toujours l'éventuel message d'erreur
-				$error = $this->memorizeData($key, $found, sprintf('STOP! For store %d (%s %s), a forbidden domain was found (%s).',
-					$storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
+				$msg = $this->saveMemory($key, $cansend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), a forbidden domain was found (%s).', $storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
 			}
 			else {
-				// pas d'erreur
-				$error = $this->memorizeData($key, false, 'ok');
+				// met en cache le résultat
+				$msg = $this->saveMemory($key, 'ok-can-send');
 			}
 		}
 
-		if ($found)
-			return $error;
+		if (stripos($msg, 'ok-can-send') === false)
+			return $msg;
 
 		return true;
 	}
 
 	private function loadMemory($key) {
 
-		if (!is_bool(Mage::registry($key))) {
-			$value = Mage::app()->loadCache($key);
-			if ($value !== false) {
-				Mage::register($key, (bool) $value);
-				Mage::register($key.'_txt', '(from cache) '.Mage::app()->loadCache($key.'_txt'));
+		$msg = Mage::registry($key);
+
+		if (empty($msg)) {
+			$msg = Mage::app()->loadCache($key);
+			if (!empty($msg)) {
+				$msg = '(from cache) '.$msg;
+				Mage::register($key, $msg);
 			}
 		}
 
-		return $key;
+		return $msg;
 	}
 
-	private function memorizeData($key, $found, $error) {
+	private function saveMemory($key, $msg) {
 
-		Mage::register($key, $found);
-		Mage::register($key.'_txt', '(from registry) '.$error);
+		Mage::register($key, '(from registry) '.$msg);
+		if (Mage::app()->useCache('config'))
+			Mage::app()->saveCache($msg, $key, array(Mage_Core_Model_Config::CACHE_TAG));
 
-		if (Mage::app()->useCache('config')) {
-			$found = $found ? 1 : 0; // car on ne peut pas enregistrer true/false
-			Mage::app()->saveCache($found, $key, array(Mage_Core_Model_Config::CACHE_TAG));
-			Mage::app()->saveCache($error, $key.'_txt', array(Mage_Core_Model_Config::CACHE_TAG));
-		}
-
-		return $error;
+		return $msg;
 	}
 
 
@@ -349,7 +369,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		$email->setData('encoded_mail_recipients', $zend->recipients);
 		$email->setData('encoded_mail_subject', $mail->getSubject());
 
-		$email->setMailSender(!empty($headers['user'][0]) ? $headers['user'][0] : '');
+		$email->setMailSender(!empty($headers['From'][0]) ? $headers['From'][0] : '');
 		$email->setMailRecipients($zend->recipients);
 		$email->setMailSubject($mail->getSubject());
 		$email->setMailContent($parts);

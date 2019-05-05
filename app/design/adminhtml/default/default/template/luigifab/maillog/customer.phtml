@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/14/11/2015
- * Updated L/14/01/2019
+ * Updated V/12/04/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -37,7 +37,7 @@ $customer = Mage::registry('current_customer');
 				$isSubscribed = Mage::getModel('newsletter/subscriber')->loadByCustomer($customer)->isSubscribed();
 			?>
 			<?php if (Mage::getStoreConfigFlag('maillog/bounces/enabled')): ?>
-				<p><?php echo $isBounce ? '<strong>'.$this->__('Email address is invalid!').'</strong>' : $this->__('Email address is valid.') ?>
+				<p><?php echo $isBounce ? '<strong>'.$this->__('Email address is invalid.').'</strong>' : $this->__('Email address is valid.') ?>
 				<br /><?php echo $this->__('%d email(s), %d send, %d open/read.',
 					$stats->getSize(),
 					count($stats->getItemsByColumnValue('status', 'sent')) + count($stats->getItemsByColumnValue('status', 'read')),

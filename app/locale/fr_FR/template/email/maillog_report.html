@@ -1,32 +1,4 @@
-<!--@subject Rapport des emails envoyés @-->
-<!--@vars {
-"var frequency":"Report frequency",
-"var date_period_from":"Begining date of the report",
-"var date_period_to":"Ending date of the report",
-"var total_email":"Number of emails",
-"var total_pending":"Number of pending emails",
-"var total_sending":"Number of emails currently being sent",
-"var total_sent":"Number of emails sent",
-"var total_read":"Number of emails open/read",
-"var total_error":"Number of emails on error",
-"var total_unsent":"Number of emails unsent",
-"var total_bounce":"Number of invalid emails",
-
-"var import_bounces":"Last import of invalid emails",
-"var import_unsubscribers":"Last import of unsubscribed emails",
-"var sync":"Synchronization status",
-
-"var items.period":"Statistics, dates",
-"var items.total_email":"Statistics, number of email",
-"var items.percent_sent":"Statistics, percent of email sent",
-"var items.percent_read":"Statistics, percent of email open/read",
-"var items.percent_unsent":"Statistics, percent of email unsent",
-"var items.total_sync":"Statistics, number of synchronization",
-"var items.percent_sync":"Statistics, percent of successful synchronization",
-
-"var error_list":"List of emails on error",
-"var config":"Configuration address"
-}@-->
+<!--@subject Rapport des emails envoyés 💌 @-->
 
 <div style="margin:1em; font-size:12px; line-height:16px;" lang="fr">
 	<p>Voici le rapport {{var frequency}} par rapport aux envois des emails.
@@ -81,11 +53,40 @@
 	</table>
 
 	{{depend error_list}}
-		<ul style="margin:1.5em 0; padding:0.5em 0 0; font-size:0.9em; line-height:1.3em;list-style:none; border-top:1px dashed #777;">
+		<ul style="margin:1.5em 0; padding:0.5em 0 0; font-size:0.9em; line-height:1.3em; list-style:none; border-top:1px dashed #777;">
 			<li style="margin:0.8em 0 0.5em;">{{var error_list}}</li>
 		</ul>
 	{{/depend}}
 
-	<p style="font-size:0.8em; line-height:1.35em; font-style:italic; color:#6F6F6F;">{{config path='design/head/default_title'}} - Rapport des emails envoyés
+	<p style="font-size:0.8em; line-height:1.35em; font-style:italic; color:#6F6F6F;">{{config path='design/head/default_title'}} - Rapport des emails envoyés 💌
 	<br /><a href="{{var config}}" style="color:#6F6F6F;">{{var config}}</a> - <a href="#online#" style="color:#6F6F6F;">voir la version en ligne</a> #readimg# #mailid#cron#</p>
 </div>
+
+{{depend test}}
+<pre>
+variable = {{var variable}}
+ A / if variable gt  0 / {{if variable gt 0}}  true {{else}} false {{/if}}
+ B / if variable gte 0 / {{if variable gte 0}} true {{else}} false {{/if}}
+ C / if variable lt  0 / {{if variable lt 0}}  true {{else}} false {{/if}}
+ D / if variable lte 0 / {{if variable lte 0}} true {{else}} false {{/if}}
+ E / if variable eq  0 / {{if variable eq 0}}  true {{else}} false {{/if}}
+ F / if variable neq 0 / {{if variable neq 0}} true {{else}} false {{/if}}
+ G / if variable gt  90 elseif gt  45 / {{if variable gt 90}}  true1 {{elseif variable gt 45}}  true2 {{else}} false {{/if}}
+ H / if variable gte 90 elseif gte 45 / {{if variable gte 90}} true1 {{elseif variable gte 45}} true2 {{else}} false {{/if}}
+ I / if variable lt  90 elseif lt  45 / {{if variable lt 90}}  true1 {{elseif variable lt 45}}  true2 {{else}} false {{/if}}
+ J / if variable lte 90 elseif lte 45 / {{if variable lte 90}} true1 {{elseif variable lte 45}} true2 {{else}} false {{/if}}
+ K / if variable eq  90 elseif eq  45 / {{if variable eq 90}}  true1 {{elseif variable eq 45}}  true2 {{else}} false {{/if}}
+ L / if variable neq 90 elseif neq 45 / {{if variable neq 90}} true1 {{elseif variable neq 45}} true2 {{else}} false {{/if}}
+ M / if variable gt  variable / {{if variable gt variable}}  true {{else}} false {{/if}}
+ N / if variable gte variable / {{if variable gte variable}} true {{else}} false {{/if}}
+ O / if variable lt  variable / {{if variable lt variable}}  true {{else}} false {{/if}}
+ P / if variable lte variable / {{if variable lte variable}} true {{else}} false {{/if}}
+ Q / if variable eq  variable / {{if variable eq variable}}  true {{else}} false {{/if}}
+ R / if variable neq variable / {{if variable neq variable}} true {{else}} false {{/if}}
+variable2 = array(...)
+{{foreach variable2}} S / variable2.abc = {{var variable2.abc}} {{/foreach}}
+{{foreach variable2}} T / variable2.abc = {{var variable2.abc}} {{forelse}} T / empty foreach {{/foreach}}
+{{foreach variable3}} U / not empty foreach {{forelse}} U / empty foreach {{/foreach}}
+</pre>
+{{ dump }}
+{{/depend}}

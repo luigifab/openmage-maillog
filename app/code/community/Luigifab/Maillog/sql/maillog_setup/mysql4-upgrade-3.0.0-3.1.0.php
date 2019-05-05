@@ -81,12 +81,12 @@ try {
 
 	$this->removeAttribute('customer', 'is_bounce');
 	$this->addAttribute('customer', 'is_bounce', array(
-	    'label'    => 'Invalid email (hard bounce)', //$this->__('Invalid email (hard bounce)') pour le translate.php avec Magento 1.7 et +
-	    'type'     => 'int',
-	    'input'    => 'select',
-	    'source'   => 'maillog/source_bounce',
-	    'visible'  => 1,
-	    'required' => 0
+		'label'    => 'Invalid email (hard bounce)', //$this->__('Invalid email (hard bounce)') pour le translate.php avec Magento 1.7 et +
+		'type'     => 'int',
+		'input'    => 'select',
+		'source'   => 'maillog/source_bounce',
+		'visible'  => 1,
+		'required' => 0
 	));
 
 	$attributeSetId   = $this->getDefaultAttributeSetId('customer');

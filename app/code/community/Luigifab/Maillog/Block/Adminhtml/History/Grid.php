@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/05/02/2019
+ * Updated L/11/03/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -91,13 +91,25 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	protected function _prepareColumns() {
 
 		if (!empty($this->getRequest()->getParam('test'))) {
-			$this->addColumn('choices', array(
-				'header'    => $this->__('Options'),
-				'type'      => 'checkbox',
-				'index'     => 'email_id',
-				'align'     => 'center',
-				'field_name'=> 'choices',
-				'values'    => $this->getChoices()
+			$this->addColumn('choice', array(
+				'header_css_class' => 'a-center',
+				'index'      => 'email_id',
+				'type'       => 'checkbox',
+				'values'     => $this->getChoices(true),
+				'field_name' => 'choice',
+				'align'      => 'center',
+				'width'      => '75px',
+				'sortable'   => false
+			));
+			$this->addColumn('position', array(
+				'index'      => 'position',
+				'name'       => 'position',
+				'align'      => 'left',
+				'width'      => '75px',
+				'editable'   => true,
+				'filter'     => false,
+				'sortable'   => false,
+				'validate_class' => 'validate-number'
 			));
 		}
 
@@ -125,7 +137,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 		$this->addColumn('mail_subject', array(
 			'header'    => $this->__('Subject').' *',
-			'index'     => 'mail_subject'
+			'index'     => 'mail_subject',
+			'frame_callback' => array($this, 'decorateSubject')
 		));
 
 		$this->addColumn('size', array(
@@ -224,10 +237,10 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	}
 
 
-	public function getChoices() {
-		if (is_array($this->getRequest()->getPost('choices')))
-			return $this->getRequest()->getPost('choices');
-		return array();
+	public function getChoices($onlyIds = false) {
+		if (is_array($this->getRequest()->getPost('choice')))
+			return $this->getRequest()->getPost('choice');
+		return $onlyIds ? array(67667) : array(67667 => array('position' => 5));
 	}
 
 	public function getId() {
@@ -287,6 +300,9 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return $this->helper('maillog')->getHumanEmailAddress($row->getData('mail_recipients'));
 	}
 
+	public function decorateSubject($value, $row, $column, $isExport) {
+		return $row->getSubject();
+	}
 
 	protected function _toHtml() {
 		return str_replace('class="data', 'class="adminhtml-maillog-history data', parent::_toHtml());

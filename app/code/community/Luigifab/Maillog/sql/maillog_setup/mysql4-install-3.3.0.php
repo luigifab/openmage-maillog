@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/25/09/2018
+ * Updated J/18/04/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -38,41 +38,42 @@ try {
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "crontab/jobs/maillog_%";
 
 		DROP TABLE IF EXISTS '.$this->getTable('luigifab_maillog').';
-		DROP TABLE IF EXISTS '.$this->getTable('luigifab_maillog_bounce').';
 		DROP TABLE IF EXISTS '.$this->getTable('luigifab_maillog_sync').';
+		DROP TABLE IF EXISTS '.$this->getTable('luigifab_maillog_bounce').';
 
 		CREATE TABLE '.$this->getTable('luigifab_maillog').' (
 			email_id                int(11) unsigned NOT NULL AUTO_INCREMENT,
 			status                  enum("pending","sent","error","read","notsent","bounce","sending") NOT NULL DEFAULT "pending",
-			created_at              datetime        DEFAULT NULL,
-			sent_at                 datetime        DEFAULT NULL,
-			duration                int(4)          NOT NULL DEFAULT -1,
-			uniqid                  varchar(30)     NOT NULL DEFAULT "",
-			type                    varchar(50)     NOT NULL DEFAULT "--",
-			size                    int(8) unsigned NOT NULL DEFAULT 0,
-			encoded_mail_recipients varchar(255)    NULL DEFAULT NULL,
-			encoded_mail_subject    varchar(255)    NULL DEFAULT NULL,
-			mail_sender             varchar(255)    NULL DEFAULT NULL,
-			mail_recipients         varchar(255)    NULL DEFAULT NULL,
-			mail_subject            varchar(255)    NULL DEFAULT NULL,
-			mail_body               longtext        NULL DEFAULT NULL,
-			mail_header             text            NULL DEFAULT NULL,
-			mail_parameters         text            NULL DEFAULT NULL,
-			mail_parts              longblob        NULL DEFAULT NULL,
+			created_at              datetime         DEFAULT NULL,
+			sent_at                 datetime         DEFAULT NULL,
+			duration                int(4)           NOT NULL DEFAULT -1,
+			uniqid                  varchar(30)      NOT NULL DEFAULT "",
+			type                    varchar(50)      NOT NULL DEFAULT "--",
+			size                    int(8) unsigned  NOT NULL DEFAULT 0,
+			encoded_mail_recipients varchar(255)     NULL DEFAULT NULL,
+			encoded_mail_subject    varchar(255)     NULL DEFAULT NULL,
+			mail_sender             varchar(255)     NULL DEFAULT NULL,
+			mail_recipients         varchar(255)     NULL DEFAULT NULL,
+			mail_subject            varchar(255) CHARACTER SET utf8mb4 NULL DEFAULT NULL,
+			mail_body               longtext     CHARACTER SET utf8mb4 NULL DEFAULT NULL,
+			mail_header             text             NULL DEFAULT NULL,
+			mail_parameters         text             NULL DEFAULT NULL,
+			mail_parts              longblob         NULL DEFAULT NULL,
 			deleted                 tinyint(1) unsigned NOT NULL DEFAULT 0,
-			PRIMARY KEY (email_id)
+			PRIMARY KEY (email_id),
+			KEY uniqid (uniqid)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 		CREATE TABLE '.$this->getTable('luigifab_maillog_sync').' (
 			sync_id                 int(11) unsigned NOT NULL AUTO_INCREMENT,
-			status                  enum("pending","success","error","running") NOT NULL DEFAULT "pending",
-			created_at              datetime        NULL DEFAULT NULL,
-			sync_at                 datetime        NULL DEFAULT NULL,
-			duration                int(4)          NOT NULL DEFAULT -1,
-			user                    varchar(50)     NULL DEFAULT NULL,
-			action                  varchar(250)    NULL DEFAULT NULL,
-			request                 text            NULL DEFAULT NULL,
-			response                text            NULL DEFAULT NULL,
+			status                  enum("pending","success","error","running","notsync") NOT NULL DEFAULT "pending",
+			created_at              datetime         NULL DEFAULT NULL,
+			sync_at                 datetime         NULL DEFAULT NULL,
+			duration                int(4)           NOT NULL DEFAULT -1,
+			user                    varchar(50)      NULL DEFAULT NULL,
+			action                  varchar(250)     NULL DEFAULT NULL,
+			request                 text             NULL DEFAULT NULL,
+			response                text             NULL DEFAULT NULL,
 			PRIMARY KEY (sync_id)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	');
@@ -85,12 +86,12 @@ try {
 
 	$this->removeAttribute('customer', 'is_bounce');
 	$this->addAttribute('customer', 'is_bounce', array(
-	    'label'    => 'Invalid email (hard bounce)', //$this->__('Invalid email (hard bounce)') pour le translate.php avec Magento 1.7 et +
-	    'type'     => 'int',
-	    'input'    => 'select',
-	    'source'   => 'maillog/source_bounce',
-	    'visible'  => 1,
-	    'required' => 0
+		'label'    => 'Invalid email (hard bounce)', //$this->__('Invalid email (hard bounce)') pour le translate.php avec Magento 1.7 et +
+		'type'     => 'int',
+		'input'    => 'select',
+		'source'   => 'maillog/source_bounce',
+		'visible'  => 1,
+		'required' => 0
 	));
 
 	$attributeSetId   = $this->getDefaultAttributeSetId('customer');

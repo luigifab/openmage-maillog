@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated S/16/02/2019
+ * Updated V/12/04/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -59,11 +59,20 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</enabled>
+						<send translate="label">
+							<label>Send emails</label>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>2</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</send>
 						<minify translate="label">
 							<label><![CDATA[Minify <abbr title="HyperText Markup Language">HTML</abbr> code]]></label>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_minify</source_model>
-							<sort_order>2</sort_order>
+							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -72,59 +81,15 @@
 							<label>Lifetime of the email history and email header colors</label>
 							<frontend_model>maillog/adminhtml_config_special</frontend_model>
 							<backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
-							<sort_order>3</sort_order>
+							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</special_config>
-						<filters translate="label">
-							<label>Security and data filters</label>
-							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-							<sort_order>10</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</filters>
-						<send translate="label">
-							<label>Send emails</label>
-							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>11</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</send>
-						<baseurl translate="label comment">
-							<label><![CDATA[All <em>base_url</em> must contain]]></label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>text</frontend_type>
-							<sort_order>12</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</baseurl>
-						<notbaseurl translate="label comment">
-							<label><![CDATA[All <em>base_url</em> must not contain]]></label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>text</frontend_type>
-							<sort_order>12</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</notbaseurl>
-						<ignore translate="label comment">
-							<label>Email address must not contains</label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>textarea</frontend_type>
-							<sort_order>14</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</ignore>
 						<options translate="label">
 							<label>Options</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-							<sort_order>20</sort_order>
+							<sort_order>10</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -133,7 +98,7 @@
 							<label>Number of emails per page</label>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_number</source_model>
-							<sort_order>21</sort_order>
+							<sort_order>11</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -142,7 +107,7 @@
 							<label>Show the subject column</label>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>22</sort_order>
+							<sort_order>12</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -151,7 +116,7 @@
 							<label>Show the size column</label>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>23</sort_order>
+							<sort_order>13</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -160,7 +125,7 @@
 							<label>Show the created at column</label>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>24</sort_order>
+							<sort_order>14</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -168,7 +133,7 @@
 						<stats translate="label">
 							<label>Statistics</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-							<sort_order>30</sort_order>
+							<sort_order>20</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -177,7 +142,7 @@
 							<label>Number of emails</label>
 							<frontend_type>label</frontend_type>
 							<frontend_model>maillog/adminhtml_config_email</frontend_model>
-							<sort_order>31</sort_order>
+							<sort_order>21</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -186,16 +151,61 @@
 							<label>Table size</label>
 							<frontend_type>label</frontend_type>
 							<frontend_model>maillog/adminhtml_config_size</frontend_model>
-							<sort_order>32</sort_order>
+							<sort_order>22</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</stats_size>
 					</fields>
 				</general>
+				<filters translate="label">
+					<label>Security and data filters</label>
+					<sort_order>2</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>0</show_in_website>
+					<show_in_store>0</show_in_store>
+					<fields>
+						<baseurl translate="label comment">
+							<label><![CDATA[All <em>base_url</em> must contain]]></label>
+							<comment>Separate keywords by a space.</comment>
+							<frontend_type>text</frontend_type>
+							<sort_order>1</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</baseurl>
+						<notbaseurl translate="label comment">
+							<label><![CDATA[All <em>base_url</em> must not contain]]></label>
+							<comment>Separate keywords by a space.</comment>
+							<frontend_type>text</frontend_type>
+							<sort_order>2</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</notbaseurl>
+						<ignore translate="label comment">
+							<label>Email address must not contains</label>
+							<comment>Separate keywords by a space.</comment>
+							<frontend_type>textarea</frontend_type>
+							<sort_order>3</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</ignore>
+						<registry translate="label">
+							<label>Manually</label>
+							<frontend_type>label</frontend_type>
+							<frontend_model>maillog/adminhtml_config_registry</frontend_model>
+							<sort_order>4</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</registry>
+					</fields>
+				</filters>
 				<email translate="label">
 					<label>Email reports</label>
-					<sort_order>2</sort_order>
+					<sort_order>3</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
@@ -248,6 +258,14 @@
 						</test>
 					</fields>
 				</email>
+				<directives translate="label comment">
+					<label>Emails and wysiwyg directives</label>
+					<comment><![CDATA[]]></comment>
+					<sort_order>4</sort_order>
+					<show_in_default>0</show_in_default>
+					<show_in_website>0</show_in_website>
+					<show_in_store>0</show_in_store>
+				</directives>
 				<sync translate="label comment">
 					<label><![CDATA[<abbr title="Application Programming Interface">API</abbr> synchronization]]></label>
 					<comment><![CDATA[
@@ -261,7 +279,7 @@
 						</ul>
 						<p><strong>Warning! We must enable synchronization only when configuring the synchronization is complete.</strong></p>
 					]]></comment>
-					<sort_order>4</sort_order>
+					<sort_order>5</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
@@ -275,11 +293,20 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</enabled>
+						<send translate="label">
+							<label>Synchronize customers</label>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>2</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</send>
 						<type translate="label">
 							<label>System</label>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_type</source_model>
-							<sort_order>2</sort_order>
+							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -288,7 +315,7 @@
 							<label>Lifetime of the synchronization history</label>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_lifetime</source_model>
-							<sort_order>3</sort_order>
+							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -346,63 +373,10 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</mapping_config>
-						<filters translate="label">
-							<label>Security and data filters</label>
-							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-							<sort_order>30</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</filters>
-						<send translate="label">
-							<label>Synchronize customers</label>
-							<frontend_type>select</frontend_type>
-							<source_model>adminhtml/system_config_source_yesno</source_model>
-							<sort_order>31</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</send>
-						<baseurl translate="label comment">
-							<label><![CDATA[All <em>base_url</em> must contain]]></label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>text</frontend_type>
-							<sort_order>32</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</baseurl>
-						<notbaseurl translate="label comment">
-							<label><![CDATA[All <em>base_url</em> must not contain]]></label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>text</frontend_type>
-							<sort_order>33</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</notbaseurl>
-						<ignore translate="label comment">
-							<label>Email address must not contains</label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>textarea</frontend_type>
-							<sort_order>34</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</ignore>
-						<registry translate="label">
-							<label>Manually, for all emails, for one email</label>
-							<frontend_type>label</frontend_type>
-							<frontend_model>maillog/adminhtml_config_registry</frontend_model>
-							<sort_order>35</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</registry>
 						<stats translate="label">
 							<label>Statistics</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-							<sort_order>40</sort_order>
+							<sort_order>30</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -411,7 +385,7 @@
 							<label>Number of synchronizations</label>
 							<frontend_type>label</frontend_type>
 							<frontend_model>maillog/adminhtml_config_sync</frontend_model>
-							<sort_order>41</sort_order>
+							<sort_order>31</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -420,7 +394,7 @@
 							<label>Table size</label>
 							<frontend_type>label</frontend_type>
 							<frontend_model>maillog/adminhtml_config_size</frontend_model>
-							<sort_order>42</sort_order>
+							<sort_order>32</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -430,7 +404,7 @@
 				<bounces translate="label comment">
 					<label>Invalid emails import</label>
 					<comment><![CDATA[<p>This import allows to import invalid emails from your <strong>System</strong> to <strong>Magento</strong>.<br />It is carried out punctually by cron job (maximum once per day) thanks to the newest file in the specified folder below.</p>]]></comment>
-					<sort_order>5</sort_order>
+					<sort_order>6</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
@@ -520,7 +494,7 @@
 				<unsubscribers translate="label comment">
 					<label>Unsubscribers emails import</label>
 					<comment><![CDATA[<p>This import allows to import unsubscribed emails from your <strong>System</strong> to <strong>Magento</strong>.<br />It is carried out punctually by cron job (maximum once per day) thanks to the newest file in the specified folder below.</p>]]></comment>
-					<sort_order>6</sort_order>
+					<sort_order>7</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>

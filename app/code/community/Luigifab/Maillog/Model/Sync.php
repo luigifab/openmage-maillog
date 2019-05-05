@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated S/16/02/2019
+ * Updated V/03/05/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -32,7 +32,6 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 	}
 
 
-	// effectue la synchronisation
 	public function updateNow($send = true) {
 
 		$now = time();
@@ -46,8 +45,6 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		try {
 			$this->setData('status', 'running');
 			$this->save();
-
-			$allow = Mage::helper('maillog')->canSend('sync', $dat);
 
 			// chargement des objets du client
 			if ($dat[1] == 'customer') {
@@ -89,6 +86,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			// note très très importante, le + fait en sorte que ce qui est déjà présent n'est pas écrasé
 			// par exemple, si entity_id est trouvé dans $customer, même si entity_id est trouvé dans $billing,
 			// c'est bien l'entity_id de customer qui est utilisé
+			$allow = Mage::getStoreConfigFlag('maillog/sync/send') ? Mage::helper('maillog')->canSend($dat) : false;
 			$data  = $this->getSystem()->mapFields($customer);
 			$data += $this->getSystem()->mapFields($billing);
 			$data += $this->getSystem()->mapFields($shipping);
@@ -137,7 +135,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			$customer->setOrigData('email', $dat[4]);
 			$customer->setData('email', $dat[4]);
 
-			$allow = Mage::helper('maillog')->canSend('sync', $dat);
+			$allow = Mage::getStoreConfigFlag('maillog/sync/send') ? Mage::helper('maillog')->canSend($dat) : false;
 			$data  = $this->getSystem()->mapFields($customer);
 
 			if ($allow !== true) {

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/18/01/2018
- * Updated M/15/01/2019
+ * Updated V/03/05/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -21,7 +21,7 @@
 
 class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System {
 
-	// http://api.dolist.net/doc/
+	// https://api.dolist.net/doc/
 
 	// liste des pays par rapport à ce qui existe sur Dolist
 	private $countries = array(
@@ -67,7 +67,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 	// gestion des champs
 	public function getFields() {
 
-		// http://api.dolist.net/doc/CustomFields#GetFieldList
+		// https://api.dolist.net/doc/CustomFields#GetFieldList
 		$result = $this->sendRequest('../CustomFieldManagementService', 'GetFieldList', array('request' => array()));
 		$fields = array();
 
@@ -157,11 +157,9 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 						}
 					}
 					else if (($current == $customer) && ($magento == 'store_id')) {
-						$value = $object->getData('store_id');
-						if (!is_null($value) && array_key_exists(Mage::getStoreConfig('general/locale/code', $value), $this->locales))
-							$fields[$system] = array('Name' => $system, 'Value' => $this->locales[Mage::getStoreConfig('general/locale/code', $value)]);
-						else
-							$fields[$system] = array('Name' => $system, 'Value' => '');
+						$value = Mage::getStoreConfig('general/locale/code', $object->getData('store_id'));
+						// spécial
+						$fields[$system] = array('Name' => $system, 'Value' => $value);
 					}
 					else if (($current == $customer) && ($magento == 'dob') && $object->hasData($magento)) {
 						$fields[$system] = array('Name' => $system, 'Value' => date('Y-m-d', strtotime($object->getData($magento))));
@@ -213,7 +211,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		sort($data['Fields']);
 		$data['Fields'] = array_filter($data['Fields']);
 
-		// http://api.dolist.net/doc/Contact#SaveContact
+		// https://api.dolist.net/doc/Contact#SaveContact
 		$result = $this->sendRequest('ContactManagementService', 'SaveContact', array('contact' => $data));
 		if ($this->checkResponse($result)) {
 
@@ -260,7 +258,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		if (is_object($data)) {
 
 			// updateCustomer
-			// http://api.dolist.net/doc/Contact#SavedContactInfo
+			// https://api.dolist.net/doc/Contact#SavedContactInfo
 			if (isset($data->GetStatusByTicketResult->ReturnCode) && !in_array($data->GetStatusByTicketResult->ReturnCode, array(-1, 1)))
 				return false;
 
@@ -275,12 +273,12 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		if (is_object($data)) {
 
 			// getFields
-			// http://api.dolist.net/doc/CustomFields#GetFieldList
+			// https://api.dolist.net/doc/CustomFields#GetFieldList
 			if (!empty($data->GetFieldListResult->FieldList->Field))
 				$data = $data->GetFieldListResult->FieldList->Field;
 
 			// updateCustomer
-			// http://api.dolist.net/doc/Contact#SaveContact
+			// https://api.dolist.net/doc/Contact#SaveContact
 			if ($forHistory && !empty($data->GetStatusByTicketResult->ReturnCode) && ($data->GetStatusByTicketResult->ReturnCode == 1))
 				return array('memberid' => $data->GetStatusByTicketResult->MemberId);
 		}
@@ -294,7 +292,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 			if (!isset($this->auth) || (!empty($this->auth->GetAuthenticationTokenResult->DeprecatedDate) &&
 			    ((strtotime($this->auth->GetAuthenticationTokenResult->DeprecatedDate) + 30) > time()))) {
 
-				ini_set('soap.wsdl_cache_enabled', 0);
+				//ini_set('soap.wsdl_cache_enabled', 0);
 				ini_set('default_socket_timeout', 30);
 
 				$proxy    = Mage::getStoreConfig('maillog/sync/api_url').'AuthenticationService.svc?wsdl';

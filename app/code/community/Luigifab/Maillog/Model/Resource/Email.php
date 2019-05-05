@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/25/08/2018
+ * Updated S/09/03/2019
  *
  * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -23,5 +23,33 @@ class Luigifab_Maillog_Model_Resource_Email extends Mage_Core_Model_Mysql4_Abstr
 
 	public function _construct() {
 		$this->_init('maillog/email', 'email_id');
+	}
+
+	public function _getCharacterSet() {
+		if (empty($this->names)) {
+			$this->names = $this->getReadConnection()->fetchAll('SHOW SESSION VARIABLES LIKE "character_set_client";');
+			$this->names = !empty($this->names[0]['Value']) ? $this->names[0]['Value'] : 'utf8';
+		}
+		return $this->names;
+	}
+
+	protected function _beforeLoad() {
+		$this->getReadConnection()->query('SET NAMES utf8mb4;');
+		return $this;
+	}
+
+	protected function _afterLoad() {
+		$this->getReadConnection()->query('SET NAMES '.$this->_getCharacterSet().';');
+		return $this;
+	}
+
+	protected function _beforeSave() {
+		$this->getReadConnection()->query('SET NAMES utf8mb4;');
+		return $this;
+	}
+
+	protected function _afterSave() {
+		$this->getReadConnection()->query('SET NAMES '.$this->_getCharacterSet().';');
+		return $this;
 	}
 }
