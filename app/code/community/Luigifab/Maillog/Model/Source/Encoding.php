@@ -1,9 +1,9 @@
 <?php
 /**
- * Created D/03/02/2018
- * Updated D/03/02/2018
+ * Created D/12/06/2016
+ * Updated M/20/08/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -19,15 +19,13 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Block_Adminhtml_Config_Registry extends Mage_Adminhtml_Block_System_Config_Form_Field {
+class Luigifab_Maillog_Model_Source_Encoding {
 
-	public function render(Varien_Data_Form_Element_Abstract $element) {
-		$element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
-		return parent::render($element);
-	}
+	public function toOptionArray() {
 
-	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		return sprintf('<code id="%s">Mage::register(\'maillog_no_sync\', true);
-Mage::register(\'maillog_sync_\'.$fullEmail, true);</code>', $element->getHtmlId());
+		return [
+			['value' => 'quoted-printable', 'label' => 'quoted-printable'],
+			['value' => 'base64', 'label' => 'base64']
+		];
 	}
 }

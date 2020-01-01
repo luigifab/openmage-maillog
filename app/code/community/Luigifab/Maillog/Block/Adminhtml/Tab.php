@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated M/05/02/2019
+ * Updated D/22/09/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -48,6 +48,6 @@ class Luigifab_Maillog_Block_Adminhtml_Tab extends Mage_Adminhtml_Block_Abstract
 
 
 	protected function _toHtml() {
-		return !empty($block = $this->getLayout()->getBlock('adminhtml_maillog_embedtab')) ? $block->toHtml() : parent::_toHtml();
+		return empty($block = $this->getLayout()->getBlock('adminhtml_maillog_embedtab')) ? parent::_toHtml() : $block->toHtml();
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/19/06/2015
- * Updated S/22/12/2018
+ * Updated S/28/09/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -30,14 +30,14 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Size extends Mage_Adminhtml_Block_
 
 		$database = Mage::getSingleton('core/resource');
 		$read = $database->getConnection('core_read');
-		$conf = $read->getConfig();
+		$name = (mb_stripos($element->getHtmlId(), 'sync') !== false) ? 'maillog/sync' : 'maillog/email';
 
 		$select = $read->select()
 			->from('information_schema.TABLES', '(data_length + index_length) AS size_bytes')
-			->where('table_schema = ?', $conf['dbname'])
-			->where('table_name = ?', $database->getTableName((mb_strpos($element->getHtmlId(), 'sync') !== false) ? 'luigifab_maillog_sync' : 'luigifab_maillog'));
+			->where('table_schema = DATABASE()')
+			->where('table_name = ?', $database->getTableName($name));
 
-		$element->setValue(floatval($read->fetchOne($select)));
+		$element->setValue((float) $read->fetchOne($select));
 
 		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $this->helper('maillog')->getNumberToHumanSize($element->getValue()));
 	}

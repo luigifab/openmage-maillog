@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated L/11/03/2019
+ * Updated J/17/10/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -33,7 +33,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		$this->setSaveParametersInSession(true);
 		$this->setPagerVisibility(true);
 		$this->setFilterVisibility(true);
-		$this->setDefaultLimit(max($this->_defaultLimit, intval(Mage::getStoreConfig('maillog/general/number'))));
+		$this->setDefaultLimit(max($this->_defaultLimit, (int) Mage::getStoreConfig('maillog/general/number')));
 
 		// embed tab
 		if (!is_object(Mage::registry('current_order')) && ($this->getRequest()->getParam('back') == 'order')) {
@@ -47,13 +47,13 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 		if (is_object($order = Mage::registry('current_order'))) {
 			$this->setId('maillog_order_grid_'.$order->getId());
-			$this->back = array('back' => 'order', 'bid' => $order->getId());
-			$this->_defaultFilter = array('mail_subject' => $order->getData('increment_id'));
+			$this->back = ['back' => 'order', 'bid' => $order->getId()];
+			$this->_defaultFilter = ['mail_subject' => $order->getData('increment_id')];
 		}
 		else if (is_object($customer = Mage::registry('current_customer'))) {
 			$this->setId('maillog_customer_grid_'.$customer->getId());
-			$this->back = array('back' => 'customer', 'bid' => $customer->getId());
-			$this->_defaultFilter = array('mail_recipients' => $customer->getData('email'));
+			$this->back = ['back' => 'customer', 'bid' => $customer->getId()];
+			$this->_defaultFilter = ['mail_recipients' => $customer->getData('email')];
 		}
 	}
 
@@ -63,11 +63,11 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 		// embed tab
 		if (is_object($order = Mage::registry('current_order'))) {
-			$collection->addFieldToFilter('mail_recipients', array('like' => '%'.$order->getData('customer_email').'%'));
-			//$collection->addFieldToFilter('mail_subject',  array('like' => '%'.$order->getData('increment_id').'%'));
+			$collection->addFieldToFilter('mail_recipients', ['like' => '%'.$order->getData('customer_email').'%']);
+			//$collection->addFieldToFilter('mail_subject',  ['like' => '%'.$order->getData('increment_id').'%']);
 		}
 		else if (is_object($customer = Mage::registry('current_customer'))) {
-			$collection->addFieldToFilter('mail_recipients', array('like' => '%'.$customer->getData('email').'%'));
+			$collection->addFieldToFilter('mail_recipients', ['like' => '%'.$customer->getData('email').'%']);
 		}
 
 		$this->setCollection($collection);
@@ -76,10 +76,10 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 	protected function _addColumnFilterToCollection($column) {
 
-		if (in_array($column->getId(), array('mail_recipients', 'mail_subject'))) {
+		if (in_array($column->getId(), ['mail_recipients', 'mail_subject'])) {
 			$words = explode(' ', $column->getFilter()->getValue());
 			foreach ($words as $word)
-				$this->getCollection()->addFieldToFilter($column->getId(), array('like' => '%'.$word.'%'));
+				$this->getCollection()->addFieldToFilter($column->getId(), ['like' => '%'.$word.'%']);
 		}
 		else {
 			parent::_addColumnFilterToCollection($column);
@@ -91,7 +91,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	protected function _prepareColumns() {
 
 		if (!empty($this->getRequest()->getParam('test'))) {
-			$this->addColumn('choice', array(
+			$this->addColumn('choice', [
 				'header_css_class' => 'a-center',
 				'index'      => 'email_id',
 				'type'       => 'checkbox',
@@ -100,8 +100,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 				'align'      => 'center',
 				'width'      => '75px',
 				'sortable'   => false
-			));
-			$this->addColumn('position', array(
+			]);
+			$this->addColumn('position', [
 				'index'      => 'position',
 				'name'       => 'position',
 				'align'      => 'left',
@@ -110,82 +110,82 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 				'filter'     => false,
 				'sortable'   => false,
 				'validate_class' => 'validate-number'
-			));
+			]);
 		}
 
-		$this->addColumn('email_id', array(
+		$this->addColumn('email_id', [
 			'header'    => $this->__('Id'),
 			'index'     => 'email_id',
 			'align'     => 'center',
 			'width'     => '80px'
-		));
+		]);
 
-		$this->addColumn('type', array(
+		$this->addColumn('type', [
 			'header'    => $this->__('Type'),
 			'index'     => 'type',
 			'type'      => 'options',
 			'options'   => $this->helper('maillog')->getAllTypes(),
 			'align'     => 'center',
 			'width'     => '100px'
-		));
+		]);
 
-		$this->addColumn('mail_recipients', array(
+		$this->addColumn('mail_recipients', [
 			'header'    => $this->__('Recipient(s)').' *',
 			'index'     => 'mail_recipients',
-			'frame_callback' => array($this, 'decorateRecipients')
-		));
+			'frame_callback' => [$this, 'decorateRecipients']
+		]);
 
-		$this->addColumn('mail_subject', array(
+		$this->addColumn('mail_subject', [
 			'header'    => $this->__('Subject').' *',
 			'index'     => 'mail_subject',
-			'frame_callback' => array($this, 'decorateSubject')
-		));
+			'frame_callback' => [$this, 'decorateSubject']
+		]);
 
-		$this->addColumn('size', array(
+		$this->addColumn('size', [
 			'header'    => $this->__('Size'),
 			'index'     => 'size',
 			'type'      => 'number',
 			'width'     => '85px',
 			'filter'    => false,
 			'sortable'  => false,
-			'frame_callback' => array($this, 'decorateSize')
-		));
+			'frame_callback' => [$this, 'decorateSize']
+		]);
 
-		$this->addColumn('created_at', array(
+		$this->addColumn('created_at', [
 			'header'    => $this->__('Created At'),
 			'index'     => 'created_at',
 			'type'      => 'datetime',
 			'format'    => Mage::getSingleton('core/locale')->getDateTimeFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT),
 			'align'     => 'center',
 			'width'     => '150px',
-			'frame_callback' => array($this, 'decorateDate')
-		));
+			'frame_callback' => [$this, 'decorateDate']
+		]);
 
-		$this->addColumn('sent_at', array(
+		$this->addColumn('sent_at', [
 			'header'    => $this->__('Sent At'),
 			'index'     => 'sent_at',
 			'type'      => 'datetime',
 			'format'    => Mage::getSingleton('core/locale')->getDateTimeFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT),
 			'align'     => 'center',
 			'width'     => '150px',
-			'frame_callback' => array($this, 'decorateDate')
-		));
+			'frame_callback' => [$this, 'decorateDate']
+		]);
 
-		$this->addColumn('duration', array(
+		$this->addColumn('duration', [
 			'header'    => $this->__('Duration'),
 			'index'     => 'duration',
 			'align'     => 'center',
 			'width'     => '60px',
 			'filter'    => false,
 			'sortable'  => false,
-			'frame_callback' => array($this, 'decorateDuration')
-		));
+			'frame_callback' => [$this, 'decorateDuration']
+		]);
 
-		$this->addColumn('status', array(
+		$this->addColumn('status', [
 			'header'    => $this->__('Status'),
 			'index'     => 'status',
 			'type'      => 'options',
-			'options'   => array(
+			'options'   => [
 				'pending' => $this->__('Pending'),
 				'sending' => $this->__('Sending'),
 				'sent'    => $this->__('Sent'),
@@ -193,29 +193,29 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 				'error'   => $this->helper('maillog')->_('Error'),
 				'notsent' => $this->__('Unsent'),
 				'bounce'  => $this->__('Blocked')
-			),
+			],
 			'width'     => '125px',
-			'frame_callback' => array($this, 'decorateStatus')
-		));
+			'frame_callback' => [$this, 'decorateStatus']
+		]);
 
-		$this->addColumn('action', array(
+		$this->addColumn('action', [
 			'type'      => 'action',
 			'getter'    => 'getId',
-			'actions'   => array(
-				array(
+			'actions'   => [
+				[
 					'caption' => $this->__('View'),
-					'url'     => !empty($this->back['bid']) ?
-						array('base' => '*/maillog_history/view/back/'.$this->back['back'].'/bid/'.$this->back['bid']) :
-						array('base' => '*/maillog_history/view'),
+					'url'     => empty($this->back['bid']) ?
+						['base' => '*/maillog_history/view'] :
+						['base' => '*/maillog_history/view/back/'.$this->back['back'].'/bid/'.$this->back['bid']],
 					'field'   => 'id'
-				)
-			),
+				]
+			],
 			'align'     => 'center',
 			'width'     => '55px',
 			'filter'    => false,
 			'sortable'  => false,
 			'is_system' => true
-		));
+		]);
 
 		// filtrage des colonnes
 		// embed tab
@@ -240,7 +240,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	public function getChoices($onlyIds = false) {
 		if (is_array($this->getRequest()->getPost('choice')))
 			return $this->getRequest()->getPost('choice');
-		return $onlyIds ? array(67667) : array(67667 => array('position' => 5));
+		return $onlyIds ? [67667] : [67667 => ['position' => 5]];
 	}
 
 	public function getId() {
@@ -255,14 +255,14 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	}
 
 	public function getRowClass($row) {
-		return !empty($row->getData('mail_parts')) ? 'parts' : '';
+		return empty($row->getData('mail_parts')) ? '' : 'parts';
 	}
 
-	public function getGridUrl($params = array()) {
+	public function getGridUrl($params = []) {
 
 		// embed tab
 		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
-			$query = !empty($query = getenv('QUERY_STRING')) ? '?'.$query : '';
+			$query = empty($query = getenv('QUERY_STRING')) ? '' : '?'.$query;
 			return $this->getUrl('*/maillog_history/index', array_merge($params, $this->back)).$query;
 		}
 
@@ -273,11 +273,11 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 		// embed tab
 		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
-			$params = array_merge($this->back, array('id' => $row->getId()));
+			$params = array_merge($this->back, ['id' => $row->getId()]);
 			return empty($this->getRequest()->getParam('test')) ? $this->getUrl('*/maillog_history/view', $params) : false;
 		}
 
-		return empty($this->getRequest()->getParam('test')) ? $this->getUrl('*/*/view', array('id' => $row->getId())) : false;
+		return empty($this->getRequest()->getParam('test')) ? $this->getUrl('*/*/view', ['id' => $row->getId()]) : false;
 	}
 
 	public function decorateStatus($value, $row, $column, $isExport) {
@@ -285,7 +285,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	}
 
 	public function decorateDuration($value, $row, $column, $isExport) {
-		return $this->helper('maillog')->getHumanDuration($row);
+		return $this->helper('maillog')->getHumanDuration($row->getData('created_at'), $row->getData('sent_at'));
 	}
 
 	public function decorateSize($value, $row, $column, $isExport) {
@@ -293,7 +293,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	}
 
 	public function decorateDate($value, $row, $column, $isExport) {
-		return (!in_array($row->getData($column->getIndex()), array('', '0000-00-00 00:00:00', null))) ? $value : '';
+		return in_array($row->getData($column->getIndex()), ['', '0000-00-00 00:00:00', null]) ? '' : $value;
 	}
 
 	public function decorateRecipients($value, $row, $column, $isExport) {

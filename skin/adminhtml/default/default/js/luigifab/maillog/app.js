@@ -1,8 +1,8 @@
 /**
  * Created J/03/12/2015
- * Updated V/12/04/2019
+ * Updated S/19/10/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -18,31 +18,68 @@
  * GNU General Public License (GPL) for more details.
  */
 
+if (window.NodeList && !NodeList.prototype.forEach) {
+	NodeList.prototype.forEach = function (callback, that, i) {
+		that = that || window;
+		for (i = 0; i < this.length; i++)
+			callback.call(that, this[i], i, this);
+	};
+}
+
 var maillog = {
 
 	start: function () {
 
-		if (document.getElementById('maillog_bounces_stats_customer')) {
+		if (document.getElementById('maillog_sync_bounces_stats_customer')) {
 
 			console.info('maillog.app - hello');
-
-			var customer   = document.getElementById('maillog_bounces_stats_customer'),
-			    bounce     = document.getElementById('maillog_bounces_stats_bounce'),
-			    subscriber = document.getElementById('maillog_unsubscribers_stats_subscriber'),
-			    elem, elems, i, j;
+			var customer   = document.getElementById('maillog_sync_bounces_stats_customer'),
+			    bounce     = document.getElementById('maillog_sync_bounces_stats_bounce'),
+			    subscriber = document.getElementById('maillog_sync_unsubscribers_stats_subscriber'),
+			    i, j;
 
 			i = parseInt(customer.textContent.trim(), 10);
 			j = parseInt(bounce.textContent.trim(), 10);
-			bounce.textContent += ' (' + Math.floor(j * 100 / i) + '%)';
+			bounce.textContent += ' (' + Math.floor(j * 100 / i) + ' %)';
 
 			i = parseInt(customer.textContent.trim(), 10);
 			j = parseInt(subscriber.textContent.trim(), 10);
-			subscriber.textContent += ' (' + Math.floor(j * 100 / i) + '%)';
+			subscriber.textContent += ' (' + Math.floor(j * 100 / i) + ' %)';
+		}
+		else if (document.getElementById('pictureConfig')) {
 
-			elems = document.querySelectorAll('textarea');
-			for (elem in elems) if (elems.hasOwnProperty(elem) && !isNaN(elem)) {
-				elems[elem].setAttribute('spellcheck', 'false');
-			}
+			console.info('maillog.app - hello');
+			var prev, nb = 0, max = 0, html = '';
+
+			document.getElementById('pictureConfig').querySelectorAll('tbody > tr').forEach(function (elem) {
+				if (elem.querySelector('td[rowspan]')) {
+					nb  = parseInt(elem.querySelector('td[rowspan]').getAttribute('rowspan'), 10);
+					max = (380 + 1) + 'px';
+					html += '<div class="max" style="margin-left:' + max + ';">' +
+						'<span class="s">a' + 'A' + '</span>' +
+						'<span class="l">b' + max + '</span>' +
+						'<span class="w">c' + elem.querySelector('.w').value + ' x ' + elem.querySelector('.h').value + '</span>' +
+					'</div>';
+				}
+				else {
+					html += '<div class="mid" style="margin-left:' + 10 + 'px; width:' + 10 + 'px;">' +
+						'<span class="s">a' + 'B' + '</span>' +
+						'<span class="l">b' + prev + '</span>' +
+						'<span class="r">c' + elem.querySelector('.b').value + '</span>' +
+						'<span class="w">d' + elem.querySelector('.w').value + ' x ' + elem.querySelector('.h').value + '</span>' +
+					'</div>';
+					if (--nb < 2) {
+						html += '<div class="min" style="width:' + 10 + 'px;">' +
+							'<span class="s">a' + 'C' + '</span>' +
+							'<span class="l">b0</span>' +
+							'<span class="r">c' + elem.querySelector('.b').value + '</span>' +
+							'<span class="w">d' + elem.querySelector('.w').value + ' x ' + elem.querySelector('.h').value + '</span>' +
+						'</div>';
+					}
+				}
+			});
+
+			document.getElementById('picturePreview').innerHTML += html;
 		}
 	},
 
@@ -63,23 +100,21 @@ var maillog = {
 
 	mark: function () {
 
-		var elem, elems, fields = document.getElementById('maillog_sync_mapping_config').value;
+		var fields = document.getElementById('maillog_sync_mapping_config').value;
 
-		elems = document.getElementById('maillog_sync_mapping_system').querySelectorAll('option');
-		for (elem in elems) if (elems.hasOwnProperty(elem) && !isNaN(elem) && (elem > 0)) {
-			if ((fields.indexOf('\n' + elems[elem].value + ':') > -1) || (fields.indexOf(elems[elem].value + ':') === 0))
-				elems[elem].setAttribute('class', 'has');
+		document.getElementById('maillog_sync_mapping_system').querySelectorAll('option').forEach(function (elem) {
+			if ((fields.indexOf('\n' + elem.value + ':') > -1) || (fields.indexOf(elem.value + ':') === 0))
+				elem.setAttribute('class', 'has');
 			else
-				elems[elem].removeAttribute('class');
-		}
+				elem.removeAttribute('class');
+		});
 
-		elems = document.getElementById('maillog_sync_mapping_magento').querySelectorAll('option');
-		for (elem in elems) if (elems.hasOwnProperty(elem) && !isNaN(elem) && (elem > 0)) {
-			if (fields.indexOf(':' + elems[elem].value) > -1)
-				elems[elem].setAttribute('class', 'has');
+		document.getElementById('maillog_sync_mapping_magento').querySelectorAll('option').forEach(function (elem) {
+			if (fields.indexOf(':' + elem.value) > -1)
+				elem.setAttribute('class', 'has');
 			else
-				elems[elem].removeAttribute('class');
-		}
+				elem.removeAttribute('class');
+		});
 	},
 
 	reset: function (elem, color) {
@@ -111,5 +146,5 @@ var maillog = {
 	}
 };
 
-if (typeof self.addEventListener === 'function')
-	self.addEventListener('load', maillog.start, false);
+if (typeof self.addEventListener == 'function')
+	self.addEventListener('load', maillog.start.bind(maillog));

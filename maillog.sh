@@ -1,9 +1,9 @@
 #!/bin/sh
 #
 # Created D/23/09/2018
-# Updated V/28/12/2018
+# Updated S/14/09/2019
 #
-# Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+# Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
 # Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
 # Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
 # https://www.luigifab.fr/magento/maillog
@@ -23,13 +23,15 @@ SCRIPT=maillog.php
 LOGFILE=maillog.log
 LOGDIR="var/log/"
 PHPBIN=`which php`
+DEV=""
+ONLYSYNC=""
+ONLYEMAIL=""
 
 if [ ! -d "$BASEDIR$LOGDIR" ] ; then
 	mkdir -p "$BASEDIR$LOGDIR"
 fi
 
 if ! ps auxwww | grep "$BASEDIR$SCRIPT" | grep -v grep 1>/dev/null 2>/dev/null ; then
-	DEV=ONLYSYNC=ONLYEMAIL=""
 	for ARG in $*
 	do
 		if [[ $ARG == "--dev" ]] ; then
@@ -38,6 +40,8 @@ if ! ps auxwww | grep "$BASEDIR$SCRIPT" | grep -v grep 1>/dev/null 2>/dev/null ;
 			ONLYSYNC="--only-sync"
 		elif [[ $ARG == "--only-email" ]] ; then
 			ONLYEMAIL="--only-email"
+		else
+			echo "unknown argument: $ARG" >> $BASEDIR$LOGDIR$LOGFILE
 		fi
 	done
 	$PHPBIN $BASEDIR$SCRIPT $DEV $ONLYSYNC $ONLYEMAIL >> $BASEDIR$LOGDIR$LOGFILE 2>&1 &

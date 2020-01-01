@@ -1,9 +1,9 @@
 <?php
 /**
  * Created L/09/11/2015
- * Updated M/08/01/2019
+ * Updated S/28/09/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -35,20 +35,20 @@ try {
 	// ADD COLUMN IF NOT EXISTS, à partir de MariaDB 10.0.2, n'existe pas dans MySQL 8.0
 	// https://mariadb.com/kb/en/mariadb/alter-table/
 	// https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
-	$sql = Mage::getSingleton('core/resource')->getConnection('core_read')->fetchOne('SELECT VERSION()');
+	$sql = $this->getConnection()->fetchOne('SELECT VERSION()');
 	if ((mb_stripos($sql, 'MariaDB') !== false) && version_compare($sql, '10.0.2', '>='))
-		$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' ADD COLUMN IF NOT EXISTS mail_parts longblob NULL DEFAULT NULL');
+		$this->run('ALTER TABLE '.$this->getTable('maillog/email').' ADD COLUMN IF NOT EXISTS mail_parts longblob NULL DEFAULT NULL');
 	else
-		$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' ADD COLUMN mail_parts longblob NULL DEFAULT NULL');
+		$this->run('ALTER TABLE '.$this->getTable('maillog/email').' ADD COLUMN mail_parts longblob NULL DEFAULT NULL');
 
-	$this->run('ALTER TABLE '.$this->getTable('luigifab_maillog').' MODIFY COLUMN type varchar(50) NOT NULL DEFAULT "--"');
-	$this->run('UPDATE '.$this->getTable('luigifab_maillog').' SET type = "--" WHERE type = ""');
+	$this->run('ALTER TABLE '.$this->getTable('maillog/email').' MODIFY COLUMN type varchar(50) NOT NULL DEFAULT "--"');
+	$this->run('UPDATE '.$this->getTable('maillog/email').' SET type = "--" WHERE type = ""');
 
 	// EN CAS D'INTERRUPTION IL SUFFIT SIMPLEMENT DE RELANCER SI L'ENSEMBLE DES EMAILS À AU MAXIMUM 1 SEULE PIÈCE JOINTE
 	// suppression de la première pièce jointe qui correspond au contenu de l'email uniquement s'il y a au moins 2 pièces jointes
 	// par lot de 1000 pour éviter un memory_limit
 	$total = Mage::getResourceModel('maillog/email_collection')
-		->addFieldToFilter('mail_parts', array('notnull' => true))
+		->addFieldToFilter('mail_parts', ['notnull' => true])
 		->getSize();
 
 	$p = ceil($total / 1000);
@@ -59,7 +59,7 @@ try {
 	while ($p > 0) {
 
 		$emails = Mage::getResourceModel('maillog/email_collection')
-			->addFieldToFilter('mail_parts', array('notnull' => true))
+			->addFieldToFilter('mail_parts', ['notnull' => true])
 			->setOrder('email_id', 'desc')
 			->setPageLimit(1000, $p);
 
@@ -67,28 +67,25 @@ try {
 
 		foreach ($emails as $email) {
 
-			$parts = unserialize(gzdecode($email->getData('mail_parts')));
+			$parts = @unserialize(gzdecode($email->getData('mail_parts')));
 
 			if (($parts !== false) && (count($parts) >= 2)) {
-
-				array_shift($parts);
-				$parts = gzencode(serialize($parts), 9);
-
+				array_shift($parts); // supprime le premier
 				Mage::log('Update v3.0! Removing body part from email #'.$email->getId().' (step '.$p.')', Zend_Log::INFO, 'maillog.log');
-				$email->setData('mail_parts', $parts)->save();
-				$i += 1;
+				$email->setData('mail_parts', gzencode(serialize($parts), 9))->save();
+				$i++;
 			}
 			else if (($parts !== false) && (count($parts) >= 1)) {
-
+				// nothing to do
 			}
 			else {
 				Mage::log('Update v3.0! Removing all parts from email #'.$email->getId().' (step '.$p.')', Zend_Log::INFO, 'maillog.log');
 				$email->setData('mail_parts', null)->save();
-				$i += 1;
+				$i++;
 			}
 		}
 
-		$p -= 1;
+		$p--;
 	}
 
 	Mage::log('Update v3.0! Done', Zend_Log::INFO, 'maillog.log');

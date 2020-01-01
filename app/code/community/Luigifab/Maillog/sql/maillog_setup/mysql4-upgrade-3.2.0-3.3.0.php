@@ -1,9 +1,9 @@
 <?php
 /**
  * Created S/09/03/2019
- * Updated M/30/04/2019
+ * Updated S/28/09/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -36,19 +36,19 @@ try {
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/ignore";
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/baseurl";
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/notbaseurl";
-		ALTER TABLE '.$this->getTable('luigifab_maillog').' CHANGE mail_subject mail_subject varchar(255) CHARACTER SET utf8mb4 NULL DEFAULT NULL;
-		ALTER TABLE '.$this->getTable('luigifab_maillog').' CHANGE mail_body mail_body longtext CHARACTER SET utf8mb4 NULL DEFAULT NULL;
-		ALTER TABLE '.$this->getTable('luigifab_maillog_sync').' CHANGE status status enum("pending","success","error","running","notsync") NOT NULL DEFAULT "pending";
+		ALTER TABLE '.$this->getTable('maillog/email').' CHANGE mail_subject mail_subject varchar(255) CHARACTER SET utf8mb4 NULL DEFAULT NULL;
+		ALTER TABLE '.$this->getTable('maillog/email').' CHANGE mail_body mail_body longtext CHARACTER SET utf8mb4 NULL DEFAULT NULL;
+		ALTER TABLE '.$this->getTable('maillog/sync').' CHANGE status status enum("pending","success","error","running","notsync") NOT NULL DEFAULT "pending";
 	');
 
 	// CREATE INDEX IF NOT EXISTS, n'existe pas dans MySQL 8.0
 	// https://mariadb.com/kb/en/library/create-index/
 	// https://dev.mysql.com/doc/refman/8.0/en/create-index.html
-	$sql = Mage::getSingleton('core/resource')->getConnection('core_read')->fetchOne('SELECT VERSION()');
+	$sql = $this->getConnection()->fetchOne('SELECT VERSION()');
 	if (mb_stripos($sql, 'MariaDB') !== false)
-		$this->run('CREATE INDEX IF NOT EXISTS uniqid ON '.$this->getTable('luigifab_maillog').' (uniqid);');
+		$this->run('CREATE INDEX IF NOT EXISTS uniqid ON '.$this->getTable('maillog/email').' (uniqid);');
 	else
-		$this->run('CREATE INDEX uniqid ON '.$this->getTable('luigifab_maillog').' (uniqid);');
+		$this->run('CREATE INDEX uniqid ON '.$this->getTable('maillog/email').' (uniqid);');
 }
 catch (Exception $e) {
 	$lock->unlock();

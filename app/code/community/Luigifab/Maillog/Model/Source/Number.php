@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/25/08/2018
+ * Updated M/20/08/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -23,12 +23,12 @@ class Luigifab_Maillog_Model_Source_Number {
 
 	public function toOptionArray() {
 
-		return array(
-			array('value' => 20,  'label' => 20),
-			array('value' => 30,  'label' => 30),
-			array('value' => 50,  'label' => 50),
-			array('value' => 100, 'label' => 100),
-			array('value' => 200, 'label' => 200)
-		);
+		return [
+			['value' => 20,  'label' => 20],
+			['value' => 30,  'label' => 30],
+			['value' => 50,  'label' => 50],
+			['value' => 100, 'label' => 100],
+			['value' => 200, 'label' => 200]
+		];
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created S/14/11/2015
- * Updated S/25/08/2018
+ * Updated M/20/08/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -27,7 +27,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Bounce extends Mage_Adminhtml_Bloc
 	}
 
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		$ids = array('in' => Mage::getSingleton('maillog/source_bounce')->getBounceIds());
+		$ids = ['in' => Mage::getSingleton('maillog/source_bounce')->getBounceIds()];
 		$element->setValue(Mage::getResourceModel('customer/customer_collection')->addAttributeToFilter('is_bounce', $ids)->getSize());
 		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $element->getValue());
 	}

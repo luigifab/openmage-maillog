@@ -1,9 +1,9 @@
 <?php
 /**
  * Created M/02/01/2018
- * Updated S/25/08/2018
+ * Updated M/24/09/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -27,6 +27,6 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Test extends Mage_Adminhtml_Block_
 	}
 
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		return sprintf('<input type="checkbox" name="maillog_test_email" id="%s" />', $element->getHtmlId());
+		return sprintf('<input type="checkbox" name="%s" id="%s" />', $element->getHtmlId(), $element->getHtmlId());
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/27/01/2019
+ * Updated M/19/11/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -27,8 +27,16 @@ class Luigifab_Maillog_Block_Adminhtml_History extends Mage_Adminhtml_Block_Widg
 
 		$this->_controller = 'adminhtml_history';
 		$this->_blockGroup = 'maillog';
-		$this->_headerText = $this->__('Transactional emails').' '.$this->helper('maillog')->getSpecialCronStatus();
+		$this->_headerText = $this->__('Transactional emails').' '.$this->helper('maillog')->getCronStatus();
 
 		$this->_removeButton('add');
+
+		if (Mage::getStoreConfigFlag('maillog/email/enabled')) {
+			$this->_addButton('test', [
+				'label'   => $this->__('Send an email now'),
+				'onclick' => "setLocation('".$this->getUrl('*/*/test')."');",
+				'class'   => 'add'
+			]);
+		}
 	}
 }

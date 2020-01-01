@@ -1,9 +1,9 @@
 <?php
 /**
  * Created J/18/01/2018
- * Updated S/22/12/2018
+ * Updated J/23/05/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -22,7 +22,7 @@
 abstract class Luigifab_Maillog_Model_System {
 
 	public function getType() {
-		return mb_substr(get_class($this), mb_strrpos(get_class($this), '_') + 1);
+		return mb_substr(get_class($this), mb_strripos(get_class($this), '_') + 1);
 	}
 
 

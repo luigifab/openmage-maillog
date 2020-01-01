@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/18/04/2019
+ * Updated V/25/10/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -33,15 +33,18 @@ set_time_limit(0);
 
 try {
 	// configuration et tables
+	// deleteConfigData
 	$this->run('
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%";
+		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog_sync/%";
+		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog_directives/%";
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "crontab/jobs/maillog_%";
 
-		DROP TABLE IF EXISTS '.$this->getTable('luigifab_maillog').';
-		DROP TABLE IF EXISTS '.$this->getTable('luigifab_maillog_sync').';
+		DROP TABLE IF EXISTS '.$this->getTable('maillog/email').';
+		DROP TABLE IF EXISTS '.$this->getTable('maillog/sync').';
 		DROP TABLE IF EXISTS '.$this->getTable('luigifab_maillog_bounce').';
 
-		CREATE TABLE '.$this->getTable('luigifab_maillog').' (
+		CREATE TABLE '.$this->getTable('maillog/email').' (
 			email_id                int(11) unsigned NOT NULL AUTO_INCREMENT,
 			status                  enum("pending","sent","error","read","notsent","bounce","sending") NOT NULL DEFAULT "pending",
 			created_at              datetime         DEFAULT NULL,
@@ -64,7 +67,7 @@ try {
 			KEY uniqid (uniqid)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-		CREATE TABLE '.$this->getTable('luigifab_maillog_sync').' (
+		CREATE TABLE '.$this->getTable('maillog/sync').' (
 			sync_id                 int(11) unsigned NOT NULL AUTO_INCREMENT,
 			status                  enum("pending","success","error","running","notsync") NOT NULL DEFAULT "pending",
 			created_at              datetime         NULL DEFAULT NULL,
@@ -79,30 +82,37 @@ try {
 	');
 
 	// attribut client
-	$sortOrder = intval($this->_conn->fetchOne(
+	$sortOrder = (int) $this->_conn->fetchOne(
 		'SELECT sort_order FROM '.$this->getTable('eav_entity_attribute').' WHERE attribute_id = ?',
-		 intval(Mage::getResourceModel('eav/entity_attribute')->getIdByCode('customer', 'email'))
-	)) + 1;
+		 (int) Mage::getResourceModel('eav/entity_attribute')->getIdByCode('customer', 'email')
+	) + 1;
 
 	$this->removeAttribute('customer', 'is_bounce');
-	$this->addAttribute('customer', 'is_bounce', array(
-		'label'    => 'Invalid email (hard bounce)', //$this->__('Invalid email (hard bounce)') pour le translate.php avec Magento 1.7 et +
+	$this->addAttribute('customer', 'is_bounce', [
+		'label'    => 'Invalid email (hard bounce)', //$this->__('Invalid email (hard bounce)') pour le translate.php
 		'type'     => 'int',
 		'input'    => 'select',
 		'source'   => 'maillog/source_bounce',
 		'visible'  => 1,
 		'required' => 0
-	));
+	]);
 
 	$attributeSetId   = $this->getDefaultAttributeSetId('customer');
 	$attributeGroupId = $this->getDefaultAttributeGroupId('customer', $attributeSetId);
 	$this->addAttributeToGroup('customer', $attributeSetId, $attributeGroupId, 'is_bounce', $sortOrder);
 
-	if (version_compare(Mage::getVersion(), '1.4.2', '>=')) {
-		$attribute = Mage::getSingleton('eav/config')->getAttribute('customer', 'is_bounce');
-		$attribute->setData('used_in_forms', array('adminhtml_customer'));
-		$attribute->setData('sort_order', $sortOrder);
-		$attribute->save();
+	$attribute = Mage::getSingleton('eav/config')->getAttribute('customer', 'is_bounce');
+	$attribute->setData('used_in_forms', ['adminhtml_customer']);
+	$attribute->setData('sort_order', $sortOrder);
+	$attribute->save();
+
+	// variable de configuration dans les emails
+	$var = Mage::getModel('admin/variable');
+	if (is_object($var)) {
+		$var->load('design/head/default_title', 'variable_name');
+		$var->setData('variable_name', 'design/head/default_title');
+		$var->setData('is_allowed', '1');
+		$var->save();
 	}
 }
 catch (Exception $e) {

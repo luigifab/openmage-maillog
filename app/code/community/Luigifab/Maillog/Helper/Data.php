@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/05/05/2019
+ * Updated J/05/12/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -21,24 +21,48 @@
 
 class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
+	public function getSystem() {
+
+		$system = Mage::registry('maillog');
+		if (!is_object($system)) {
+			$system = Mage::getStoreConfig('maillog_sync/general/type');
+			$system = (empty($system) || empty(Mage::getStoreConfig('maillog_sync/general/api_url'))) ?
+				new Varien_Object(['fields' => [], 'type' => 'Emarsys']) :
+				Mage::getSingleton((mb_stripos($system, '/') === false) ? 'maillog/system_'.$system : $system);
+			Mage::register('maillog', $system);
+		}
+
+		return $system;
+	}
+
 	public function getVersion() {
 		return (string) Mage::getConfig()->getModuleConfig('Luigifab_Maillog')->version;
 	}
 
-	public function _($data, $a = null, $b = null) {
-		return (mb_strpos($txt = $this->__(' '.$data, $a, $b), ' ') === 0) ? $this->__($data, $a, $b) : $txt;
+	public function _(string $data, $a = null, $b = null) {
+		return (mb_stripos($txt = $this->__(' '.$data, $a, $b), ' ') === 0) ? $this->__($data, $a, $b) : $txt;
 	}
 
-	public function getHumanDuration($row) {
+	public function escapeEntities($data, bool $quotes = false) {
+		return htmlspecialchars($data, $quotes ? ENT_SUBSTITUTE | ENT_COMPAT : ENT_SUBSTITUTE | ENT_NOQUOTES);
+	}
 
-		if ((!in_array($row->getData('created_at'), array('', '0000-00-00 00:00:00', null)) &&
-		    !in_array($row->getData('sent_at'), array('', '0000-00-00 00:00:00', null))) || ($row->getData('duration') > -1)) {
+	public function formatDate($date = null, $format = Zend_Date::DATETIME_LONG, $showTime = false) {
+		$object = Mage::getSingleton('core/locale');
+		return str_replace($object->date($date)->toString(Zend_Date::TIMEZONE), '', $object->date($date)->toString($format));
+	}
 
-			$data = $row->getData('duration');
-			$data = ($data > -1) ? $data : strtotime($row->getData('sent_at')) - strtotime($row->getData('created_at'));
+	public function getHumanEmailAddress(string $email) {
+		return $this->escapeEntities(str_replace(['<', '>', ',', '"'], ['(', ')', ', ', ''], $email));
+	}
 
-			$minutes = intval($data / 60);
-			$seconds = intval($data % 60);
+	public function getHumanDuration($start, $end) {
+
+		if (!in_array($start, ['', '0000-00-00 00:00:00', null]) && !in_array($end, ['', '0000-00-00 00:00:00', null])) {
+
+			$data    = is_numeric($start) ? $start : strtotime($end) - strtotime($start);
+			$minutes = (int) ($data / 60);
+			$seconds = $data % 60;
 
 			if ($data > 599)
 				$data = '<strong>'.(($seconds > 9) ? $minutes.':'.$seconds : $minutes.':0'.$seconds).'</strong>';
@@ -53,43 +77,30 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		}
 	}
 
-	public function getNumberToHumanSize($number) {
+	public function getNumberToHumanSize(string $number) {
 
 		if ($number < 1) {
 			return '';
 		}
 		else if (($number / 1024) < 1024) {
 			$size = $number / 1024;
-			$size = Zend_Locale_Format::toNumber($size, array('precision' => 2));
-			return $this->__('%s kB', str_replace(array('.00',',00'), '', $size));
+			$size = Zend_Locale_Format::toNumber($size, ['precision' => 2]);
+			return $this->__('%s kB', str_replace(['.00', ',00'], '', $size));
 		}
 		else if (($number / 1024 / 1024) < 1024) {
 			$size = $number / 1024 / 1024;
-			$size = Zend_Locale_Format::toNumber($size, array('precision' => 2));
-			return $this->__('%s MB', str_replace(array('.00',',00'), '', $size));
+			$size = Zend_Locale_Format::toNumber($size, ['precision' => 2]);
+			return $this->__('%s MB', str_replace(['.00', ',00'], '', $size));
 		}
 		else {
 			$size = $number / 1024 / 1024 / 1024;
-			$size = Zend_Locale_Format::toNumber($size, array('precision' => 2));
-			return $this->__('%s GB', str_replace(array('.00',',00'), '', $size));
+			$size = Zend_Locale_Format::toNumber($size, ['precision' => 2]);
+			return $this->__('%s GB', str_replace(['.00', ',00'], '', $size));
 		}
 	}
 
-	public function getHumanEmailAddress($data) {
-		return htmlspecialchars(str_replace(array('<','>',',','"'), array('(',')',', ',''), $data));
-	}
 
-	public function formatDate($date = null, $format = Zend_Date::DATETIME_LONG, $showTime = false) {
-		$object = Mage::getSingleton('core/locale');
-		return str_replace($object->date($date)->toString(Zend_Date::TIMEZONE), '', $object->date($date)->toString($format));
-	}
-
-	public function getLock() {
-		return Mage::getBaseDir('var').'/maillog.lock';
-	}
-
-
-	public function filterMail($varien, $html, $vars) {
+	public function filterMail(object $varien, string $html, array $vars) {
 
 		// foreach/forelse
 		$pattern = '/{{foreach\s*(.*?)}}(.*?)({{forelse}}(.*?))?{{\\/foreach\s*}}/si';
@@ -97,25 +108,22 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 			foreach ($matches as $match) {
 
+				$items    = $varien->_getVariable2($match[1], '');
 				$replaced = '';
 
-				// items contient le contenu de la variable du foreach
-				// et c'est normalement quelque chose qui ressemble à un tableau
-				$items = $varien->_getVariable2($match[1], '');
-				$i = 0;
-
-				if (!empty($items) && is_array($items)) {
+				if (!empty($items) && is_iterable($items)) {
+					$i = 1;
 					foreach ($items as &$item) {
-						if (is_array($item)) {
-							foreach ($item as $key => &$data)
-								$varien->setVariables(array($match[1].$i.'_'.$key => &$data));
+						if (is_object($item) || is_array($item)) {
+							foreach ((is_object($item) ? $item->getData() : $item) as $key => &$data)
+								$varien->setVariables([$match[1].$i.'_'.$key => &$data]);
 							unset($data);
 						}
 						else {
-							$varien->setVariables(array($match[1].$i.'_'.$key => &$item));
+							$varien->setVariables([$match[1].$i.'_'.$key => &$item]);
 						}
 						$replaced .= str_replace(' '.$match[1].'.', ' '.$match[1].$i.'_', $match[2]);
-						$i += 1;
+						$i++;
 					}
 					unset($item);
 				}
@@ -127,91 +135,144 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			}
 		}
 
-		// if elseif/elsif else
-		$pattern1 = '/{{if\s*(.*?)}}(.*?)((?:{{else?if\s*.*?}}.*?)*)({{else}}(.*?))?{{\\/if\s*}}/si';
-		$pattern2 = '/{{else?if\s*(.*?)}}(.*?)(?={{else?if|$)/si';
-		if (preg_match_all($pattern1, $html, $matches, PREG_SET_ORDER)) {
+		// if elseif/elsif (max 20) else
+		// https://regex101.com/r/gDDgL7/3/
+		$pattern = '/{{if\s*(.*?)}}(.*?)(?={{els|{{\/if}})
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
+(?:({{else}})(.*?))*
+{{\/if}}/six';
+		if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
 
 			foreach ($matches as $match) {
 
+				// $match[0] = tout le groupe
+				$group    = array_shift($match);
 				$replaced = '';
 
-				if ($this->variableMail($varien, $match[1], '') == '') {
-					if (isset($match[3])) {
-						preg_match_all($pattern2, $match[3], $submatches, PREG_SET_ORDER);
-						foreach ($submatches as $submatch) {
-							if ($this->variableMail($varien, $submatch[1], '') != '')
-								$replaced = $submatch[2];
-						}
-						if (empty($replaced))
-							$replaced = isset($match[4], $match[5]) ? $match[5] : '';
+				// $match[1/3/5...] = var cond var   => $value
+				// $match[2/4/6...] = valeur si vrai
+				// $match[...11=last-1] = {{else}}
+				// $match[...12=last] = valeur si faux
+				while (count($match) > 0) {
+					$value = array_shift($match);
+					if ($value == '{{else}}') {
+						$replaced = array_shift($match);
+						break;
 					}
-					else {
-						$replaced = isset($match[4], $match[5]) ? $match[5] : '';
+					if (!empty($value) && !empty($this->variableMail($varien, $value, ''))) {
+						$replaced = array_shift($match);
+						break;
 					}
-				}
-				else {
-					$replaced = $match[2];
 				}
 
-				$html = str_replace($match[0], $replaced, $html);
+				$html = str_replace($group, $replaced, $html);
+			}
+		}
+
+ 		// number
+		$pattern = '/{{number\s*(.*?)}}/si';
+		if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
+
+			$locale = Mage::app()->getStore()->isAdmin() ? Mage::getSingleton('core/translate')->getLocale() :
+				Mage::getStoreConfig('general/locale/code', empty($vars['store']) ? null : $vars['store']);
+
+			foreach ($matches as $match) {
+				$number  = $varien->_getVariable2($match[1], $match[1]);
+				$replace = is_numeric($number) ? Zend_Locale_Format::toNumber((float) $number, ['locale' => $locale]) : '';
+				$html    = str_replace($match[0], $replace, $html);
 			}
 		}
 
 		// dump
-		$pattern = '/{{\s*dump\s*}}/si';
+		$pattern = '/{{dump\s*(.*?)?}}/si';
 		if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
-			$replaced = '<pre>dump:'.trim(print_r($this->dumpData($vars), true)).'</pre>';
-			foreach ($matches as $match)
-				$html = str_replace($match[0], $replaced, $html);
+
+			foreach ($matches as $match) {
+				$data     = empty($match[1]) ? $vars : ($vars[$match[1]] ?? null);
+				$replaced = '<pre>'.trim(is_array($data) ? print_r($this->dumpArray($data), true) : var_export($data, true)).'</pre>';
+				$html     = str_replace($match[0], $replaced, $html);
+			}
 		}
 
 		return $html;
 	}
 
-	public function variableMail($varien, $value, $default) {
+	public function variableMail(object $varien, string $value, $default) {
 
 		// >
-		if (mb_strpos($value, ' gt ') !== false) {
-			$values = explode(' gt ', $value);
-			if (empty($check = $varien->_getVariable2($values[1], $default)))
+		if (mb_stripos($value, ' gt ') !== false) {
+			$values = array_map('trim', explode(' gt ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return $varien->_getVariable2($values[0], $default) > $check;
+			return (is_numeric($base) && is_numeric($check)) ? ($base > $check) : false;
 		}
 		// >=
-		else if (mb_strpos($value, ' gte ') !== false) {
-			$values = explode(' gte ', $value);
-			if (empty($check = $varien->_getVariable2($values[1], $default)))
+		else if ((mb_stripos($value, ' gte ') !== false) || (mb_stripos($value, ' gteq ') !== false)) {
+			$values = array_map('trim', explode(' gte ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return $varien->_getVariable2($values[0], $default) >= $check;
+			return (is_numeric($base) && is_numeric($check)) ? ($base >= $check) : false;
 		}
 		// <
-		else if (mb_strpos($value, ' lt ') !== false) {
-			$values = explode(' lt ', $value);
-			if (empty($check = $varien->_getVariable2($values[1], $default)))
+		else if (mb_stripos($value, ' lt ') !== false) {
+			$values = array_map('trim', explode(' lt ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return $varien->_getVariable2($values[0], $default) < $check;
+			return (is_numeric($base) && is_numeric($check)) ? ($base < $check) : false;
 		}
 		// <=
-		else if (mb_strpos($value, ' lte ') !== false) {
-			$values = explode(' lte ', $value);
-			if (empty($check = $varien->_getVariable2($values[1], $default)))
+		else if ((mb_stripos($value, ' lte ') !== false) || (mb_stripos($value, ' lteq ') !== false)) {
+			$values = array_map('trim', explode(' lte ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return $varien->_getVariable2($values[0], $default) <= $check;
+			return (is_numeric($base) && is_numeric($check)) ? ($base <= $check) : false;
 		}
 		// ==
-		else if (mb_strpos($value, ' eq ') !== false) {
-			$values = explode(' eq ', $value);
-			if (empty($check = $varien->_getVariable2($values[1], $default)))
+		else if (mb_stripos($value, ' eq ') !== false) {
+			$values = array_map('trim', explode(' eq ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return $varien->_getVariable2($values[0], $default) == $check;
+			if (($check == 'empty') && empty($base)) // == empty
+				return true;
+			if (is_numeric($base) && ($base == 0) && !is_numeric($check)) // en PHP, tout string vaut 0 (voir observer::sendEmailReport)
+				return false;
+			return $base == $check;
 		}
 		// !=
-		else if (mb_strpos($value, ' neq ') !== false) {
-			$values = explode(' neq ', $value);
-			if (empty($check = $varien->_getVariable2($values[1], $default)))
+		else if (mb_stripos($value, ' neq ') !== false) {
+			$values = array_map('trim', explode(' neq ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return $varien->_getVariable2($values[0], $default) != $check;
+			if (($check == 'empty') && empty($base)) // != empty
+				return false;
+			if (is_numeric($base) && ($base == 0) && !is_numeric($check)) // en PHP, tout string vaut 0 (voir observer::sendEmailReport)
+				return true;
+			return $base != $check;
 		}
 		// traitement par défaut
 		else {
@@ -219,14 +280,31 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		}
 	}
 
-	private function dumpData($vars) {
-		$data = array();
+	private function dumpArray(array $vars) {
+		$data = [];
 		foreach ($vars as $key => $var) {
 			$type = gettype($var);
 			if ($type == 'object')
-				$data[$key.' '.get_class($var)] = $this->dumpObject($var);
+				$data[$key.' '.get_class($var)] = $this->dumpObject($var->getData());
 			else if ($type == 'array')
-				$data[$key] = $this->dumpData($var);
+				$data[$key] = $this->dumpArray($var);
+			else if ($type == 'string')
+				$data[$key] = 'string (+striptags) => '.strip_tags(str_replace(['<br>', '<br/>', '<br />', "\n"], ' ', $var));
+			else
+				$data[$key] = $type.' => '.$var;
+		}
+		ksort($data);
+		return $data;
+	}
+
+	private function dumpObject(array $vars) {
+		$data = [];
+		foreach ($vars as $key => $var) {
+			$type = gettype($var);
+			if ($type == 'object')
+				$data[$key.' '.get_class($var)] = $this->dumpObject($var->getData());
+			else if ($type == 'array')
+				$data[$key] = $this->dumpArray($var);
 			else
 				$data[$key] = $type;
 		}
@@ -234,27 +312,16 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		return $data;
 	}
 
-	private function dumpObject($object) {
-		$vars = $object->getData();
-		$data = array();
-		foreach ($vars as $key => $var) {
-			$type = gettype($var);
-			$data[$key] = ($type == 'array') ? $this->dumpData($var) : $type;
-		}
-		ksort($data);
-		return $data;
-	}
 
-
-	public function canSend($email) {
+	public function canSend(string ...$emails) {
 
 		// l'adresse email ne doit pas contenir
 		$ignores = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/filters/ignore')));
 		foreach ($ignores as $ignore) {
-			if (is_string($email) && (stripos($email, $ignore) !== false))
-				return sprintf('STOP! Email address not allowed by keyword: %s', $ignore);
-			if ((stripos($email[4], $ignore) !== false) || (!empty($email[3]) && (stripos($email[3], $ignore) !== false)))
-				return sprintf('STOP! Email address not allowed by keyword: %s', $ignore);
+			foreach ($emails as $email) {
+				if (mb_stripos($email, $ignore) !== false)
+					return sprintf('STOP! Email address not allowed by keyword: %s', $ignore);
+			}
 		}
 
 		// toutes les base_url doivent contenir
@@ -269,12 +336,12 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				// vérifie les domaines
 				// si on trouve pas un domaine, c'est qu'il y a un problème
 				$cansend  = true;
-				$storeIds = Mage::getResourceModel('core/store_collection')->setOrder('store_id', 'asc')->getAllIds();
+				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 				foreach ($storeIds as $storeId) {
 					$baseurl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
 					$baseurl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
 					foreach ($domains as $domain) {
-						if ((stripos($baseurl1, $domain) === false) || (stripos($baseurl2, $domain) === false)) {
+						if ((mb_stripos($baseurl1, $domain) === false) || (mb_stripos($baseurl2, $domain) === false)) {
 							$cansend = false;
 							break 2;
 						}
@@ -290,7 +357,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			}
 		}
 
-		if (stripos($msg, 'ok-can-send') === false)
+		if (mb_stripos($msg, 'ok-can-send') === false)
 			return $msg;
 
 		// toutes les base_url ne doivent pas contenir
@@ -305,12 +372,12 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				// vérifie les domaines
 				// si on trouve un domaine, c'est qu'il y a un problème
 				$cansend  = true;
-				$storeIds = Mage::getResourceModel('core/store_collection')->setOrder('store_id', 'asc')->getAllIds();
+				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 				foreach ($storeIds as $storeId) {
 					$baseurl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
 					$baseurl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
 					foreach ($domains as $domain) {
-						if ((stripos($baseurl1, $domain) !== false) || (stripos($baseurl2, $domain) !== false)) {
+						if ((mb_stripos($baseurl1, $domain) !== false) || (mb_stripos($baseurl2, $domain) !== false)) {
 							$cansend = false;
 							break 2;
 						}
@@ -326,13 +393,13 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			}
 		}
 
-		if (stripos($msg, 'ok-can-send') === false)
+		if (mb_stripos($msg, 'ok-can-send') === false)
 			return $msg;
 
 		return true;
 	}
 
-	private function loadMemory($key) {
+	private function loadMemory(string $key) {
 
 		$msg = Mage::registry($key);
 
@@ -347,20 +414,20 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		return $msg;
 	}
 
-	private function saveMemory($key, $msg) {
+	private function saveMemory(string $key, string $msg) {
 
 		Mage::register($key, '(from registry) '.$msg);
 		if (Mage::app()->useCache('config'))
-			Mage::app()->saveCache($msg, $key, array(Mage_Core_Model_Config::CACHE_TAG));
+			Mage::app()->saveCache($msg, $key, [Mage_Core_Model_Config::CACHE_TAG]);
 
 		return $msg;
 	}
 
 
-	public function sendMail($zend, $mail, $parts) {
+	public function sendMail(object $zend, object $mail, $parts) {
 
 		$headers = $mail->getHeaders();
-		$email = Mage::getModel('maillog/email');
+		$email   = Mage::getModel('maillog/email');
 
 		$email->setData('created_at', date('Y-m-d H:i:s'));
 		$email->setData('status', 'pending');
@@ -369,18 +436,24 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		$email->setData('encoded_mail_recipients', $zend->recipients);
 		$email->setData('encoded_mail_subject', $mail->getSubject());
 
-		$email->setMailSender(!empty($headers['From'][0]) ? $headers['From'][0] : '');
+		$email->setMailSender(empty($headers['From'][0]) ? '' : $headers['From'][0]);
 		$email->setMailRecipients($zend->recipients);
 		$email->setMailSubject($mail->getSubject());
 		$email->setMailContent($parts);
 
+		// debug
+		//$email->setId(9999999); echo $email->toHtml(true); exit;
+
 		$email->save();
+
+		Mage::unregister('maillog_last_emailid');
+		Mage::register('maillog_last_emailid', $email->getId());
 	}
 
-	public function sendSync($object, $type, $key, $todo) {
+	public function sendSync(object $object, string $type, string $key, string $todo) {
 
-		$id    =  !empty($object->getData('customer_id')) ? $object->getData('customer_id') : $object->getId(); // !!
-		$type  = (!empty($object->getData('customer_id')) && ($type != 'customer')) ? 'customer' : $type;       // !!
+		$id    =   empty($object->getData('customer_id')) ? $object->getId() : $object->getData('customer_id');
+		$type  = (!empty($object->getData('customer_id')) && ($type != 'customer')) ? 'customer' : $type;
 		$email = $object->getData($key);
 
 		if (empty($email))
@@ -400,15 +473,12 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$todo.':'.$type.':'.$id.':'.$object->getOrigData($key).':'.$email :
 				$todo.':'.$type.':'.$id.'::'.$email;
 
-			$username = (!Mage::app()->getStore()->isAdmin() || !is_object($user = Mage::getSingleton('admin/session')->getData('user'))) ?
-				Mage::app()->getStore()->getData('code') : Mage::app()->getStore()->getData('code').' ('.$user->getData('username').')';
-
 			$syncs = Mage::getResourceModel('maillog/sync_collection');
 			$syncs->addFieldToFilter('status', 'pending');
-			$syncs->addFieldToFilter('action', array('like' => $todo.':'.$type.':'.$id.':%'));
-			$syncs->addFieldToSort('created_at', 'desc');
+			$syncs->addFieldToFilter('action', ['like' => $todo.':'.$type.':'.$id.':%']);
+			$syncs->setOrder('created_at', 'desc');
 
-			// si une synchro en attente pour le même client existe déjà
+			// des fois qu'une synchro en attente pour le même client existe déjà
 			$sync = Mage::getModel('maillog/sync');
 			//$sync->setData('request', 'waiting cron...');
 
@@ -452,24 +522,56 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			$sync->setData('created_at', date('Y-m-d H:i:s'));
 			$sync->setData('status', 'pending');
 			$sync->setData('action', $action);
-			$sync->setData('user', $username);
+			$sync->setData('user', $this->getUsername());
 			$sync->save();
+
+			Mage::unregister('maillog_last_syncid');
+			Mage::register('maillog_last_syncid', $sync->getId());
 
 			if (Mage::app()->getStore()->isAdmin())
 				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Customer data will be synchronized (%s).', $email));
 		}
 	}
 
+	public function getUsername() {
 
-	public function getImportStatus($key, $id = null) {
+		$file = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+		$file = array_pop($file);
+		$file = array_key_exists('file', $file) ? basename($file['file']) : '';
 
-		$help    = Mage::helper('adminhtml');
-		$basedir = Mage::getStoreConfig('maillog/'.$key.'/directory');
+		// backend
+		// PHP_SAPI évite Warning: session_save_path(): Cannot change save path when headers already sent
+		if ((PHP_SAPI != 'cli') && Mage::app()->getStore()->isAdmin() && Mage::getSingleton('admin/session')->isLoggedIn())
+			$user = sprintf('admin %s', Mage::getSingleton('admin/session')->getData('user')->getData('username'));
+		// cron
+		else if (is_object($cron = Mage::registry('current_cron')))
+			$user = sprintf('cron %d - %s', $cron->getId(), $cron->getData('job_code'));
+		// xyz.php
+		else if ($file != 'index.php')
+			$user = $file;
+		// full action name
+		else if (is_object($action = Mage::app()->getFrontController()->getAction()))
+			$user = $action->getFullActionName();
+		// frontend
+		else
+			$user = sprintf('frontend %d', Mage::app()->getStore()->getData('code'));
+
+		return $user;
+	}
+
+
+	public function getLock() {
+		return Mage::getBaseDir('var').'/maillog.lock';
+	}
+
+	public function getImportStatus(string $key, $id = null) {
+
+		$basedir = Mage::getStoreConfig('maillog_sync/'.$key.'/directory');
 		$basedir = str_replace('//', '/', Mage::getBaseDir('var').'/'.trim($basedir, "/ \t\n\r\0\x0B").'/');
 
 		if (is_file($basedir.'status.dat')) {
 
-			$result = new Varien_Object(@unserialize(file_get_contents($basedir.'status.dat')));
+			$result = new Varien_Object(@json_decode(file_get_contents($basedir.'status.dat'), true, 3));
 			$result->setData('duration', strtotime($result->getData('finished_at')) - strtotime($result->getData('started_at')));
 
 			// de qui ?
@@ -477,11 +579,11 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$txt = $this->__('Manual import: %s.', $this->formatDate($result->getData('finished_at'), Zend_Date::DATETIME_FULL));
 			}
 			else {
-				$url = $help->getUrl('*/cronlog_history/view', array('id' => $result->getData('cron')));
-				$txt = $this->__('Cron job #<a %s>%d</a> finished at %s (%s).', 'href="'.$url.'"', $result->getData('cron'), $this->formatDate($result->getData('finished_at'), Zend_Date::DATETIME_FULL), $this->getHumanDuration($result));
+				$url = Mage::helper('adminhtml')->getUrl('*/cronlog_history/view', ['id' => $result->getData('cron')]);
+				$txt = $this->__('Cron job #<a %s>%d</a> finished at %s.', 'href="'.$url.'"', $result->getData('cron'), $this->formatDate($result->getData('finished_at'), Zend_Date::DATETIME_FULL));
 
-				$schedule = Mage::getModel('cron/schedule')->load($result->getData('cron'));
-				if (empty($schedule->getId()) || !Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog'))
+				$job = Mage::getModel('cron/schedule')->load($result->getData('cron'));
+				if (empty($job->getId()) || !Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog'))
 					$txt = strip_tags($txt);
 			}
 
@@ -489,79 +591,86 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			if (!empty($result->getData('file'))) {
 
 				$file = $result->getData('file');
-				$file = $basedir.'done/'.mb_substr($file, 0, mb_strpos($file, '-') - 2).'/'.$file;
+				$file = $basedir.'done/'.mb_substr($file, 0, mb_stripos($file, '-') - 2).'/'.$file;
 
 				if (is_file($file)) {
 					if ($key == 'bounces') {
-						$url = $help->getUrl('*/maillog_sync/download', array('file' => 'bounces'));
-						$txt = $txt."\n".'<a href="'.$url.'" download="">'.$result->getData('file').'</a>';
+						$url  = Mage::helper('adminhtml')->getUrl('*/maillog_sync/download', ['file' => 'bounces']);
+						$txt .= "\n".'<br />'.'<a href="'.$url.'" download="">'.$result->getData('file').'</a>';
 					}
 					else if ($key == 'unsubscribers') {
-						$url = $help->getUrl('*/maillog_sync/download', array('file' => 'unsubscribers'));
-						$txt = $txt."\n".'<a href="'.$url.'" download="">'.$result->getData('file').'</a>';
+						$url  = Mage::helper('adminhtml')->getUrl('*/maillog_sync/download', ['file' => 'unsubscribers']);
+						$txt .= "\n".'<br />'.'<a href="'.$url.'" download="">'.$result->getData('file').'</a>';
 					}
 					else {
 						$file = false;
-						$txt .= "\n".$result->getData('file');
+						$txt .= "\n".'<br />'.$result->getData('file');
 					}
 				}
 				else {
 					$file = false;
-					$txt .= "\n".$result->getData('file');
+					$txt .= "\n".'<br />'.$result->getData('file');
 				}
 
-				$txt .= "\n".'<code>';
 				foreach ($result->getData() as $code => $value) {
-					if (($code == 'errors') || (stripos($code, 'ed') !== false) || (stripos($code, 'Items') !== false)) {
-						if (stripos($code, '_at') === false)
-							$txt .= $code.':'.$value."\n";
+					if (($code == 'errors') || (mb_stripos($code, 'ed') !== false) || (mb_stripos($code, 'Items') !== false)) {
+						if (mb_stripos($code, '_at') === false)
+							$txt .= "\n".'<br /><span lang="en">'.$code.':'.$value.'</span>';
 					}
 				}
-				$txt .= '</code>';
 			}
 			else if (!empty($result->getData('exception'))) {
-				$txt = $txt.'<br /><span lang="en">'.$result->getData('exception').'</span>';
+				$txt .= "\n".'<br /><span lang="en">'.$result->getData('exception').'</span>';
 			}
 
 			// en cours ?
-			$schedules = Mage::getResourceModel('cron/schedule_collection');
-			$schedules->addFieldToFilter('job_code', 'maillog_'.$key.'_import');
-			$schedules->addFieldToFilter('status', 'running');
-			$schedule = $schedules->getFirstItem();
+			// sauf si la tâche cron à durée plus d'une heure
+			$job = Mage::getResourceModel('cron/schedule_collection')
+				->addFieldToFilter('job_code', 'maillog_'.$key.'_import')
+				->addFieldToFilter('status', 'running')
+				->getFirstItem();
 
-			if (!empty($schedule->getId())) {
 
-				$url = $help->getUrl('*/cronlog_history/view', array('id' => $schedule->getId()));
-				$job = $this->__('An import is in progress (cron job #<a %s>%d</a>).', 'href="'.$url.'"', $schedule->getId());
+			if (!empty($job->getId())) {
+				if ((time() - strtotime($job->getData('executed_at'))) > 3600) {
+					$job->setStatus('error');
+					$job->setMessages('Process killed?');
+					$job->save();
+				}
+				else {
+					$url = Mage::helper('adminhtml')->getUrl('*/cronlog_history/view', ['id' => $job->getId()]);
+					$job = $this->__('An import is in progress (cron job #<a %s>%d</a>).', 'href="'.$url.'"', $job->getId());
 
-				if (!Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog'))
-					$job = strip_tags($job);
+					if (!Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog'))
+						$job = strip_tags($job);
 
-				$txt = $txt.'<br /><strong>'.$job.'</strong>';
+					$txt .= "\n".'<br /><strong>'.$job.'</strong>';
+				}
 			}
 		}
 
-		return empty($id) ? $file : '<div style="width:180%;" id="'.$id.'">'.(!empty($txt) ? $txt : '').'</div>';
+		return empty($id) ? $file : '<div style="width:180%; line-height:130%;" id="'.$id.'">'.(empty($txt) ? '' : $txt).'</div>';
 	}
 
-	public function getSpecialCronStatus() {
+	public function getCronStatus() {
 
-		$schedules = Mage::getResourceModel('cron/schedule_collection');
-		$schedules->addFieldToFilter('job_code', 'maillog_sendemails_syncdatas');
-		$schedules->addFieldToFilter('status', 'success');
-		$schedules->setOrder('finished_at', 'desc');
-		$schedule = $schedules->getFirstItem();
+		$job = Mage::getResourceModel('cron/schedule_collection')
+			->addFieldToFilter('job_code', 'maillog_sendemails_syncdatas')
+			->addFieldToFilter('status', 'success')
+			->setOrder('finished_at', 'desc')
+			->getFirstItem();
 
-		if (!empty($schedule->getId())) {
+		if (!empty($job->getId())) {
 
-			$url = Mage::helper('adminhtml')->getUrl('*/cronlog_history/view', array('id' => $schedule->getId()));
-			$txt = $this->__('last process: cron job #<a %s>%d</a> finished at %s', 'href="'.$url.'"', $schedule->getId(), $this->formatDate($schedule->getData('finished_at'), Zend_Date::DATETIME_SHORT));
+			$url = Mage::helper('adminhtml')->getUrl('*/cronlog_history/view', ['id' => $job->getId()]);
+			$txt = $this->__('last process: cron job #<a %s>%d</a> finished at %s', 'href="'.$url.'"', $job->getId(), $this->formatDate($job->getData('finished_at'), Zend_Date::DATETIME_SHORT));
 
 			if (!Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog'))
 				$txt = strip_tags($txt);
 		}
 		else {
-			$url = Mage::helper('adminhtml')->getUrl('*/system_config/edit', array('section' => Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog') ? 'cronlog' : 'system'));
+			$url = Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog') ? 'cronlog' : 'system';
+			$url = Mage::helper('adminhtml')->getUrl('*/system_config/edit', ['section' => $url]);
 			$txt = $this->__('last process: not yet finished or short <a %s>cron jobs history</a>', 'href="'.$url.'"');
 		}
 
@@ -570,18 +679,14 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 	public function getAllTypes() {
 
-		// recherche des types
-		// efficacité maximale avec la PROCEDURE ANALYSE de MySQL/MariaDB
 		$database = Mage::getSingleton('core/resource');
-		$table = $database->getTableName('luigifab_maillog');
+		$read  = $database->getConnection('core_read');
 
-		$types = $database->getConnection('core_read')->fetchAll('SELECT type FROM '.$table.' PROCEDURE ANALYSE()');
-		$types = (!empty($types[0]['Optimal_fieldtype']) && (mb_stripos($types[0]['Optimal_fieldtype'], 'ENUM(') !== false)) ?
-			explode(',', str_replace(array('ENUM(', '\'', ') NOT NULL'), '', $types[0]['Optimal_fieldtype'])) : array();
-
+		$types = $read->fetchAssoc($read->select()->distinct()->from($database->getTableName('maillog/email'), 'type'));
+		$types = array_keys($types);
 		$types = array_combine($types, $types);
-		ksort($types);
 
+		ksort($types);
 		return $types;
 	}
 }

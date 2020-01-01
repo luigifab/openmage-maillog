@@ -2,16 +2,16 @@
 
 <div style="margin:1em; font-size:12px; line-height:16px;" lang="fr">
 	<p>Voici le rapport {{var frequency}} par rapport aux envois des emails.
-	<br />Période du <strong>{{var date_period_from}}</strong> au <strong>{{var date_period_to}}</strong>.</p>
+	<br>Période du <strong>{{var date_period_from}}</strong> au <strong>{{var date_period_to}}</strong>.</p>
 
-	<p>Sur les <strong>{{var total_email}}</strong> emails prévus :
-	<br /><span style="color:#B3B4B3;">➤ Email(s) en attente : {{var total_pending}}</span>
-	<br /><span style="color:#FF9C00;">➤ Email(s) en cours d'envoi : {{var total_sending}}</span>
-	<br /><span style="color:#FFC700;">➤ Email(s) envoyé(s) : <strong>{{var total_sent}}</strong></span>
-	<br /><span style="color:#3CB861;">➤ Email(s) ouvert(s)/lu(s) : <strong>{{var total_read}}</strong></span>
-	<br /><span style="color:#E41101;">➤ Email(s) en erreur : {{var total_error}}</span>
-	<br /><span style="color:purple;">➤ Email(s) non envoyé(s) : {{var total_unsent}}</span>
-	<br /><span style="color:black;">➤ Email(s) bloqué(s) : {{var total_bounce}}</span></p>
+	<p>Sur les <strong>{{number total_email}}</strong> emails prévus :
+	<br><span style="color:#B3B4B3;">➤ Email(s) en attente : {{number total_pending}}</span>
+	<br><span style="color:#FF9C00;">➤ Email(s) en cours d'envoi : {{number total_sending}}</span>
+	<br><span style="color:#FFC700;">➤ Email(s) envoyé(s) : <strong>{{number total_sent}}</strong></span>
+	<br><span style="color:#3CB861;">➤ Email(s) ouvert(s)/lu(s) : <strong>{{number total_read}}</strong></span>
+	<br><span style="color:#E41101;">➤ Email(s) en erreur : {{number total_error}}</span>
+	<br><span style="color:purple;">➤ Email(s) non envoyé(s) : {{number total_unsent}}</span>
+	<br><span style="color:black;">➤ Email(s) bloqué(s) : {{number total_bounce}}</span></p>
 
 	{{depend import_bounces}}
 		<p style="padding-left:0.5em; text-indent:-0.5em;">Import des emails invalides : {{var import_bounces}}</p>
@@ -20,36 +20,99 @@
 		<p style="padding-left:0.5em; text-indent:-0.5em;">Import des emails désabonnés : {{var import_unsubscribers}}</p>
 	{{/depend}}
 
-	<p style="margin:1.5em 0 0.5em; padding:1.15em 0 0; list-style:none; border-top:1px dashed #777;">Petit historique des données (ci-dessous, les emails non envoyés correspondent au total de tous les statuts autres que envoyé et ouvert/lu) :</p>
-	<table style="margin-bottom:1em;">
-		<tr>
-			<th></th>
-			<td style="font-size:12px; line-height:15px;">|</td>
-			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">Email</th>
-			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">envoyé</th>
-			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">ouvert/lu</th>
-			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">non envoyé</th>
-			{{depend sync}}
-			<td style="font-size:12px; line-height:15px;">|</td>
-			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;" title="Synchronisation">Sync.</th>
-			<th scope="col" style="padding:2px 5px; font-size:12px; line-height:15px;">réussie</th>
-			{{/depend}}
-		</tr>
-		{{foreach items}}
+	<table style="margin:1.5em 0 1em; background-color:#F2F2F2;">
+		<caption style="padding-bottom:8px; text-align:left;">Petit historique des données :</caption>
+		<thead>
 			<tr>
-				<th scope="row" style="padding:2px 5px; line-height:15px; font-size:12px; font-weight:400;">{{var items.period}}</th>
-				<td style="font-size:12px;">|<br />|</td>
-				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;"><strong>{{var items.total_email}}</strong></td>
-				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.percent_sent}}</td>
-				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.percent_read}}</td>
-				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.percent_unsent}}</td>
+				<th scope="col" style="padding:2px 5px; font-size:12px; font-weight:400;">Période</th>
+				<td style="font-size:12px;">|</td>
+				<th scope="col" style="padding:2px 5px; font-size:12px; font-weight:400; text-align:left;">Email</th>
+				<th scope="col" style="padding:2px 5px; font-size:12px; font-weight:400; text-align:left;">envoyé</th>
+				<th scope="col" style="padding:2px 5px; font-size:12px; font-weight:400; text-align:left;">ouvert/lu</th>
 				{{depend sync}}
-				<td style="font-size:12px;">|<br />|</td>
-				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.total_sync}}</td>
-				<td style="padding:2px 5px; line-height:15px; font-size:12px; text-align:left;">{{var items.percent_sync}}</td>
+					<td style="font-size:12px;">|</td>
+					<th scope="col" style="padding:2px 5px; font-size:12px; font-weight:400; text-align:left;" title="Synchronisation">Sync.</th>
+					<th scope="col" style="padding:2px 5px; font-size:12px; font-weight:400; text-align:left;">réussie</th>
 				{{/depend}}
 			</tr>
-		{{/foreach}}
+		</thead>
+		<tbody>
+			{{foreach items}}
+				{{depend items.space}}
+					<tr>
+						<td colspan="{{if sync}}8{{else}}5{{/if}}" style="font-size:5px; line-height:5px;">&nbsp;</td>
+					</tr>
+				{{/depend}}
+				<tr>
+					<th scope="row" style="padding:2px 5px 3px; line-height:16px; font-size:12px; font-weight:400;">{{var items.period}}</th>
+					<td style="font-size:12px;">|<br>|</td>
+					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; vertical-align:top;">
+						{{if items.variation_email gt 5}}
+							<strong>{{number items.total_email}}</strong>
+							<br><small style="color:#3CB861;">↗ +{{number items.variation_email}} %</small>
+						{{elseif items.variation_email lt -5}}
+							<strong>{{number items.total_email}}</strong>
+							<br><small style="color:#E41101;">↘ {{number items.variation_email}} %</small>
+						{{else}}
+							<strong>{{number items.total_email}}</strong>
+						{{/if}}
+					</td>
+					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; vertical-align:top;">
+						{{if items.total_email eq 0}}
+
+						{{elseif items.variation_sent gt 5}}
+							<strong>{{number items.percent_sent}} %</strong>
+							<br><small style="color:#3CB861;">↗ +{{number items.variation_sent}} %</small>
+						{{elseif items.variation_sent lt -5}}
+							<strong>{{number items.percent_sent}} %</strong>
+							<br><small style="color:#E41101;">↘ {{number items.variation_sent}} %</small>
+						{{else}}
+							<strong>{{number items.percent_sent}} %</strong>
+						{{/if}}
+					</td>
+					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; vertical-align:top;">
+						{{if items.total_email eq 0}}
+
+						{{elseif items.variation_read gt 5}}
+							<strong>{{number items.percent_read}} %</strong>
+							<br><small style="color:#3CB861;">↗ +{{number items.variation_read}} %</small>
+						{{elseif items.variation_read lt -5}}
+							<strong>{{number items.percent_read}} %</strong>
+							<br><small style="color:#E41101;">↘ {{number items.variation_read}} %</small>
+						{{else}}
+							<strong>{{number items.percent_read}} %</strong>
+						{{/if}}
+					</td>
+					{{depend sync}}
+						<td style="font-size:12px;">|<br>|</td>
+						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; vertical-align:top;">
+							{{if items.variation_sync gt 5}}
+								<strong>{{number items.total_sync}}</strong>
+								<br><small style="color:#3CB861;">↗ +{{number items.variation_sync}} %</small>
+							{{elseif items.variation_sync lt -5}}
+								<strong>{{number items.total_sync}}</strong>
+								<br><small style="color:#E41101;">↘ {{number items.variation_sync}} %</small>
+							{{else}}
+								<strong>{{number items.total_sync}}</strong>
+							{{/if}}
+						</td>
+						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; vertical-align:top;">
+							{{if items.total_sync eq 0}}
+
+							{{elseif items.variation_success gt 5}}
+								<strong>{{number items.percent_success}} %</strong>
+								<br><small style="color:#3CB861;">↗ +{{number items.variation_success}} %</small>
+							{{elseif items.variation_success lt -5}}
+								<strong>{{number items.percent_success}} %</strong>
+								<br><small style="color:#E41101;">↘ {{number items.variation_success}} %</small>
+							{{else}}
+								<strong>{{number items.percent_success}} %</strong>
+							{{/if}}
+						</td>
+					{{/depend}}
+				</tr>
+			{{/foreach}}
+		</tbody>
 	</table>
 
 	{{depend error_list}}
@@ -59,34 +122,49 @@
 	{{/depend}}
 
 	<p style="font-size:0.8em; line-height:1.35em; font-style:italic; color:#6F6F6F;">{{config path='design/head/default_title'}} - Rapport des emails envoyés 💌
-	<br /><a href="{{var config}}" style="color:#6F6F6F;">{{var config}}</a> - <a href="#online#" style="color:#6F6F6F;">voir la version en ligne</a> #readimg# #mailid#cron#</p>
+	<br><a href="{{var config}}" style="color:#6F6F6F;">{{var config}}</a> - <a href="#online#" style="color:#6F6F6F;">voir dans mon navigateur</a> #readimg# #mailid#cron#</p>
 </div>
 
 {{depend test}}
-<pre>
-variable = {{var variable}}
- A / if variable gt  0 / {{if variable gt 0}}  true {{else}} false {{/if}}
- B / if variable gte 0 / {{if variable gte 0}} true {{else}} false {{/if}}
- C / if variable lt  0 / {{if variable lt 0}}  true {{else}} false {{/if}}
- D / if variable lte 0 / {{if variable lte 0}} true {{else}} false {{/if}}
- E / if variable eq  0 / {{if variable eq 0}}  true {{else}} false {{/if}}
- F / if variable neq 0 / {{if variable neq 0}} true {{else}} false {{/if}}
- G / if variable gt  90 elseif gt  45 / {{if variable gt 90}}  true1 {{elseif variable gt 45}}  true2 {{else}} false {{/if}}
- H / if variable gte 90 elseif gte 45 / {{if variable gte 90}} true1 {{elseif variable gte 45}} true2 {{else}} false {{/if}}
- I / if variable lt  90 elseif lt  45 / {{if variable lt 90}}  true1 {{elseif variable lt 45}}  true2 {{else}} false {{/if}}
- J / if variable lte 90 elseif lte 45 / {{if variable lte 90}} true1 {{elseif variable lte 45}} true2 {{else}} false {{/if}}
- K / if variable eq  90 elseif eq  45 / {{if variable eq 90}}  true1 {{elseif variable eq 45}}  true2 {{else}} false {{/if}}
- L / if variable neq 90 elseif neq 45 / {{if variable neq 90}} true1 {{elseif variable neq 45}} true2 {{else}} false {{/if}}
- M / if variable gt  variable / {{if variable gt variable}}  true {{else}} false {{/if}}
- N / if variable gte variable / {{if variable gte variable}} true {{else}} false {{/if}}
- O / if variable lt  variable / {{if variable lt variable}}  true {{else}} false {{/if}}
- P / if variable lte variable / {{if variable lte variable}} true {{else}} false {{/if}}
- Q / if variable eq  variable / {{if variable eq variable}}  true {{else}} false {{/if}}
- R / if variable neq variable / {{if variable neq variable}} true {{else}} false {{/if}}
-variable2 = array(...)
-{{foreach variable2}} S / variable2.abc = {{var variable2.abc}} {{/foreach}}
-{{foreach variable2}} T / variable2.abc = {{var variable2.abc}} {{forelse}} T / empty foreach {{/foreach}}
-{{foreach variable3}} U / not empty foreach {{forelse}} U / empty foreach {{/foreach}}
-</pre>
-{{ dump }}
+<pre lang="mul" style="margin:4em 1em 0;" onclick="this.innerHTML = this.innerHTML.replace(/\s+true\s+=\s+true/g, ' <b>true</b>').replace(/\s+false\s+=\s+false/g, ' <b>false</b>'); this.removeAttribute('onclick');">
+--------------------
+Example foreach var1 = [['numb' => -2], ['numb' => 0], ['numb' => 2]] with if gt/gte/lt/lte/eq/neq/empty
+ i / {if var1.numb operator value or empty} / result calculated by Luigifab_Maillog_Helper_Data::variableMail() = result calculated by PHP
+{{foreach var1}}
+ A / if {{var var1.numb}} gt  0 / {{if var1.numb gt  0}} true  {{else}} false {{/if}} = {{var var1.a}}
+ B / if {{var var1.numb}} gte 0 / {{if var1.numb gte 0}} true  {{else}} false {{/if}} = {{var var1.b}}
+ C / if {{var var1.numb}} lt  0 / {{if var1.numb lt  0}} true  {{else}} false {{/if}} = {{var var1.c}}
+ D / if {{var var1.numb}} lte 0 / {{if var1.numb lte 0}} true  {{else}} false {{/if}} = {{var var1.d}}
+ E / if {{var var1.numb}} eq  0 / {{if var1.numb eq  0}} true  {{else}} false {{/if}} = {{var var1.e}}
+ F / if {{var var1.numb}} neq 0 / {{if var1.numb neq 0}} true  {{else}} false {{/if}} = {{var var1.f}}
+ G / if {{var var1.numb}} gt  {{var var1.numb}} / {{if var1.numb gt  var1.numb}} true  {{else}} false {{/if}} = {{var var1.g}}
+ H / if {{var var1.numb}} gte {{var var1.numb}} / {{if var1.numb gte var1.numb}} true  {{else}} false {{/if}} = {{var var1.h}}
+ I / if {{var var1.numb}} lt  {{var var1.numb}} / {{if var1.numb lt  var1.numb}} true  {{else}} false {{/if}} = {{var var1.i}}
+ J / if {{var var1.numb}} lte {{var var1.numb}} / {{if var1.numb lte var1.numb}} true  {{else}} false {{/if}} = {{var var1.j}}
+ K / if {{var var1.numb}} eq  {{var var1.numb}} / {{if var1.numb eq  var1.numb}} true  {{else}} false {{/if}} = {{var var1.k}}
+ L / if {{var var1.numb}} neq {{var var1.numb}} / {{if var1.numb neq var1.numb}} true  {{else}} false {{/if}} = {{var var1.l}}
+ M / if {{var var1.numb}} eq  empty / {{if var1.numb eq  empty}} true  {{else}} false {{/if}} = {{var var1.m}}
+ N / if {{var var1.numb}} neq empty / {{if var1.numb neq empty}} true  {{else}} false {{/if}} = {{var var1.n}}
+ O / if {{var var1.numb}} eq  abcde / {{if var1.numb eq  abcde}} true  {{else}} false {{/if}} = {{var var1.o}}
+ P / if {{var var1.numb}} neq abcde / {{if var1.numb neq abcde}} true  {{else}} false {{/if}} = {{var var1.p}}
+{{/foreach}}
+--------------------
+Example number 1700200
+ {{number 1700200}}
+
+--------------------
+Example foreach var2 = [...]
+{{foreach var2}}
+ var2.sku = {{var var2.sku}}
+{{/foreach}}
+--------------------
+Example foreach var3 = null
+{{foreach var3}}
+ ...
+{{forelse}}
+ empty foreach
+{{/foreach}}
+--------------------
+Example dump frequency / dump</pre>
+{{dump frequency}}{{dump}}
 {{/depend}}

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated V/08/03/2019
+ * Updated S/09/11/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -19,15 +19,15 @@
  * GNU General Public License (GPL) for more details.
  */
 
-chdir(dirname(__FILE__));
+chdir(__DIR__);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+define('MAGENTO_ROOT', getcwd());
 if ((PHP_SAPI != 'cli') || is_file('maintenance.flag') || is_file('upgrade.flag'))
 	exit(0);
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-define('MAGENTO_ROOT', getcwd());
-
-$success = $error = $done = array();
+$success = $error = $done = [];
 $email = $sync = true; $dev = false;
 
 if (isset($_SERVER['MAGE_IS_DEVELOPER_MODE']) || in_array('--dev', $argv))
@@ -62,7 +62,7 @@ if ($email) {
 
 	$emails = Mage::getResourceModel('maillog/email_collection');
 	$emails->addFieldToFilter('status', 'pending');
-	$emails->addFieldToFilter('created_at', array('lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 SECOND)')));
+	$emails->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 SECOND)')]);
 
 	foreach ($emails as $email) {
 		try {
@@ -81,26 +81,26 @@ if ($sync) {
 
 	$syncs = Mage::getResourceModel('maillog/sync_collection');
 	$syncs->addFieldToFilter('status', 'pending');
-	$syncs->addFieldToFilter('created_at', array('lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 10 SECOND)')));
-	$syncs->addFieldToSort('created_at', 'asc');
+	$syncs->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 10 SECOND)')]);
+	$syncs->setOrder('created_at', 'asc');
 
 	foreach ($syncs as $sync) {
 		try {
 			// 0 action : 1 type : 2 id : 3 ancien-email : 4 email
 			// 0 action : 1 type : 2 id : 3              : 4 email
-			$dat = explode(':', $sync->getData('action'));
-			if (in_array($dat[4], $done))
+			$info = explode(':', $sync->getData('action'));
+			if (in_array($info[4], $done))
 				sleep(1);
 
-			if ($dat[0] == 'update') {
+			if ($info[0] == 'update') {
 				$sync->updateNow();
 				$success[] = 'sync:'.$sync->getId();
-				$done[]    = $dat[4];
+				$done[]    = $info[4];
 			}
-			else if ($dat[0] == 'delete') {
+			else if ($info[0] == 'delete') {
 				$sync->deleteNow();
 				$success[] = 'sync:'.$sync->getId();
-				$done[]    = $dat[4];
+				$done[]    = $info[4];
 			}
 		}
 		catch (Exception $e) {

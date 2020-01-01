@@ -1,9 +1,9 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated S/16/02/2019
+ * Updated J/05/12/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -33,7 +33,7 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 		$this->setSaveParametersInSession(true);
 		$this->setPagerVisibility(true);
 		$this->setFilterVisibility(true);
-		$this->setDefaultLimit(max($this->_defaultLimit, intval(Mage::getStoreConfig('maillog/general/number'))));
+		$this->setDefaultLimit(max($this->_defaultLimit, (int) Mage::getStoreConfig('maillog/general/number')));
 	}
 
 	protected function _prepareCollection() {
@@ -43,21 +43,12 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 	protected function _addColumnFilterToCollection($column) {
 
-		if (in_array($column->getId(), array('action'))) {
-
-			$infos = Mage::getVersionInfo();
-			$words = explode(' ', $column->getFilter()->getValue());
-
-			if (($infos['minor'] == 5) || version_compare(Mage::getVersion(), '1.7', '>=')) { // Magento 1.5 ou Magento 1.7 et +
-				$a = array('action', 'request', 'response');
-				foreach ($words as $word) {
-					$b = array_fill(0, count($a), array('like' => '%'.$word.'%'));
-					$this->getCollection()->addFieldToFilter($a, $b);
-				}
-			}
-			else {
-				foreach ($words as $word)
-					$this->getCollection()->addFieldToFilter('action', array('like' => '%'.$word.'%'));
+		if ($column->getId() == 'action') {
+			$words  = explode(' ', $column->getFilter()->getValue());
+			$fields = ['action', 'request', 'response'];
+			foreach ($words as $word) {
+				$values = array_fill(0, count($fields), ['like' => '%'.$word.'%']);
+				$this->getCollection()->addFieldToFilter($fields, $values);
 			}
 		}
 		else {
@@ -69,66 +60,55 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 	protected function _prepareColumns() {
 
-		$this->addColumn('sync_id', array(
+		$this->addColumn('sync_id', [
 			'header'    => $this->__('Id'),
 			'index'     => 'sync_id',
 			'align'     => 'center',
 			'width'     => '80px'
-		));
+		]);
 
-		$infos = Mage::getVersionInfo();
-		if (($infos['minor'] == 5) || version_compare(Mage::getVersion(), '1.7', '>=')) { // Magento 1.5 ou Magento 1.7 et +
-			$this->addColumn('action', array(
-				'header'    => $this->__('Action / Request / Response *'),
-				'index'     => 'action',
-				'frame_callback' => array($this, 'decorateDetails'),
-				'sortable'  => false
-			));
-		}
-		else {
-			$this->addColumn('action', array(
-				'header'    => $this->__('Action').' *',
-				'index'     => 'action',
-				'frame_callback' => array($this, 'decorateDetails'),
-				'sortable'  => false
-			));
-		}
+		$this->addColumn('action', [
+			'header'   => $this->__('Action / Request / Response *'),
+			'index'    => 'action',
+			'sortable' => false,
+			'frame_callback' => [$this, 'decorateDetails']
+		]);
 
-		//$this->addColumn('created_at', array(
+		//$this->addColumn('created_at', [
 		//	'header'    => $this->__('Created At'),
 		//	'index'     => 'created_at',
 		//	'type'      => 'datetime',
 		//	'format'    => Mage::getSingleton('core/locale')->getDateTimeFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT),
 		//	'align'     => 'center',
 		//	'width'     => '150px',
-		//	'frame_callback' => array($this, 'decorateDate')
-		//));
+		//	'frame_callback' => [$this, 'decorateDate']
+		//]);
 
-		$this->addColumn('sync_at', array(
+		$this->addColumn('sync_at', [
 			'header'    => $this->__('Synchronized At'),
 			'index'     => 'sync_at',
 			'type'      => 'datetime',
 			'format'    => Mage::getSingleton('core/locale')->getDateTimeFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT),
 			'align'     => 'center',
 			'width'     => '150px',
-			'frame_callback' => array($this, 'decorateDate')
-		));
+			'frame_callback' => [$this, 'decorateDate']
+		]);
 
-		$this->addColumn('status', array(
+		$this->addColumn('status', [
 			'header'    => $this->__('Status'),
 			'index'     => 'status',
 			'type'      => 'options',
-			'options'   => array(
+			'options'   => [
 				'pending' => $this->__('Pending'),
 				'running' => $this->__('Running'),
 				'success' => $this->__('Success'),
 				'error'   => $this->helper('maillog')->_('Error'),
 				'notsync' => $this->__('Unsent')
-			),
+			],
 			'width'     => '125px',
-			'frame_callback' => array($this, 'decorateStatus'),
-			'sortable'  => false
-		));
+			'sortable'  => false,
+			'frame_callback' => [$this, 'decorateStatus']
+		]);
 
 		return parent::_prepareColumns();
 	}
@@ -147,33 +127,36 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 	}
 
 	public function decorateDate($value, $row, $column, $isExport) {
-		return (!in_array($row->getData($column->getIndex()), array('', '0000-00-00 00:00:00', null))) ? $value : '';
+		return in_array($row->getData($column->getIndex()), ['', '0000-00-00 00:00:00', null]) ? '' : $value;
 	}
 
 	public function decorateDetails($value, $row, $column, $isExport) {
 
-		$text = sprintf('<div>By <em>%s</em> for <em>%s</em> %s</div>',
-			$row->getData('user'), $row->getData('action'),
-			!empty($duration = $this->helper('maillog')->getHumanDuration($row)) ? ' / duration '.$duration : '');
+		$data = $row->getData('duration');
+
+		if (in_array($row->getData('sync_at'), ['', '0000-00-00 00:00:00', null]))
+			$text = sprintf('<div>By <em>%s</em> for <em>%s</em><br />Created at <em>%s UTC</em></div>',
+				$row->getData('user'), $row->getData('action'),
+				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT));
+		else
+			$text = sprintf('<div>By <em>%s</em> for <em>%s</em><br />Created at <em>%s UTC</em> and synced at <em>%s UTC</em> %s</div>',
+				$row->getData('user'), $row->getData('action'),
+				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT),
+				$this->formatDate($row->getData('sync_at'), Zend_Date::DATETIME_SHORT),
+				empty($duration = $this->helper('maillog')->getHumanDuration($data, $data)) ? '' : '(duration '.$duration.')');
 
 		if (!empty($data = $row->getData('request')))
-			$text .= ' == request == <div class="details">'.nl2br(htmlspecialchars($data)).'</div>';
+			$text .= ' <em>== request ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
 
 		if (!empty($data = $row->getData('response'))) {
-			if (stripos($data, 'STOP! ') !== false) {
-				$text .= ' == response == <br />'.nl2br(htmlspecialchars($data));
+			if (mb_stripos($data, 'STOP! ') !== false) {
+				$text .= ' <em>== response ==</em> <br />'.nl2br($this->helper('maillog')->escapeEntities($data));
 			}
 			else {
-				$text .= ' == response == <div class="details">'.nl2br(htmlspecialchars($data)).'</div>';
-				if (Mage::getStoreConfig('maillog/sync/type') == 'dolist') {
+				$text .= ' <em>== response ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
+				if (mb_stripos($text, '[memberid] ') !== false) { // dolist
 					$url  = 'https://extranet.dolist.net/Contacts/ViewContact.aspx?m=10&amp;t=2&amp;c=';
-					$text = preg_replace('#(\[memberid\] (\d+))#', '<a href="'.$url.'$2">$1</a>', $text);
-				}
-				else if (Mage::getStoreConfig('maillog/sync/type') == 'dolibarr') {
-					$url = Mage::getStoreConfig('maillog/sync/api_url');
-					$url = mb_substr($url, 0, mb_stripos($url, '/api'));
-					if (mb_stripos($text, ':customer:') !== false)
-						$text = preg_replace('#(\[id\] (\d+))#', '<a href="'.$url.'/comm/card.php?socid=$2">$1</a>', $text);
+					$text = preg_replace('#(\[memberid] (\d+))#', '<a href="'.$url.'$2">$1</a>', $text);
 				}
 			}
 		}

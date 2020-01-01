@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="48" height="48" version="1.1">
 <!-- Humanity icon theme GNU GPL 2 https://opensource.org/licenses/gpl-2.0 -->
-<!-- python scour -enable-id-stripping -indent=tab -strip-xml-prolog -->
 <defs>
 <linearGradient id="lg2467" y2="609.51" gradientUnits="userSpaceOnUse" x2="302.86" gradientTransform="matrix(.067325 0 0 0.0147 -.34114 37.04)" y1="366.65" x1="302.86">
 <stop stop-opacity="0" offset="0"/>

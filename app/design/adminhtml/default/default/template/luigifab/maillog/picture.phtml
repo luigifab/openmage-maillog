@@ -1,0 +1,147 @@
+<?php
+/**
+ * Created J/09/05/2019
+ * Updated J/07/11/2019
+ *
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/magento/maillog
+ *
+ * This program is free software, you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL) as published
+ * by the free software foundation, either version 2 of the license, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but without any warranty, without even the implied warranty of
+ * merchantability or fitness for a particular purpose. See the
+ * GNU General Public License (GPL) for more details.
+ */
+
+$config = $this->getConfig();
+$text   = addslashes($this->__('Are you sure?'));
+?>
+
+<tr id="<?php echo $this->getHtmlId() ?>_head">
+	<td class="label" colspan="2"><?php echo $this->getLabel() ?></td>
+	<td class="scope-label"><?php echo $this->getScopeLabel() ?></td>
+	<td></td>
+</tr>
+<tr id="<?php echo $this->getHtmlId() ?>" class="grid">
+	<td colspan="4">
+		<table cellspacing="0" class="data border data-table" id="pictureConfig">
+			<thead>
+				<tr class="headings">
+					<th>code</th>
+					<th></th>
+					<th>config</th>
+					<th>taille</th>
+					<th><?php echo $this->__('Action') ?></th>
+				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+					<td colspan="5">
+						<button type="button" class="scalable add" onclick="maillog.addPicture();">
+							<span><?php echo $this->__('Add') ?></span>
+						</button>
+					</td>
+				</tr>
+			</tfoot>
+			<tbody>
+				<tr><!-- template supprimé par maillog.start() en javascript -->
+					<td rowspan="3">
+						<input type="text" name="groups[general][fields][special_picture][value][0][c]"
+							value="pouet" class="input-text c" />
+					</td>
+					<td></td>
+					<td>image de base</td>
+					<td>
+						<input type="number" name="groups[general][fields][special_picture][value][0][w]"
+							min="0" step="1" value="260" class="input-text w" />px x
+						<input type="number" name="groups[general][fields][special_picture][value][0][h]"
+							min="0" step="1" value="200" class="input-text h" />px
+					</td>
+					<td>
+						<button type="button" class="add" onclick="maillog.addPicture(this);"><?php echo $this->__('Add') ?></button>
+						<button type="button" class="add" onclick="maillog.previewPicture(this);"><?php echo $this->__('Preview') ?></button>
+						<button type="button" class="delete" onclick="maillog.deletePicture(this);"><?php echo $this->__('Delete') ?></button>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<input type="number" name="groups[general][fields][special_picture][value][1][b]"
+							min="0" step="1" value="380" class="input-text b" />
+						<select name="groups[general][fields][special_picture][value][1][u]" class="u">
+							<option value="px">px</option>
+							<option value="vw">vw</option>
+						</select>
+					</td>
+					<td>
+						<input type="number" name="groups[general][fields][special_picture][value][1][w]"
+							min="0" step="1" value="160" class="input-text w" />px x
+						<input type="number" name="groups[general][fields][special_picture][value][1][h]"
+							min="0" step="1" value="123" class="input-text h" />px
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<input type="number" name="groups[general][fields][special_picture][value][2][b]"
+							min="0" step="1" value="320" class="input-text b" />
+						<select name="groups[general][fields][special_picture][value][2][u]" class="u">
+							<option value="px">px</option>
+							<option value="vw">vw</option>
+						</select>
+					</td>
+					<td>
+						<input type="number" name="groups[general][fields][special_picture][value][2][w]"
+							min="0" step="1" value="130" class="input-text w" />px x
+						<input type="number" name="groups[general][fields][special_picture][value][2][h]"
+							min="0" step="1" value="100" class="input-text h" />px
+					</td>
+					<td></td>
+				</tr>
+				<?php foreach ([] as $picture): ?>
+				<?php endforeach ?>
+			</tbody>
+		</table>
+		<div id="picturePreview">
+			<div class="inf">
+				<span class="s">-</span>
+				largeur de l'affichage
+				<span class="w">-</span>
+			</div>
+			<div style="margin-left:381px;" class="max">
+				<span class="s">C</span>
+				<span class="l">381</span>
+				<span class="w"></span>
+			</div>
+			<div class="mid" style="margin-left:321px; width:calc(380px - 321px);">
+				<span class="s">B</span>
+				<span class="l">321</span>
+				<span class="r">380</span>
+				<span class="w"></span>
+			</div>
+			<div class="min" style="width:320px;">
+				<span class="s">A</span>
+				<span class="l">0</span>
+				<span class="r">320</span>
+				<span class="w"></span>
+			</div>
+		</div>
+
+		<pre id="pictureCodePreview">
+{{picture config="pouet" source=".../image.jpg"}}
+&lt;picture&gt;
+C &lt;source media="(min-width:381px)" srcset="260x200.png 1x, 520x400.png 2x"&gt;
+B &lt;source media="(max-width:380px)" srcset="160x123.png 1x, 320x246.png 2x"&gt;
+A &lt;source media="(max-width:320px)" srcset="130x100.png 1x, 260x200.png 2x"&gt;
+&lt;img src="260x200.png"&gt;
+&lt;/picture&gt;
+		</pre>
+	</td>
+</tr>

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated M/30/04/2019
+ * Updated D/10/11/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -21,7 +21,7 @@
 
 class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
-	// EVENT admin_system_config_changed_section_maillog (adminhtml)
+	// EVENT admin_system_config_changed_section_maillog[_sync] (adminhtml)
 	public function updateConfig() {
 
 		// suppression des anciens emails
@@ -39,7 +39,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			}
 		}
 
-		if (($check === true) || !empty(Mage::getStoreConfig('maillog/sync/lifetime'))) {
+		if (($check === true) || !empty(Mage::getStoreConfig('maillog_sync/general/lifetime'))) {
 			$config->setData('value', '30 2 * * '.Mage::getStoreConfig('general/locale/firstday'));
 			$config->setData('path', 'crontab/jobs/maillog_clean_old_data/schedule/cron_expr');
 			$config->save();
@@ -52,8 +52,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$config = Mage::getModel('core/config_data');
 		$config->load('crontab/jobs/maillog_bounces_import/schedule/cron_expr', 'path');
 
-		if (Mage::getStoreConfigFlag('maillog/bounces/enabled')) {
-			$value = Mage::getStoreConfig('maillog/bounces/cron_expr');
+		if (Mage::getStoreConfigFlag('maillog_sync/bounces/enabled')) {
+			$value = Mage::getStoreConfig('maillog_sync/bounces/cron_expr');
 			$config->setData('value', (mb_strlen($value) < 9) ? '30 2 * * *' : $value);
 			$config->setData('path', 'crontab/jobs/maillog_bounces_import/schedule/cron_expr');
 			$config->save();
@@ -66,8 +66,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$config = Mage::getModel('core/config_data');
 		$config->load('crontab/jobs/maillog_unsubscribers_import/schedule/cron_expr', 'path');
 
-		if (Mage::getStoreConfigFlag('maillog/unsubscribers/enabled')) {
-			$value = Mage::getStoreConfig('maillog/unsubscribers/cron_expr');
+		if (Mage::getStoreConfigFlag('maillog_sync/unsubscribers/enabled')) {
+			$value = Mage::getStoreConfig('maillog_sync/unsubscribers/cron_expr');
 			$config->setData('value', (mb_strlen($value) < 9) ? '30 2 * * *' : $value);
 			$config->setData('path', 'crontab/jobs/maillog_unsubscribers_import/schedule/cron_expr');
 			$config->save();
@@ -102,12 +102,16 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$config->save();
 
 			// email de test
-			if (!empty(Mage::app()->getRequest()->getPost('maillog_test_email')))
+			if (!empty(Mage::app()->getRequest()->getPost('maillog_email_test')))
+				$this->sendEmailReport(null, true);
+			else if (!empty(Mage::app()->getRequest()->getPost('maillog_sync_email_test')))
 				$this->sendEmailReport(null, true);
 		}
 		else {
 			$config->delete();
 		}
+
+		Mage::getConfig()->reinit(); // très important
 	}
 
 
@@ -119,7 +123,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		Mage::getSingleton('core/translate')->setLocale($newLocale)->init('adminhtml', true);
 
 		$frequency = Mage::getStoreConfig('maillog/email/frequency');
-		$errors = $items = array();
+		$errors = $items = [];
 
 		// chargement des emails de la période
 		// le mois dernier (mensuel/monthly), les septs derniers jour (hebdomadaire/weekly), hier (quotidien/daily)
@@ -139,28 +143,28 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		// chargement des emails de la période
 		// optimisation maximale de manière à ne charger que le nécessaire (pas le contenu des emails)
 		$emails = Mage::getResourceModel('maillog/email_collection');
-		$emails->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(array('email_id', 'status', 'mail_subject', 'created_at')); // opt. maximale
-		$emails->setOrder('email_id', 'desc');
-		$emails->addFieldToFilter('created_at', array(
+		$emails->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['email_id', 'status', 'mail_subject', 'created_at']); // opt. maximale
+		$emails->addFieldToFilter('created_at', [
 			'datetime' => true,
 			'from' => $dates['start']->toString(Zend_Date::RFC_3339),
-			'to' => $dates['end']->toString(Zend_Date::RFC_3339)
-		));
+			'to'   => $dates['end']->toString(Zend_Date::RFC_3339)
+		]);
+		$emails->setOrder('email_id', 'desc');
 
 		foreach ($emails as $email) {
 
-			if (!in_array($email->getData('status'), array('error', 'pending')))
+			if (!in_array($email->getData('status'), ['error', 'pending']))
 				continue;
 
-			$link = '<a href="'.$this->getEmailUrl('adminhtml/maillog_history/view', array('id' => $email->getId())).'" style="font-weight:700; color:red; text-decoration:none;">'.$this->__('Email %d: %s', $email->getId(), $email->getSubject()).'</a>';
+			$link = '<a href="'.$this->getEmailUrl('adminhtml/maillog_history/view', ['id' => $email->getId()]).'" style="font-weight:700; color:#E41101; text-decoration:none;">'.$this->__('Email %d: %s', $email->getId(), $email->getSubject()).'</a>';
 
 			$state = $this->__('Status: %s', $this->__(ucfirst($email->getData('status'))));
-			$hour  = $this->__('Created At: %s', Mage::helper('maillog')->formatDate($email->getData('created_at')));
+			$hour  = $this->__('Created At: %s', $this->formatDate($email->getData('created_at')));
 
 			$errors[] = sprintf('(%d) %s / %s / %s', count($errors) + 1, $link, $hour, $state);
 		}
 
-		$vars = array(
+		$vars = [
 			'frequency'            => $frequency,
 			'date_period_from'     => $dates['start']->toString(Zend_Date::DATETIME_FULL),
 			'date_period_to'       => $dates['end']->toString(Zend_Date::DATETIME_FULL),
@@ -172,17 +176,12 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			'total_error'          => count($emails->getItemsByColumnValue('status', 'error')),
 			'total_unsent'         => count($emails->getItemsByColumnValue('status', 'notsent')),
 			'total_bounce'         => count($emails->getItemsByColumnValue('status', 'bounce')),
-			'error_list'           => !empty($errors) ? implode('</li><li style="margin:0.8em 0 0.5em;">', $errors) : '',
-			'import_bounces'       => trim(strip_tags($this->getImportStatus('bounces', 'bounces'))),
-			'import_unsubscribers' => trim(strip_tags($this->getImportStatus('unsubscribers', 'unsubscribers'))),
-			'sync'                 => Mage::getStoreConfigFlag('maillog/sync/enabled'),
+			'error_list'           => implode('</li><li style="margin:0.8em 0 0.5em;">', $errors),
+			'import_bounces'       => trim(strip_tags($this->getImportStatus('bounces', 'bounces'), '<br> <span>')),
+			'import_unsubscribers' => trim(strip_tags($this->getImportStatus('unsubscribers', 'unsubscribers'), '<br> <span>')),
+			'sync'                 => Mage::getStoreConfigFlag('maillog_sync/general/enabled'),
 			'items'                => &$items
-		);
-
-		$search  = array("\n",   ').<br>',                                                 '.Sorry,');
-		$replace = array('<br>', ').<br><span style="font-size:11px; line-height:14px;">', '.<br>Sorry,');
-		$vars['import_bounces']       = str_replace($search, $replace, $vars['import_bounces']).'</span>';
-		$vars['import_unsubscribers'] = str_replace($search, $replace, $vars['import_unsubscribers']).'</span>';
+		];
 
 		// chargement des statistiques des emails et des synchronisations
 		// optimisation maximale de manière à ne faire que des COUNT en base de données
@@ -190,96 +189,124 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		// ne recherche pas les données au dela de la durée de vie maximale (email et sync)
 		$emails = Mage::getResourceModel('maillog/email_collection');
 		$syncs  = Mage::getResourceModel('maillog/sync_collection');
-		$val    = Mage::getStoreConfig('maillog/sync/lifetime') * 60; // lifetime sync (en secondes)
-		$max    = 0; // lifetime email (en mois)
 
-		$config = @unserialize(Mage::getStoreConfig('maillog/general/special_config'));
-		if (!empty($config) && is_array($config)) {
-			foreach ($config as $key => $months) {
-				if (is_numeric($months) && ($months >= 2) && (mb_strpos($key, '_all') !== false))
-					$max = ($months > $max) ? $months : $max;
-			}
-		}
-
-		$curWeek = false;
-		if (!in_array(Mage::getSingleton('core/locale')->date()->toString(Zend_Date::WEEKDAY_8601), array(1, 2)))
-			$curWeek = true;
-
-		// de 1 à  6 : semaines
-		// de 7 à 18 : mois
-		for ($i = 1, $j = 6; $i < 18; $i++) {
+		// de à 1 à 7 semaines
+		// puis jusqu'à 18 mois
+		$curWeek = !in_array(Mage::getSingleton('core/locale')->date()->toString(Zend_Date::WEEKDAY_8601), [1, 2]);
+		for ($i = 1, $j = 7; $i <= 18; $i++) {
 
 			// cherche les dates
-			if (($i == 1) && $curWeek)
-				$dates = $this->getDateRange('cur_week');
-			else if ($curWeek)
-				$dates = $this->getDateRange(($i <= $j) ? 'last_week' : 'last_month', ($i <= $j) ? $i - 2 : $i - $j);
-			else
-				$dates = $this->getDateRange(($i <= $j) ? 'last_week' : 'last_month', ($i <= $j) ? $i - 1 : $i - $j);
+			$variation = !in_array($i, [7, 18]);
+			if (($i == 1) && $curWeek) {
+				$variation = false;
+				$dates     = $this->getDateRange('cur_week');
+				$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339), 'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
+				$oldWhere  = [];
+			}
+			else if ($curWeek) {
+				$dates     = $this->getDateRange(($i <= $j) ? 'last_week' : 'last_month', ($i <= $j) ? $i - 2 : $i - $j);
+				$oldDates  = $this->getDateRange(($i <= $j) ? 'last_week' : 'last_month', ($i <= $j) ? $i - 2 + 1 : $i - $j + 1);
+				$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339), 'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
+				$oldWhere  = ['from' => $oldDates['start']->toString(Zend_Date::RFC_3339), 'to' => $oldDates['end']->toString(Zend_Date::RFC_3339)];
+			}
+			else {
+				$dates     = $this->getDateRange(($i <= $j) ? 'last_week' : 'last_month', ($i <= $j) ? $i - 1 : $i - $j);
+				$oldDates  = $this->getDateRange(($i <= $j) ? 'last_week' : 'last_month', ($i <= $j) ? $i - 1 + 1 : $i - $j + 1);
+				$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339), 'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
+				$oldWhere  = ['from' => $oldDates['start']->toString(Zend_Date::RFC_3339), 'to' => $oldDates['end']->toString(Zend_Date::RFC_3339)];
+			}
 
-			$where = array(
-				'datetime' => true,
-				'from' => $dates['start']->toString(Zend_Date::RFC_3339),
-				'to' => $dates['end']->toString(Zend_Date::RFC_3339)
-			);
-
-			// prépare les données
+			// affiche les dates
 			if ($i > $j)
 				$items[$i]['period'] = ucfirst($dates['start']->toString(Zend_Date::MONTH_NAME).' '.$dates['start']->toString(Zend_Date::YEAR));
-			else if (($i == 1) && $curWeek)
-				$items[$i]['period'] = $this->__('Week %d', $dates['start']->toString(Zend_Date::WEEK)).'*';
 			else
-				$items[$i]['period'] = $this->__('Week %d', $dates['start']->toString(Zend_Date::WEEK));
+				$items[$i]['period'] = $this->__('Week %d', $dates['start']->toString(Zend_Date::WEEK)).((($i == 1) && $curWeek) ? '*' : '');
 
-			$items[$i]['period'] .= '<br /><small>'.$dates['start']->toString(Zend_Date::DATE_SHORT).' - '.
+			$items[$i]['period'] .= '<br><small>'.$dates['start']->toString(Zend_Date::DATE_SHORT).' - '.
 				$dates['end']->toString(Zend_Date::DATE_SHORT).'</small>';
+			//$items[$i]['period'] .= '<br><small>'.$oldDates['start']->toString(Zend_Date::DATE_SHORT).' - '.
+			//	$oldDates['end']->toString(Zend_Date::DATE_SHORT).'</small>';
 
 			// calcul les statistiques
-			// email et sync
-			if ((!empty($max) && ($max > ($i - $j))) || empty($max)) {
-				$items[$i]['total_email']    = $this->getNumber($where, $emails);
-				$items[$i]['percent_sent']   = $this->getNumber($where, $emails, array('in'  => array('sent', 'read')));
-				$items[$i]['percent_read']   = $this->getNumber($where, $emails, array('in'  => array('sent', 'read')), 'read');
-				$items[$i]['percent_unsent'] = $this->getNumber($where, $emails, array('nin' => array('sent', 'read')));
-			}
+			$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation);
+			$items[$i]['total_email']       = array_shift($tmp);
+			$items[$i]['variation_email']   = array_shift($tmp);
+			$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation, ['in'  => ['sent', 'read']]);
+			$items[$i]['percent_sent']      = array_shift($tmp);
+			$items[$i]['variation_sent']    = array_shift($tmp);
+			$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation, ['in'  => ['sent', 'read']], 'read');
+			$items[$i]['percent_read']      = array_shift($tmp);
+			$items[$i]['variation_read']    = array_shift($tmp);
 
-			if (empty($val) || (!empty($val) && (($dates['now']->getTimestamp() - $val) <= $dates['start']->getTimestamp()))) {
-				$items[$i]['total_sync']   = $this->getNumber($where, $syncs);
-				$items[$i]['percent_sync'] = $this->getNumber($where, $syncs,  'success');
-			}
+			$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation);
+			$items[$i]['total_sync']        = array_shift($tmp);
+			$items[$i]['variation_sync']    = array_shift($tmp);
+			$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation, 'success');
+			$items[$i]['percent_success']   = array_shift($tmp);
+			$items[$i]['variation_success'] = array_shift($tmp);
 
-			// ne va pas au dela de la durée de vie maximale
-			if (empty($items[$i]['total_email']) && empty($items[$i]['total_sync'])) {
-				unset($items[$i]);
-				break;
+			// supprime les variations de l'itération précédente
+			// si on est maintenant à 0
+			if ($i > 1) {
+				if ($items[$i]['total_email'] == 'n/a')
+					$items[$i - 1]['variation_email'] = $items[$i - 1]['variation_sent'] = $items[$i - 1]['variation_read'] = 'n/a';
+				if ($items[$i]['total_sync'] == 'n/a')
+					$items[$i - 1]['variation_sync'] = $items[$i - 1]['variation_success'] = 'n/a';
 			}
 		}
+
+		$items[1]['space'] = $items[8]['space'] = true;
 
 		// envoi des emails
 		$vars['test'] = $test;
 		if ($vars['test']) {
-			$vars['variable'] = 50;
-			$vars['variable2'] = array(array('abc' => 4), array('abc' => 6));
-			$vars['variable3'] = Mage::getResourceModel('catalog/product_collection')->setPageSize(3);
+			$vars['var1'] = [['numb' => -2], ['numb' => 0], ['numb' => 2]];
+			$vars['var2'] = Mage::getResourceModel('catalog/product_collection')->setPageSize(3);
+			foreach ($vars['var1'] as $i => $n) {
+				$n = $n['numb'];
+				$vars['var1'][$i]['a'] = ($n >  0) ? 'true' : 'false';
+				$vars['var1'][$i]['b'] = ($n >= 0) ? 'true' : 'false';
+				$vars['var1'][$i]['c'] = ($n <  0) ? 'true' : 'false';
+				$vars['var1'][$i]['d'] = ($n <= 0) ? 'true' : 'false';
+				$vars['var1'][$i]['e'] = ($n == 0) ? 'true' : 'false';
+				$vars['var1'][$i]['f'] = ($n != 0) ? 'true' : 'false';
+				$vars['var1'][$i]['g'] = ($n >  $n) ? 'true' : 'false';
+				$vars['var1'][$i]['h'] = ($n >= $n) ? 'true' : 'false';
+				$vars['var1'][$i]['i'] = ($n <  $n) ? 'true' : 'false';
+				$vars['var1'][$i]['j'] = ($n <= $n) ? 'true' : 'false';
+				$vars['var1'][$i]['k'] = ($n == $n) ? 'true' : 'false';
+				$vars['var1'][$i]['l'] = ($n != $n) ? 'true' : 'false';
+				$vars['var1'][$i]['m'] =  empty($n) ? 'true' : 'false';
+				$vars['var1'][$i]['n'] = !empty($n) ? 'true' : 'false';
+				// en PHP, tout string vaut 0 (voir helper::variableMail)
+				$vars['var1'][$i]['o'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'false' : (($n == 'abcde') ? 'true' : 'false');
+				$vars['var1'][$i]['p'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'true'  : (($n != 'abcde') ? 'true' : 'false');
+			}
 		}
 
 		$this->sendReportToRecipients($newLocale, $vars);
-
 		if ($newLocale != $oldLocale)
 			Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);
+
+		return Mage::registry('maillog_last_emailid');
 	}
 
-	private function getNumber($where, $collection, $status1 = null, $status2 = null) {
+	private function getNumbers(array $where, array $oldWhere, object $collection, bool $variation = true, $status1 = null, $status2 = null) {
 
-		// ne fonctionne pas avec PHP 5.6 : (clone $collection)->getSize()
+		$nb3 = $nb4 = 0;
+		$where['datetime'] = true;
+		if (!empty($oldWhere))
+			$oldWhere['datetime'] = true;
+
 		// avec des resets sinon le where est conservé malgré le clone
+		// période actuelle
 		if (empty($status1)) {
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
 			$data->addFieldToFilter('created_at', $where);
-			return $data->getSize(); // totalité
+			$nb1 = $data->getSize(); // totalité
 		}
-		if (empty($status2)) {
+		else if (empty($status2)) {
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
 			$data->addFieldToFilter('created_at', $where);
@@ -287,28 +314,68 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
 			$data->addFieldToFilter('created_at', $where);
-			$nb2 = $data->addFieldToFilter('status', $status1)->getSize(); // filtré
+			$data->addFieldToFilter('status', $status1);
+			$nb2 = $data->getSize(); // filtré
 		}
 		else {
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
 			$data->addFieldToFilter('created_at', $where);
-			$nb1 = $data->addFieldToFilter('status', $status1)->getSize(); // totalité
+			$data->addFieldToFilter('status', $status1);
+			$nb1 = $data->getSize(); // totalité
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
 			$data->addFieldToFilter('created_at', $where);
-			$nb2 = $data->addFieldToFilter('status', $status2)->getSize(); // filtré
+			$data->addFieldToFilter('status', $status2);
+			$nb2 = $data->getSize(); // filtré
 		}
 
-		$percent = ($nb1 > 0) ? ($nb2 * 100) / $nb1 : 0;
-		$percent = Zend_Locale_Format::toNumber($percent, array('precision' => 2));
+		// avec des resets sinon le where est conservé malgré le clone
+		// période précédente
+		if ($variation && !empty($oldWhere)) {
+			if (empty($status1)) {
+				$data = clone $collection;
+				$data->getSelect()->reset(Zend_Db_Select::WHERE);
+				$data->addFieldToFilter('created_at', $oldWhere);
+				$nb3 = $data->getSize(); // totalité
+			}
+			else if (empty($status2)) {
+				$data = clone $collection;
+				$data->getSelect()->reset(Zend_Db_Select::WHERE);
+				$data->addFieldToFilter('created_at', $oldWhere);
+				$nb3 = $data->getSize(); // totalité
+				$data = clone $collection;
+				$data->getSelect()->reset(Zend_Db_Select::WHERE);
+				$data->addFieldToFilter('created_at', $oldWhere);
+				$data->addFieldToFilter('status', $status1);
+				$nb4 = $data->getSize(); // filtré
+			}
+			else {
+				$data = clone $collection;
+				$data->getSelect()->reset(Zend_Db_Select::WHERE);
+				$data->addFieldToFilter('created_at', $oldWhere);
+				$data->addFieldToFilter('status', $status1);
+				$nb3 = $data->getSize(); // totalité
+				$data = clone $collection;
+				$data->getSelect()->reset(Zend_Db_Select::WHERE);
+				$data->addFieldToFilter('created_at', $oldWhere);
+				$data->addFieldToFilter('status', $status2);
+				$nb4 = $data->getSize(); // filtré
+			}
+		}
 
-		return str_replace(array(',00','.00'), '', $percent).'%<br /><small>('.$nb2.')</small>';
+		// nombre d'email/sync période actuelle, variation par rapport à la période précédente
+		if (empty($status1))
+			return [$nb1, ($nb3 != 0) ? floor(($nb1 - $nb3) / $nb3 * 100) : ($variation ? 0 : 'n/a')];
+
+		// pourcentage période actuelle, variation par rapport à la période précédente
+		$pct1 = ($nb1 > 0) ? ($nb2 * 100) / $nb1 : 0;
+		$pct2 = ($nb3 > 0) ? ($nb4 * 100) / $nb3 : 0;
+		return [floor($pct1), ($pct2 != 0) ? floor(($pct1 - $pct2) / $pct2 * 100) : ($variation ? 0 : 'n/a')];
 	}
 
-	private function getDateRange($range, $coeff = 0) {
+	private function getDateRange(string $range, int $coeff = 0) {
 
-		$dateNow   = Mage::getSingleton('core/locale')->date();
 		$dateStart = Mage::getSingleton('core/locale')->date()->setHour(0)->setMinute(0)->setSecond(0);
 		$dateEnd   = Mage::getSingleton('core/locale')->date()->setHour(23)->setMinute(59)->setSecond(59);
 
@@ -333,34 +400,30 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$dateEnd->subDay(1);
 		}
 
-		return array('now' => $dateNow, 'start' => $dateStart, 'end' => $dateEnd);
+		return ['start' => $dateStart, 'end' => $dateEnd];
 	}
 
-	private function getEmailUrl($url, $params = array()) {
+	private function getEmailUrl(string $url, array $params = []) {
 
-		if (Mage::getStoreConfigFlag('web/seo/use_rewrites'))
+		if (Mage::getStoreConfigFlag(Mage_Core_Model_Store::XML_PATH_USE_REWRITES))
 			return preg_replace('#/[^/]+\.php\d*/#', '/', Mage::helper('adminhtml')->getUrl($url, $params));
 		else
 			return preg_replace('#/[^/]+\.php(\d*)/#', '/index.php$1/', Mage::helper('adminhtml')->getUrl($url, $params));
 	}
 
-	private function sendReportToRecipients($locale, $vars) {
+	private function sendReportToRecipients(string $locale, array $vars) {
 
 		$emails = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/email/recipient_email')));
 		$vars['config'] = $this->getEmailUrl('adminhtml/system/config');
-		$vars['config'] = mb_substr($vars['config'], 0, mb_strrpos($vars['config'], '/system/config'));
+		$vars['config'] = mb_substr($vars['config'], 0, mb_strripos($vars['config'], '/system/config'));
 
 		foreach ($emails as $email) {
 
-			if (in_array($email, array('hello@example.org', 'hello@example.com', '')))
-				continue;
+			if (!in_array($email, ['hello@example.org', 'hello@example.com', ''])) {
 
-			// le setLocale utilisé plus haut ne permet pas d'utiliser le template email de la langue choisie
-			// donc le sendTransactional est fait en manuel (identique de Magento 1.4 à 1.9) pour utiliser la locale que l'on veut
-			$sender = Mage::getStoreConfig('maillog/email/sender_email_identity');
-			$template = Mage::getModel('core/email_template');
+				$sender   = Mage::getStoreConfig('maillog/email/sender_email_identity');
+				$template = Mage::getModel('core/email_template');
 
-			if (mb_strpos(Mage::helper('core/url')->getCurrentUrl(), 'section/maillog') !== false) {
 				$template->getMail()->createAttachment(
 					gzencode(file_get_contents(Mage::getModuleDir('etc', 'Luigifab_Maillog').'/tidy.conf'), 9),
 					'application/x-gzip',
@@ -368,37 +431,30 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					Zend_Mime::ENCODING_BASE64,
 					'tidy.gz'
 				);
+				$template->setSentSuccess(false);
+				$template->setDesignConfig(['store' => null]);
+				$template->loadDefault('maillog_email_template', $locale);
+				$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name'));
+				$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email'));
+				$template->setSentSuccess($template->send($email, null, $vars));
+
+				if (!$template->getSentSuccess())
+					Mage::throwException($this->__('Can not send the report by email to %s.', $email));
+
+				//exit($template->getProcessedTemplate($vars));
 			}
-
-			// sendTransactional($templateId, $sender, $recipient, $name, $vars = array(), $storeId = null)
-			//$template->sendTransactional(
-			//	Mage::getStoreConfig('maillog/email/template'),
-			//	Mage::getStoreConfig('maillog/email/sender_email_identity'),
-			//	$email, null, $vars
-			//);
-
-			$template->setSentSuccess(false);
-			$template->loadDefault('maillog_email_template', $locale);
-			$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name'));
-			$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email'));
-			$template->setSentSuccess($template->send($email, null, $vars));
-
-			if (!$template->getSentSuccess())
-				Mage::throwException($this->__('Can not send the report by email to %s.', $email));
-
-			//exit($template->getProcessedTemplate($vars));
 		}
 	}
 
 
 	// EVENT customer_delete_after (global)
-	public function customerDeleteClean($observer) {
+	public function customerDeleteSync(Varien_Event_Observer $observer) {
 
 		$customer = $observer->getData('customer');
 
 		$emails = Mage::getResourceModel('maillog/email_collection');
-		$emails->addFieldToFilter('deleted', array('neq' => 1));
-		$emails->addFieldToFilter('mail_recipients', array('like' => '%<'.$customer->getData('email').'>%'));
+		$emails->addFieldToFilter('deleted', ['neq' => 1]);
+		$emails->addFieldToFilter('mail_recipients', ['like' => '%<'.$customer->getData('email').'>%']);
 
 		// même chose que cleanOldData ou presque
 		foreach ($emails as $email) {
@@ -413,77 +469,71 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$email->setData('deleted', 1);
 			$email->save();
 		}
-	}
 
-	// EVENT customer_delete_after (global)
-	public function customerDeleteSync($observer) {
+		$syncs = Mage::getResourceModel('maillog/sync_collection');
+		$syncs->addFieldToFilter('action', ['like' => '%:customer:'.$customer->getId().':%']);
+		$syncs->deleteAll();
 
-		if (Mage::getStoreConfigFlag('maillog/sync/enabled') && (Mage::registry('maillog_no_sync') !== true)) {
-
-			$syncs = Mage::getResourceModel('maillog/sync_collection');
-			$syncs->addFieldToFilter('action', array('like' => '%:customer:'.$observer->getData('customer')->getId().':%'));
-			$syncs->deleteAll();
-
-			Mage::helper('maillog')->sendSync($observer->getData('customer'), 'customer', 'email', 'delete');
-		}
+		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true))
+			$this->sendSync($customer, 'customer', 'email', 'delete');
 	}
 
 	// EVENT customer_login (frontend)
-	public function customerLoginSync($observer) {
+	public function customerLoginSync(Varien_Event_Observer $observer) {
 
-		if (Mage::getStoreConfigFlag('maillog/sync/enabled') && (Mage::registry('maillog_no_sync') !== true))
-			Mage::helper('maillog')->sendSync($observer->getData('customer'), 'customer', 'email', 'update');
+		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true))
+			$this->sendSync($observer->getData('customer'), 'customer', 'email', 'update');
 	}
 
 	// EVENT address_save_after (frontend)
-	public function addressSaveSync($observer) {
+	public function addressSaveSync(Varien_Event_Observer $observer) {
 
-		if (Mage::getStoreConfigFlag('maillog/sync/enabled') && (Mage::registry('maillog_no_sync') !== true))
-			Mage::helper('maillog')->sendSync($observer->getData('customer_address')->getCustomer(), 'customer', 'email', 'update');
+		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true))
+			$this->sendSync($observer->getData('customer_address')->getCustomer(), 'customer', 'email', 'update');
 	}
 
 	// EVENT customer_save_commit_after (global)
-	public function customerSaveSync($observer) {
+	public function customerSaveSync(Varien_Event_Observer $observer) {
 
-		if (Mage::getStoreConfigFlag('maillog/sync/enabled') && (Mage::registry('maillog_no_sync') !== true))
-			Mage::helper('maillog')->sendSync($observer->getData('customer'), 'customer', 'email', 'update');
+		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true))
+			$this->sendSync($observer->getData('customer'), 'customer', 'email', 'update');
 	}
 
 	// EVENT newsletter_subscriber_save_after (global)
-	public function subscriberSaveSync($observer) {
+	public function subscriberSaveSync(Varien_Event_Observer $observer) {
 
-		if (Mage::getStoreConfigFlag('maillog/sync/enabled') && (Mage::registry('maillog_no_sync') !== true))
-			Mage::helper('maillog')->sendSync($observer->getData('subscriber'), 'subscriber', 'subscriber_email', 'update');
+		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true))
+			$this->sendSync($observer->getData('subscriber'), 'subscriber', 'subscriber_email', 'update');
 	}
 
 	// EVENT newsletter_subscriber_delete_after (global)
-	// si le client existe on met à jour le contact sinon on supprime le contact
-	public function subscriberDeleteSync($observer) {
+	// si le client existe on met à jour sinon on supprime
+	public function subscriberDeleteSync(Varien_Event_Observer $observer) {
 
-		if (Mage::getStoreConfigFlag('maillog/sync/enabled') && (Mage::registry('maillog_no_sync') !== true)) {
+		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true)) {
 
 			$subscriber = $observer->getData('subscriber');
-			$action     = !empty($subscriber->getData('customer_id')) ? 'update' : 'delete';
+			$action     = empty($subscriber->getData('customer_id')) ? 'delete' : 'update';
 
 			if ($action == 'delete') {
 				$syncs = Mage::getResourceModel('maillog/sync_collection');
-				$syncs->addFieldToFilter('action', array('like' => '%:subscriber:'.$subscriber->getId().':%'));
+				$syncs->addFieldToFilter('action', ['like' => '%:subscriber:'.$subscriber->getId().':%']);
 				foreach ($syncs as $sync)
 					$sync->setData('request', null)->save();
 			}
 
-			Mage::helper('maillog')->sendSync($subscriber, 'subscriber', 'subscriber_email', $action);
+			$this->sendSync($subscriber, 'subscriber', 'subscriber_email', $action);
 		}
 	}
 
 	// EVENT sales_order_invoice_save_commit_after (global)
-	// si le client existe on met à jour le contact
-	public function orderInvoiceSync($observer) {
+	// si le client existe on met à jour
+	public function orderInvoiceSync(Varien_Event_Observer $observer) {
 
-		if (Mage::getStoreConfigFlag('maillog/sync/enabled') && (Mage::registry('maillog_no_sync') !== true)) {
-			$customer = Mage::getModel('customer/customer')->load($observer->getData('invoice')->getOrder()->getCustomerId());
+		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true)) {
+			$customer = Mage::getModel('customer/customer')->load($observer->getData('invoice')->getOrder()->getData('customer_id'));
 			if (!empty($customer->getId()))
-				Mage::helper('maillog')->sendSync($customer, 'customer', 'email', 'update');
+				$this->sendSync($customer, 'customer', 'email', 'update');
 		}
 	}
 
@@ -492,7 +542,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// génère le store_id du client lors de la création d'un client
 	// sinon Magento aura la merveilleuse idée de dire que le store_id est 0
 	// actif même si le module n'est pas activé
-	public function setCustomerStoreId($observer) {
+	public function setCustomerStoreId(Varien_Event_Observer $observer) {
 
 		$customer = $observer->getData('customer');
 
@@ -508,15 +558,15 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 	// EVENT newsletter_subscriber_save_before (adminhtml)
 	// génère le store_id de l'abonné lors de l'enregistrement d'un abonné
-	// se base sur le store_id du client ($subscriber->getData('store_id') = 0 sur Magento 1.4/1.5)
+	// se base sur le store_id du client
 	// actif même si le module n'est pas activé
-	public function setSubscriberStoreId($observer) {
+	public function setSubscriberStoreId(Varien_Event_Observer $observer) {
 
 		$subscriber = $observer->getData('subscriber');
 		$customer   = Mage::registry('current_customer');
 
-		if (is_object($customer) && ($subscriber->getData('store_id') != $customer->getData('store_id')))
-			$subscriber->setData('store_id', $customer->getData('store_id'));
+		if (is_object($customer) && ($subscriber->getStoreId() != $customer->getStoreId()))
+			$subscriber->setData('store_id', $customer->getStoreId());
 
 		if (is_object($customer) && ($subscriber->getData('subscriber_email') != $customer->getOrigData('email')))
 			$subscriber->setOrigData('subscriber_email', $customer->getOrigData('email'));
@@ -527,26 +577,26 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// réduit l'historique des synchronisations (qui est configuré en minutes) et des emails (qui est configuré en mois)
 	public function cleanOldData($cron = null) {
 
-		$msg = array();
+		$msg   = [];
 		$total = 0;
 
-		$val = Mage::getStoreConfig('maillog/sync/lifetime');
+		$val = Mage::getStoreConfig('maillog_sync/general/lifetime');
 		if (!empty($val) && is_numeric($val)) {
 
 			$syncs = Mage::getResourceModel('maillog/sync_collection');
-			$syncs->addFieldToFilter('status', array('eq' => 'success'));
-			$syncs->addFieldToFilter('created_at', array('lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$val.' MINUTE)')));
+			$syncs->addFieldToFilter('status', ['eq' => 'success']);
+			$syncs->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$val.' MINUTE)')]);
 			$total += $syncs->getSize();
 			$syncs->deleteAll();
 
 			$syncs = Mage::getResourceModel('maillog/sync_collection');
-			$syncs->addFieldToFilter('status', array('neq' => 'success'));
-			$syncs->addFieldToFilter('created_at', array('lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.(3 * $val).' MINUTE)')));
+			$syncs->addFieldToFilter('status', ['neq' => 'success']);
+			$syncs->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.(3 * $val).' MINUTE)')]);
 			$total += $syncs->getSize();
 			$syncs->deleteAll();
 
 			$msg[] = 'Remove successful synchronizations after '.($val / 60 / 24).' days';
-			$msg[] = !empty($total) ? ' → '.$total.' item(s) removed' : ' → no item to remove';
+			$msg[] = empty($total) ? ' → no items to remove' : ' → '.$total.' item(s) removed';
 			$msg[] = '';
 		}
 
@@ -557,14 +607,14 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 				if (is_numeric($months) && ($months >= 2)) {
 
-					$cut    = mb_strpos($key, '_');
+					$cut    = mb_stripos($key, '_');
 					$type   = mb_substr($key, 0, $cut);
 					$action = mb_substr($key, $cut + 1);
 
 					$emails = Mage::getResourceModel('maillog/email_collection');
-					$emails->addFieldToFilter('deleted', array('neq' => 1));
-					$emails->addFieldToFilter('created_at', array('lt' => new Zend_Db_Expr(
-						'DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$months.' MONTH)')));
+					$emails->addFieldToFilter('deleted', ['neq' => 1]);
+					$emails->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr(
+						'DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$months.' MONTH)')]);
 
 					// tous les emails
 					if ($key == 'all_data') {
@@ -600,14 +650,14 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					$ids = $emails->getAllIds();
 					$ids = (count($ids) > 100) ? implode(', ', array_slice($ids, 0, 100)).'...' : implode(', ', $ids);
 
-					$msg[] = !empty($total = $emails->getSize()) ? ' → '.$total.' item(s) removed ('.$ids.')' : ' → no item to remove';
+					$msg[] = empty($total = $emails->getSize()) ? ' → no items to remove' : ' → '.$total.' item(s) removed ('.$ids.')';
 					$msg[] = '';
 
 					if (!empty($total) && ($action == 'all')) {
 						$emails->deleteAll();
 					}
 					else if (!empty($total) && ($action == 'data')) {
-						// même chose que customerDeleteClean
+						// même chose que customerDeleteClean ou presque
 						foreach ($emails as $email) {
 							$email->setData('encoded_mail_recipients', null);
 							$email->setData('encoded_mail_subject', null);
@@ -634,19 +684,19 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	public function bouncesFileImport($cron = null, $source = null) {
 
 		Mage::register('maillog_no_sync', true);
-		$diff = array('started_at' => date('Y-m-d H:i:s'), 'errors' => array());
+		$diff = ['started_at' => date('Y-m-d H:i:s'), 'errors' => []];
 
 		try {
-			$folder = Mage::getStoreConfig('maillog/bounces/directory');
+			$folder = Mage::getStoreConfig('maillog_sync/bounces/directory');
 			$folder = str_replace('//', '/', Mage::getBaseDir('var').'/'.trim($folder, "/ \t\n\r\0\x0B").'/');
-			$config = Mage::getStoreConfig('maillog/bounces/format');
+			$config = Mage::getStoreConfig('maillog_sync/bounces/format');
 			$type   = mb_substr($config, 0, 3);
 			$source = $this->todayFile($folder, $type);
 
 			$newItems = $this->dataFromFile($folder, $source, $config);
 
 			$oldItems = Mage::getResourceModel('customer/customer_collection');
-			$oldItems->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(array('email')); // optimisation maximale
+			$oldItems->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['email']); // optimisation maximale
 			$oldItems->addAttributeToFilter('is_bounce', 2); // 1/No 2/Yes 3/Yes-forced 4/No-forced
 
 			$this->updateCustomersDatabase($newItems, $oldItems->getColumnValues('email'), $diff);
@@ -657,7 +707,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 		catch (Exception $e) {
 
-			$error = !empty($diff['errors']) ? implode("\n", $diff['errors']) : $e->getMessage();
+			$error = empty($diff['errors']) ? $e->getMessage() : implode("\n", $diff['errors']);
 			$this->writeLog($folder, $source, $error, $cron);
 
 			Mage::unregister('maillog_no_sync');
@@ -672,19 +722,19 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	public function unsubscribersFileImport($cron = null, $source = null) {
 
 		Mage::register('maillog_no_sync', true);
-		$diff = array('started_at' => date('Y-m-d H:i:s'), 'errors' => array());
+		$diff = ['started_at' => date('Y-m-d H:i:s'), 'errors' => []];
 
 		try {
-			$folder = Mage::getStoreConfig('maillog/unsubscribers/directory');
+			$folder = Mage::getStoreConfig('maillog_sync/unsubscribers/directory');
 			$folder = str_replace('//', '/', Mage::getBaseDir('var').'/'.trim($folder, "/ \t\n\r\0\x0B").'/');
-			$config = Mage::getStoreConfig('maillog/unsubscribers/format');
+			$config = Mage::getStoreConfig('maillog_sync/unsubscribers/format');
 			$type   = mb_substr($config, 0, 3);
 			$source = $this->todayFile($folder, $type);
 
 			$newItems = $this->dataFromFile($folder, $source, $config);
 
 			$oldItems = Mage::getResourceModel('newsletter/subscriber_collection');
-			$oldItems->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(array('subscriber_email')); // optimisation maximale
+			$oldItems->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['subscriber_email']); // optimisation maximale
 			$oldItems->addFieldToFilter('subscriber_status', Mage_Newsletter_Model_Subscriber::STATUS_UNSUBSCRIBED);
 
 			$this->updateUnsubscribersDatabase($newItems, $oldItems->getColumnValues('subscriber_email'), $diff);
@@ -695,7 +745,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 		catch (Exception $e) {
 
-			$error = !empty($diff['errors']) ? implode("\n", $diff['errors']) : $e->getMessage();
+			$error = empty($diff['errors']) ? $e->getMessage() : implode("\n", $diff['errors']);
 			$this->writeLog($folder, $source, $error, $cron);
 
 			Mage::unregister('maillog_no_sync');
@@ -707,7 +757,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// 7 exceptions - c'est ici que tout se joue car si tout va bien nous avons un fichier et un dossier qui sont accessibles et modifiables
 	// dossier de base : inexistant, non accessible en lecture, non accessible en écriture, vide
 	// fichier : non accessible en lecture, non accessible en écriture, trop vieux
-	private function todayFile($folder, $type) {
+	private function todayFile(string $folder, string $type) {
 
 		// vérifications du dossier
 		if (!is_dir($folder))
@@ -720,7 +770,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		// recherche des fichiers
 		// utilise un tableau pour pouvoir trier par date
 		$allfiles = glob($folder.'*.'.$type);
-		$files = array();
+		$files = [];
 
 		foreach ($allfiles as $file)
 			$files[filemtime($file)] = basename($file);
@@ -751,7 +801,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// mise à jour de la base de données (ne touche pas à ce qui ne change pas - ajoute/supprime/modifie)
 	// déplace et compresse les fichiers (base/done/skip)
 	// enregistre le log final
-	private function dataFromFile($folder, $source, $config) {
+	private function dataFromFile(string $folder, string $source, string $config) {
 
 		$type = mb_substr($config, 0, 3);
 
@@ -769,8 +819,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$separ = mb_substr($config, 4, 1);
 		}
 
+		$items = [];
 		$colum = ($colum > 1) ? $colum - 1 : 1;
-		$items = array();
 		$lines = trim(str_replace("\xEF\xBB\xBF", '', file_get_contents($folder.$source)));
 
 		if (mb_detect_encoding($lines, 'utf-8', true) === false)
@@ -781,30 +831,28 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			$line = trim($line);
 
-			if (mb_strlen($line) <= 5) {
-				continue;
-			}
-			else if ($type == 'csv') {
-				$delim = ($delim == '→') ? "\t" : $delim;
-				$data  = explode($delim, $line);
-				if (!empty($data[$colum]) && (mb_strpos($data[$colum], '@') !== false))
-					$items[] = trim(str_replace($separ, '', $data[$colum]));
-			}
-			else if ($type == 'txt') {
-				if (mb_strpos($line, '@') !== false)
+			if (mb_strlen($line) > 5) {
+				if ($type == 'csv') {
+					$delim = ($delim == '→') ? "\t" : $delim;
+					$data  = explode($delim, $line);
+					if (!empty($data[$colum]) && (mb_stripos($data[$colum], '@') !== false))
+						$items[] = trim(str_replace($separ, '', $data[$colum]));
+				}
+				else if (($type == 'txt') && (mb_stripos($line, '@') !== false)) {
 					$items[] = trim($line);
+				}
 			}
 		}
 
 		return $items;
 	}
 
-	private function updateCustomersDatabase($newItems, $oldItems, &$diff) {
+	private function updateCustomersDatabase(array $newItems, array $oldItems, array &$diff) {
 
 		$diff['oldItems']    = count($oldItems);
 		$diff['newItems']    = count($newItems);
-		$diff['invalidated'] = array();
-		$diff['validated']   = array();
+		$diff['invalidated'] = [];
+		$diff['validated']   = [];
 
 		// traitement des adresses emails AJOUTÉES
 		// array_diff retourne un tableau contenant toutes les entités du premier tableau qui ne sont présentes dans aucun autres tableaux
@@ -816,11 +864,11 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		foreach ($chunkedEmails as $emails) {
 
 			$items = Mage::getResourceModel('customer/customer_collection');
-			$items->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(array('entity_id', 'entity_type_id', 'email')); // optimisation maximale
+			$items->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['entity_id', 'entity_type_id', 'email']); // optimisation maximale
 			$items->addAttributeToSelect('is_bounce');
 			// non, car cela génère un INNER JOIN, et donc cela merde si l'attribut n'a pas de ligne dans customer_entity_int
-			//$items->addAttributeToFilter('is_bounce', array('nin' => array(1, 2, 3, 4))); // donc 0/No ou null
-			$items->addAttributeToFilter('email', array('in' => $emails));
+			//$items->addAttributeToFilter('is_bounce', ['nin' => [1, 2, 3, 4]]); // donc 0/No ou null
+			$items->addAttributeToFilter('email', ['in' => $emails]);
 
 			foreach ($emails as $email) {
 				try {
@@ -841,7 +889,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			}
 		}
 
-		if (Mage::getStoreConfigFlag('maillog/bounces/subscribe')) {
+		if (Mage::getStoreConfigFlag('maillog_sync/bounces/subscribe')) {
 
 			// traitement des adresses emails SUPPRIMÉES
 			// array_diff retourne un tableau contenant toutes les entités du premier tableau qui ne sont présentes dans aucun autres tableaux
@@ -853,10 +901,10 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			foreach ($chunkedEmails as $emails) {
 
 				$items = Mage::getResourceModel('customer/customer_collection');
-				$items->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(array('entity_id', 'entity_type_id', 'email')); // opt. maximale
+				$items->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['entity_id', 'entity_type_id', 'email']); // opt. maximale
 				$items->addAttributeToSelect('is_bounce');
-				$items->addAttributeToFilter('is_bounce', array('nin' => array(0, 2, 3, 4))); // donc 1/Yes ou null
-				$items->addAttributeToFilter('email', array('in' => $emails));
+				$items->addAttributeToFilter('is_bounce', ['nin' => [0, 2, 3, 4]]); // donc 1/Yes ou null
+				$items->addAttributeToFilter('email', ['in' => $emails]);
 
 				foreach ($emails as $email) {
 					try {
@@ -879,12 +927,12 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 	}
 
-	private function updateUnsubscribersDatabase($newItems, $oldItems, &$diff) {
+	private function updateUnsubscribersDatabase(array $newItems, array $oldItems, array &$diff) {
 
 		$diff['oldItems']     = count($oldItems);
 		$diff['newItems']     = count($newItems);
-		$diff['unsubscribed'] = array();
-		$diff['subscribed']   = array();
+		$diff['unsubscribed'] = [];
+		$diff['subscribed']   = [];
 
 		// traitement des adresses emails AJOUTÉES
 		// array_diff retourne un tableau contenant toutes les entités du premier tableau qui ne sont présentes dans aucun autres tableaux
@@ -895,10 +943,10 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		foreach ($chunkedEmails as $emails) {
 
 			$items = Mage::getResourceModel('newsletter/subscriber_collection');
-			$items->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(array('subscriber_id', 'subscriber_email')); // optimisation maximale
+			$items->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['subscriber_id', 'subscriber_email']); // optimisation maximale
 			// oui, car pour être inscrit, il faut forcément une ligne dans newsletter_subscriber
 			$items->addFieldToFilter('subscriber_status', Mage_Newsletter_Model_Subscriber::STATUS_SUBSCRIBED);
-			$items->addFieldToFilter('subscriber_email', array('in' => $emails));
+			$items->addFieldToFilter('subscriber_email', ['in' => $emails]);
 
 			foreach ($emails as $email) {
 				try {
@@ -920,7 +968,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			}
 		}
 
-		if (Mage::getStoreConfigFlag('maillog/unsubscribers/subscribe')) {
+		if (Mage::getStoreConfigFlag('maillog_sync/unsubscribers/subscribe')) {
 
 			// traitement des adresses emails SUPPRIMÉES
 			// array_diff retourne un tableau contenant toutes les entités du premier tableau qui ne sont présentes dans aucun autres tableaux
@@ -931,9 +979,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			foreach ($chunkedEmails as $emails) {
 
 				$items = Mage::getResourceModel('newsletter/subscriber_collection');
-				$items->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(array('subscriber_id', 'subscriber_email'));  // opt. maximale
+				$items->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['subscriber_id', 'subscriber_email']);  // opt. maximale
 				$items->addFieldToFilter('subscriber_status', Mage_Newsletter_Model_Subscriber::STATUS_UNSUBSCRIBED);
-				$items->addFieldToFilter('subscriber_email', array('in' => $emails));
+				$items->addFieldToFilter('subscriber_email', ['in' => $emails]);
 
 				foreach ($emails as $email) {
 					try {
@@ -957,7 +1005,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 	}
 
-	private function moveFiles($folder, &$source, $type) {
+	private function moveFiles(string $folder, string &$source, string $type) {
 
 		$uniq = 1;
 		$date = Mage::getSingleton('core/locale')->date();
@@ -992,9 +1040,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		@rmdir($skipdir);
 	}
 
-	private function writeLog($folder, $source, $diff, $cron) {
+	private function writeLog(string $folder, $source, $diff, $cron = null) {
 
-		$diff = is_string($diff) ? array('started_at' => date('Y-m-d H:i:s'), 'exception' => $diff) : $diff;
+		$diff = is_string($diff) ? ['started_at' => date('Y-m-d H:i:s'), 'exception' => $diff] : $diff;
 
 		// pour le message du cron
 		if (is_object($cron)) {
@@ -1011,19 +1059,19 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		// pour le status.dat
 		// n'affiche pas les adresses, uniquement les nombres d'adresses
 		if (isset($diff['invalidated'])) {
-			$diff['invalidated']  = !empty($diff['invalidated'])  ? count($diff['invalidated'])  : 0;
-			$diff['validated']    = !empty($diff['validated'])    ? count($diff['validated'])    : 0;
+			$diff['invalidated']  = empty($diff['invalidated'])  ? 0 : count($diff['invalidated']);
+			$diff['validated']    = empty($diff['validated'])    ? 0 : count($diff['validated']);
 		}
 		if (isset($diff['unsubscribed'])) {
-			$diff['unsubscribed'] = !empty($diff['unsubscribed']) ? count($diff['unsubscribed']) : 0;
-			$diff['subscribed']   = !empty($diff['subscribed'])   ? count($diff['subscribed'])   : 0;
+			$diff['unsubscribed'] = empty($diff['unsubscribed']) ? 0 : count($diff['unsubscribed']);
+			$diff['subscribed']   = empty($diff['subscribed'])   ? 0 : count($diff['subscribed']);
 		}
-		$diff['errors']      = !empty($diff['errors'])       ? count($diff['errors'])       : 0;
+		$diff['errors']      = empty($diff['errors']) ? 0 : count($diff['errors']);
 		$diff['finished_at'] = date('Y-m-d H:i:s');
 
 		if (!is_dir($folder))
 			mkdir($folder, 0755, true);
 
-		file_put_contents($folder.'status.dat', serialize($diff));
+		file_put_contents($folder.'status.dat', json_encode($diff));
 	}
 }

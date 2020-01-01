@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/05/02/2019
+ * Updated S/09/11/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -37,6 +37,16 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		return Mage::getSingleton('admin/session')->isAllowed('tools/maillog');
 	}
 
+	protected function _redirectBack() {
+
+		if ($this->getRequest()->getParam('back') == 'order')
+			$this->_redirect('*/sales_order/view', ['order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_order_grid']);
+		else if ($this->getRequest()->getParam('back') == 'customer')
+			$this->_redirect('*/customer/edit', ['id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_customer_grid']);
+		else
+			$this->_redirect('*/*/index');
+	}
+
 	public function indexAction() {
 
 		if ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax')))
@@ -45,9 +55,17 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 			$this->loadLayout()->_setActiveMenu('tools/maillog')->renderLayout();
 	}
 
+	public function testAction() {
+
+		if (Mage::getStoreConfigFlag('maillog/email/enabled'))
+			$this->_redirect('*/*/view', ['id' => Mage::getSingleton('maillog/observer')->sendEmailReport(null, true)]);
+		else
+			$this->_redirect('*/*/index');
+	}
+
 	public function viewAction() {
 
-		$email = Mage::getModel('maillog/email')->load(intval($this->getRequest()->getParam('id', 0)));
+		$email = Mage::getModel('maillog/email')->load((int) $this->getRequest()->getParam('id', 0));
 
 		if (!empty($email->getId())) {
 			Mage::register('current_email', $email);
@@ -98,15 +116,5 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		}
 
 		$this->_redirectBack();
-	}
-
-	private function _redirectBack() {
-
-		if ($this->getRequest()->getParam('back') == 'order')
-			$this->_redirect('*/sales_order/view', array('order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_order_grid'));
-		else if ($this->getRequest()->getParam('back') == 'customer')
-			$this->_redirect('*/customer/edit', array('id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_customer_grid'));
-		else
-			$this->_redirect('*/*/index');
 	}
 }

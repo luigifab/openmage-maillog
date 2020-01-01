@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/12/04/2019
+ * Updated S/23/11/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -68,20 +68,29 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</send>
+						<encoding translate="label">
+							<label>Emails encoding</label>
+							<frontend_type>select</frontend_type>
+							<source_model>maillog/source_encoding</source_model>
+							<sort_order>3</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</encoding>
 						<minify translate="label">
 							<label><![CDATA[Minify <abbr title="HyperText Markup Language">HTML</abbr> code]]></label>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_minify</source_model>
-							<sort_order>3</sort_order>
+							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</minify>
 						<special_config translate="label">
-							<label>Lifetime of the email history and email header colors</label>
-							<frontend_model>maillog/adminhtml_config_special</frontend_model>
+							<label>Email history lifetime and email header colors</label>
+							<frontend_model>maillog/adminhtml_config_lifetime</frontend_model>
 							<backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
-							<sort_order>4</sort_order>
+							<sort_order>5</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -158,54 +167,9 @@
 						</stats_size>
 					</fields>
 				</general>
-				<filters translate="label">
-					<label>Security and data filters</label>
-					<sort_order>2</sort_order>
-					<show_in_default>1</show_in_default>
-					<show_in_website>0</show_in_website>
-					<show_in_store>0</show_in_store>
-					<fields>
-						<baseurl translate="label comment">
-							<label><![CDATA[All <em>base_url</em> must contain]]></label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>text</frontend_type>
-							<sort_order>1</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</baseurl>
-						<notbaseurl translate="label comment">
-							<label><![CDATA[All <em>base_url</em> must not contain]]></label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>text</frontend_type>
-							<sort_order>2</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</notbaseurl>
-						<ignore translate="label comment">
-							<label>Email address must not contains</label>
-							<comment>Separate keywords by a space.</comment>
-							<frontend_type>textarea</frontend_type>
-							<sort_order>3</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</ignore>
-						<registry translate="label">
-							<label>Manually</label>
-							<frontend_type>label</frontend_type>
-							<frontend_model>maillog/adminhtml_config_registry</frontend_model>
-							<sort_order>4</sort_order>
-							<show_in_default>1</show_in_default>
-							<show_in_website>0</show_in_website>
-							<show_in_store>0</show_in_store>
-						</registry>
-					</fields>
-				</filters>
 				<email translate="label">
 					<label>Email reports</label>
-					<sort_order>3</sort_order>
+					<sort_order>2</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
@@ -248,7 +212,7 @@
 							<show_in_store>0</show_in_store>
 						</sender_email_identity>
 						<test translate="label">
-							<label>Send a test</label>
+							<label>Send an email now</label>
 							<frontend_type>label</frontend_type>
 							<frontend_model>maillog/adminhtml_config_test</frontend_model>
 							<sort_order>5</sort_order>
@@ -258,16 +222,61 @@
 						</test>
 					</fields>
 				</email>
-				<directives translate="label comment">
-					<label>Emails and wysiwyg directives</label>
-					<comment><![CDATA[]]></comment>
-					<sort_order>4</sort_order>
-					<show_in_default>0</show_in_default>
+				<filters translate="label">
+					<label>Security</label>
+					<sort_order>3</sort_order>
+					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
-				</directives>
-				<sync translate="label comment">
-					<label><![CDATA[<abbr title="Application Programming Interface">API</abbr> synchronization]]></label>
+					<fields>
+						<baseurl translate="label comment">
+							<label><![CDATA[All <em>base_url</em> must contain]]></label>
+							<comment>Separate keywords by a space.</comment>
+							<frontend_type>text</frontend_type>
+							<sort_order>1</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</baseurl>
+						<notbaseurl translate="label comment">
+							<label><![CDATA[All <em>base_url</em> must not contain]]></label>
+							<comment>Separate keywords by a space.</comment>
+							<frontend_type>text</frontend_type>
+							<sort_order>2</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</notbaseurl>
+						<ignore translate="label comment">
+							<label>Email address must not contains</label>
+							<comment>Separate keywords by a space.</comment>
+							<frontend_type>textarea</frontend_type>
+							<sort_order>3</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</ignore>
+					</fields>
+				</filters>
+			</groups>
+		</maillog>
+		<maillog_sync translate="label">
+			<label>Customers synchronization</label>
+			<tab>luigifab</tab>
+			<sort_order>66</sort_order>
+			<show_in_default>1</show_in_default>
+			<show_in_website>0</show_in_website>
+			<show_in_store>0</show_in_store>
+			<groups>
+				<help>
+					<frontend_model>maillog/adminhtml_config_help</frontend_model>
+					<sort_order>0</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>0</show_in_website>
+					<show_in_store>0</show_in_store>
+				</help>
+				<general translate="label comment">
+					<label>General</label>
 					<comment><![CDATA[
 						<p>Synchronization allow to synchronize customer data from <strong>Magento</strong> to your <strong>System</strong>.<br />It is performed every minutes by cron job on the following events (whether from the backend or from the frontend):</p>
 						<ul>
@@ -277,12 +286,12 @@
 							<li>when saving a shipping or a billing address of a customer,</li>
 							<li>when invoicing an order.</li>
 						</ul>
-						<p><strong>Warning! We must enable synchronization only when configuring the synchronization is complete.</strong></p>
 					]]></comment>
-					<sort_order>5</sort_order>
+					<sort_order>1</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
+					<expanded>1</expanded>
 					<fields>
 						<enabled translate="label">
 							<label>Enable</label>
@@ -312,7 +321,7 @@
 							<show_in_store>0</show_in_store>
 						</type>
 						<lifetime translate="label">
-							<label>Lifetime of the synchronization history</label>
+							<label>History lifetime</label>
 							<frontend_type>select</frontend_type>
 							<source_model>maillog/source_lifetime</source_model>
 							<sort_order>4</sort_order>
@@ -320,8 +329,8 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</lifetime>
-						<api translate="label">
-							<label><![CDATA[<abbr title="Application Programming Interface">API</abbr>]]></label>
+						<api>
+							<label>API</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
 							<sort_order>10</sort_order>
 							<show_in_default>1</show_in_default>
@@ -364,11 +373,39 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</mapping>
+						<mapping_customerid_field translate="label comment">
+							<label>Customer Id field</label>
+							<comment>In case of a change of email address, the customer identification in the system will be done with the customer id.</comment>
+							<frontend_type>select</frontend_type>
+							<frontend_model>maillog/adminhtml_config_mapping</frontend_model>
+							<sort_order>21</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</mapping_customerid_field>
+						<mapping_system>
+							<label>A) System</label>
+							<frontend_type>select</frontend_type>
+							<frontend_model>maillog/adminhtml_config_mapping</frontend_model>
+							<sort_order>22</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</mapping_system>
+						<mapping_magento>
+							<label>B) Magento</label>
+							<frontend_type>select</frontend_type>
+							<frontend_model>maillog/adminhtml_config_mapping</frontend_model>
+							<sort_order>23</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</mapping_magento>
 						<mapping_config translate="label">
 							<label>Configuration</label>
 							<frontend_type>textarea</frontend_type>
 							<frontend_model>maillog/adminhtml_config_mapping</frontend_model>
-							<sort_order>21</sort_order>
+							<sort_order>24</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -400,11 +437,11 @@
 							<show_in_store>0</show_in_store>
 						</stats_size>
 					</fields>
-				</sync>
+				</general>
 				<bounces translate="label comment">
 					<label>Invalid emails import</label>
-					<comment><![CDATA[<p>This import allows to import invalid emails from your <strong>System</strong> to <strong>Magento</strong>.<br />It is carried out punctually by cron job (maximum once per day) thanks to the newest file in the specified folder below.</p>]]></comment>
-					<sort_order>6</sort_order>
+					<comment><![CDATA[<p>This import allows to import invalid emails from your <strong>System</strong> to <strong>Magento</strong>.<br />It is carried out punctually by cron job thanks to the newest file in the specified folder below.<br />Whatever the file format is, the module looks for an email address (the rest is ignored).</p>]]></comment>
+					<sort_order>2</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
@@ -429,7 +466,7 @@
 						</directory>
 						<format translate="label comment">
 							<label>File format</label>
-							<comment><![CDATA[Examples: <b>txt</b> / <b>csv;2</b> / <b>csv,3</b> / <b>csv,3"</b>...<br />The file must be in <b>utf-8</b> (with or without BOM).<br />Use <b>→</b> for the tabulation. Whatever the format is, the module looks for an email address (the rest is ignored).]]></comment>
+							<comment><![CDATA[Examples: <b>txt</b> / <b>csv;2</b> / <b>csv,3"</b><br />The file must be in <b>utf-8</b> (with or without BOM).<br />Use <b>→</b> for the tabulation.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
@@ -438,7 +475,7 @@
 						</format>
 						<cron_expr translate="label comment">
 							<label>Cron expression</label>
-							<comment><![CDATA[By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Maximum once per day.]]></comment>
+							<comment><![CDATA[By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Warning: maximum once per day.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
@@ -493,8 +530,8 @@
 				</bounces>
 				<unsubscribers translate="label comment">
 					<label>Unsubscribers emails import</label>
-					<comment><![CDATA[<p>This import allows to import unsubscribed emails from your <strong>System</strong> to <strong>Magento</strong>.<br />It is carried out punctually by cron job (maximum once per day) thanks to the newest file in the specified folder below.</p>]]></comment>
-					<sort_order>7</sort_order>
+					<comment><![CDATA[<p>This import allows to import unsubscribed emails from your <strong>System</strong> to <strong>Magento</strong>.<br />It is carried out punctually by cron job thanks to the newest file in the specified folder below.<br />Whatever the file format is, the module looks for an email address (the rest is ignored).</p>]]></comment>
+					<sort_order>3</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
@@ -519,7 +556,7 @@
 						</directory>
 						<format translate="label comment">
 							<label>File format</label>
-							<comment><![CDATA[Examples: <b>txt</b> / <b>csv;2</b> / <b>csv,3</b> / <b>csv,3"</b>...<br />The file must be in <b>utf-8</b> (with or without BOM).<br />Use <b>→</b> for the tabulation. Whatever the format is, the module looks for an email address (the rest is ignored).]]></comment>
+							<comment><![CDATA[Examples: <b>txt</b> / <b>csv;2</b> / <b>csv,3"</b><br />The file must be in <b>utf-8</b> (with or without BOM).<br />Use <b>→</b> for the tabulation.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
@@ -528,7 +565,7 @@
 						</format>
 						<cron_expr translate="label comment">
 							<label>Cron expression</label>
-							<comment><![CDATA[By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Maximum once per day.]]></comment>
+							<comment><![CDATA[By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Warning: maximum once per day.]]></comment>
 							<frontend_type>text</frontend_type>
 							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
@@ -581,10 +618,154 @@
 						</stats_lastfile>
 					</fields>
 				</unsubscribers>
+				<email translate="label">
+					<label>Email reports</label>
+					<sort_order>4</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>0</show_in_website>
+					<show_in_store>0</show_in_store>
+					<fields>
+						<!-- Access denied when saving? this is a Magento bug https://stackoverflow.com/q/50215440 -->
+						<enabled translate="label">
+							<label>Enable</label>
+							<config_path>maillog/email/enabled</config_path>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>1</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</enabled>
+						<frequency translate="label">
+							<label>Frequency</label>
+							<config_path>maillog/email/frequency</config_path>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_cron_frequency</source_model>
+							<sort_order>2</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</frequency>
+						<recipient_email translate="label comment">
+							<label>Send Emails To</label>
+							<comment>Separate addresses by a space.</comment>
+							<config_path>maillog/email/recipient_email</config_path>
+							<frontend_type>text</frontend_type>
+							<sort_order>3</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</recipient_email>
+						<sender_email_identity translate="label">
+							<label>Email Sender</label>
+							<config_path>maillog/email/sender_email_identity</config_path>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_email_identity</source_model>
+							<backend_model>adminhtml/system_config_backend_email_sender</backend_model>
+							<sort_order>4</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</sender_email_identity>
+						<test translate="label">
+							<label>Send an email now</label>
+							<frontend_type>label</frontend_type>
+							<frontend_model>maillog/adminhtml_config_test</frontend_model>
+							<sort_order>5</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</test>
+					</fields>
+				</email>
+				<filters translate="label">
+					<label>Security</label>
+					<sort_order>5</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>0</show_in_website>
+					<show_in_store>0</show_in_store>
+					<fields>
+						<baseurl translate="label comment">
+							<label><![CDATA[All <em>base_url</em> must contain]]></label>
+							<comment>Separate keywords by a space.</comment>
+							<config_path>maillog/filters/baseurl</config_path>
+							<frontend_type>text</frontend_type>
+							<sort_order>1</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</baseurl>
+						<notbaseurl translate="label comment">
+							<label><![CDATA[All <em>base_url</em> must not contain]]></label>
+							<comment>Separate keywords by a space.</comment>
+							<config_path>maillog/filters/notbaseurl</config_path>
+							<frontend_type>text</frontend_type>
+							<sort_order>2</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</notbaseurl>
+						<ignore translate="label comment">
+							<label>Email address must not contains</label>
+							<comment>Separate keywords by a space.</comment>
+							<config_path>maillog/filters/ignore</config_path>
+							<frontend_type>textarea</frontend_type>
+							<sort_order>3</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</ignore>
+					</fields>
+				</filters>
 			</groups>
-		</maillog>
+		</maillog_sync>
+		<maillog_directives translate="label">
+			<label>Emails and wysiwyg directives</label>
+			<tab>luigifab</tab>
+			<sort_order>67</sort_order>
+			<show_in_default>1</show_in_default>
+			<show_in_website>0</show_in_website>
+			<show_in_store>0</show_in_store>
+			<groups>
+				<help>
+					<frontend_model>maillog/adminhtml_config_help</frontend_model>
+					<sort_order>0</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>0</show_in_website>
+					<show_in_store>0</show_in_store>
+				</help>
+				<general translate="label comment">
+					<label>Emails and wysiwyg directives</label>
+					<comment>They are extraordinary new directives:</comment>
+					<frontend_model>maillog/adminhtml_config_comment</frontend_model>
+					<sort_order>1</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>0</show_in_website>
+					<show_in_store>0</show_in_store>
+					<expanded>1</expanded>
+					<fields>
+						<special_picture>
+							<label>{{picture ...}}</label>
+							<frontend_model>maillog/adminhtml_config_picture</frontend_model>
+							<backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
+							<sort_order>1</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</special_picture>
+					</fields>
+				</general>
+			</groups>
+		</maillog_directives>
 		<newsletter>
 			<groups>
+				<help>
+					<frontend_model>maillog/adminhtml_config_help</frontend_model>
+					<sort_order>0</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>1</show_in_website>
+					<show_in_store>1</show_in_store>
+				</help>
 				<subscription>
 					<expanded>1</expanded>
 					<fields>

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated V/03/05/2019
+ * Updated S/19/10/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -25,12 +25,15 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		$this->_init('maillog/sync');
 	}
 
-	public function getSystem() {
-		if (!is_object($this->model))
-			$this->model = Mage::getSingleton('maillog/system_'.Mage::getStoreConfig('maillog/sync/type'));
-		return $this->model;
+	protected function _beforeLoad() {
+		$this->getResource()->getReadConnection()->query('SET NAMES utf8mb4;');
+		return $this;
 	}
 
+	protected function _afterLoad() {
+		$this->getResource()->getReadConnection()->query('SET NAMES '.$this->getResource()->_getCharacterSet().';');
+		return $this;
+	}
 
 	public function updateNow($send = true) {
 
@@ -40,24 +43,24 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 		// 0 action : 1 type : 2 id : 3 ancien-email : 4 email
 		// 0 action : 1 type : 2 id : 3              : 4 email
-		$dat = explode(':', $this->getData('action'));
+		$info = explode(':', $this->getData('action'));
 
 		try {
 			$this->setData('status', 'running');
 			$this->save();
 
 			// chargement des objets du client
-			if ($dat[1] == 'customer') {
+			if ($info[1] == 'customer') {
 
-				$customer   = Mage::getModel('customer/customer')->load($dat[2]);
+				$customer   = Mage::getModel('customer/customer')->load($info[2]);
 				$billing    = $customer->getDefaultBillingAddress();
 				$shipping   = $customer->getDefaultShippingAddress();
-				$subscriber = Mage::getModel('newsletter/subscriber')->loadByEmail($customer->getData('email'), $customer->getData('store_id'));
+				$subscriber = Mage::getModel('newsletter/subscriber')->loadByEmail($customer->getData('email'), $customer->getStoreId());
 				$object     = $this->initSpecialObject($customer);
 
-				if (!empty($dat[3])) {
-					$customer->setOrigData('email', $dat[3]);
-					$customer->setData('email', $dat[4]);
+				if (!empty($info[3])) {
+					$customer->setOrigData('email', $info[3]);
+					$customer->setData('email', $info[4]);
 				}
 
 				if (is_object($billing) && empty($billing->getData('is_default_billing')))
@@ -65,18 +68,17 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				if (is_object($shipping) && empty($shipping->getData('is_default_shipping')))
 					$shipping->setData('is_default_shipping', 1);
 			}
-			else if ($dat[1] == 'subscriber') {
+			else if ($info[1] == 'subscriber') {
 
-				$subscriber = Mage::getModel('newsletter/subscriber')->load($dat[2]);
-				$customer   = Mage::getModel('customer/customer');
+				$subscriber = Mage::getModel('newsletter/subscriber')->load($info[2]);
 
+				$customer = Mage::getModel('customer/customer');
 				$customer->setOrigData('email', $subscriber->getOrigData('subscriber_email'));
 				$customer->setData('email', $subscriber->getData('subscriber_email'));
-				$customer->setData('store_id', $subscriber->getData('store_id'));
+				$customer->setData('store_id', $subscriber->getStoreId());
 
-				$billing    = null;
-				$shipping   = null;
-				$object     = $this->initSpecialObject($customer);
+				$billing = $shipping = null;
+				$object  = $this->initSpecialObject($customer);
 			}
 			else {
 				Mage::throwException('Unknown sync type.');
@@ -86,12 +88,13 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			// note très très importante, le + fait en sorte que ce qui est déjà présent n'est pas écrasé
 			// par exemple, si entity_id est trouvé dans $customer, même si entity_id est trouvé dans $billing,
 			// c'est bien l'entity_id de customer qui est utilisé
-			$allow = Mage::getStoreConfigFlag('maillog/sync/send') ? Mage::helper('maillog')->canSend($dat) : false;
-			$data  = $this->getSystem()->mapFields($customer);
-			$data += $this->getSystem()->mapFields($billing);
-			$data += $this->getSystem()->mapFields($shipping);
-			$data += $this->getSystem()->mapFields($subscriber);
-			$data += $this->getSystem()->mapFields($object);
+			$allow  = Mage::getStoreConfigFlag('maillog_sync/general/send') ? Mage::helper('maillog')->canSend(...$info) : false;
+			$system = Mage::helper('maillog')->getSystem();
+			$data   = $system->mapFields($customer);
+			$data  += $system->mapFields($billing);
+			$data  += $system->mapFields($shipping);
+			$data  += $system->mapFields($subscriber);
+			$data  += $system->mapFields($object);
 
 			if ($allow !== true) {
 				$this->setData('duration', time() - $now);
@@ -101,7 +104,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$this->save();
 			}
 			else if ($send) {
-				$result = $this->getSystem()->updateCustomer($data);
+				$result = $system->updateCustomer($data);
 				$this->setData('duration', time() - $now);
 				$this->saveAllData($data, $result);
 			}
@@ -113,7 +116,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			Mage::logException($e);
 		}
 
-		return !empty($data) ? $data : null;
+		return empty($data) ? null : $data;
 	}
 
 	public function deleteNow() {
@@ -124,7 +127,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 		// 0 action : 1 type : 2 id : 3 ancien-email : 4 email
 		// 0 action : 1 type : 2 id : 3              : 4 email
-		$dat = explode(':', $this->getData('action'));
+		$info = explode(':', $this->getData('action'));
 
 		try {
 			$this->setData('status', 'running');
@@ -132,11 +135,12 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 			// simulation du client
 			$customer = Mage::getModel('customer/customer');
-			$customer->setOrigData('email', $dat[4]);
-			$customer->setData('email', $dat[4]);
+			$customer->setOrigData('email', $info[4]);
+			$customer->setData('email', $info[4]);
 
-			$allow = Mage::getStoreConfigFlag('maillog/sync/send') ? Mage::helper('maillog')->canSend($dat) : false;
-			$data  = $this->getSystem()->mapFields($customer);
+			$allow  = Mage::getStoreConfigFlag('maillog_sync/general/send') ? Mage::helper('maillog')->canSend(...$info) : false;
+			$system = Mage::helper('maillog')->getSystem();
+			$data   = $system->mapFields($customer);
 
 			if ($allow !== true) {
 				$this->setData('duration', time() - $now);
@@ -146,7 +150,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$this->save();
 			}
 			else {
-				$result = $this->getSystem()->deleteCustomer($data);
+				$result = $system->deleteCustomer($data);
 				$this->setData('duration', time() - $now);
 				$this->saveAllData($data, $result);
 			}
@@ -155,13 +159,12 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			Mage::logException($e);
 		}
 
-		return !empty($data) ? $data : null;
+		return empty($data) ? null : $data;
 	}
-
 
 	// gestion des données des objets et de l'historique
 	// si le saveAllData est fait dans une transaction, s'il y a un rollback, tout est perdu
-	// dans ce cas ne pas oublier de refaire un save, par exemple
+	// dans ce cas ne pas oublier de refaire un saveAllData
 	private function initSpecialObject($customer) {
 
 		$object = new Varien_Object();
@@ -170,57 +173,55 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		if (!empty($id = $customer->getId())) {
 
 			$database = Mage::getSingleton('core/resource');
-			$read     = $database->getConnection('core_read');
+			$read = $database->getConnection('core_read');
 
 			// customer_group_code (lecture express depuis la base de données)
-			$select = $read->select()
+			$name = $read->fetchOne($read->select()
 				->from($database->getTableName('customer_group'), 'customer_group_code')
 				->where('customer_group_id = ?', $customer->getGroupId())
-				->limit(1);
+				->limit(1));
 
-			$name = $read->fetchOne($select);
 			$object->setData('group_name', $name);
 
 			// login_at (lecture express depuis la base de données)
 			// si non disponible, utilise la date d'inscription du client
-			$select = $read->select()
+			$last = $read->fetchOne($read->select()
 				->from($database->getTableName('log_customer'), 'login_at')
 				->where('customer_id = ?', $id)
 				->order('log_id desc')
-				->limit(1);
+				->limit(1));
 
-			$last = $read->fetchOne($select);
 			$object->setData('last_login_date', (mb_strlen($last) > 10) ? $last : $customer->getData('created_at'));
 
 			// commandes
-			$orders = Mage::getResourceModel('sales/order_collection');
-			$orders->addFieldToFilter('customer_id', $id);
-			$orders->addFieldToFilter('status', array('in' => array('processing', 'complete', 'closed')));
-			$orders->setOrder('created_at', 'desc');
+			$orders = Mage::getResourceModel('sales/order_collection')
+				->addFieldToFilter('customer_id', $id)
+				->addFieldToFilter('state', ['in' => ['processing', 'complete', 'closed']])
+				->setOrder('created_at', 'desc');
 
 			if (!empty($numberOfOrders = $orders->getSize())) {
 
 				$last = $orders->getLastItem();
 				$object->setData('first_order_date',        $last->getData('created_at'));
-				$object->setData('first_order_total',       floatval($last->getData('base_grand_total')));
-				$object->setData('first_order_total_notax', floatval($last->getData('base_grand_total') - $last->getData('base_tax_amount')));
+				$object->setData('first_order_total',       (float) $last->getData('base_grand_total'));
+				$object->setData('first_order_total_notax', (float) $last->getData('base_grand_total') - $last->getData('base_tax_amount'));
 
 				$first = $orders->getFirstItem();
 				$object->setData('last_order_date',        $first->getData('created_at'));
-				$object->setData('last_order_total',       floatval($first->getData('base_grand_total')));
-				$object->setData('last_order_total_notax', floatval($first->getData('base_grand_total') - $first->getData('base_tax_amount')));
+				$object->setData('last_order_total',       (float) $first->getData('base_grand_total'));
+				$object->setData('last_order_total_notax', (float) $first->getData('base_grand_total') - $first->getData('base_tax_amount'));
 
 				$orders->clear();
-				$orders->getSelect()->columns(array(
+				$orders->getSelect()->columns([
 					'sumincltax' => 'SUM(main_table.base_grand_total)',
 					'sumexcltax' => 'SUM(main_table.base_grand_total) - SUM(main_table.base_tax_amount)'
-				))->group('customer_id');
+				])->group('customer_id');
 
 				$item = $orders->getFirstItem();
-				$object->setData('average_order_amount',       floatval($item->getData('sumincltax') / $numberOfOrders));
-				$object->setData('average_order_amount_notax', floatval($item->getData('sumexcltax') / $numberOfOrders));
-				$object->setData('total_order_amount',         floatval($item->getData('sumincltax')));
-				$object->setData('total_order_amount_notax',   floatval($item->getData('sumexcltax')));
+				$object->setData('average_order_amount',       (float) $item->getData('sumincltax') / $numberOfOrders);
+				$object->setData('average_order_amount_notax', (float) $item->getData('sumexcltax') / $numberOfOrders);
+				$object->setData('total_order_amount',         (float) $item->getData('sumincltax'));
+				$object->setData('total_order_amount_notax',   (float) $item->getData('sumexcltax'));
 				$object->setData('number_of_orders',           $numberOfOrders);
 			}
 		}
@@ -230,7 +231,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 	private function transformDataForHistory($data, $asString = true) {
 
-		$inline = array();
+		$inline = [];
 
 		if (is_array($data)) {
 			foreach ($data as $key => $value) {
@@ -256,7 +257,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		if (!empty($request) && is_array($request)) {
 
 			ksort($request);
-			$mapping = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/sync/mapping_config')));
+			$mapping = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/general/mapping_config')));
 			$lines   = explode("\n", $this->transformDataForHistory($request));
 
 			foreach ($mapping as $map) {
@@ -264,13 +265,13 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$tmp = trim(array_shift($map));
 				foreach ($lines as &$line) {
 					// emarsys  [2] Test
-					if (mb_strpos($line, '['.$tmp.']') !== false) {
-						$line = $line.((mb_substr($line, -2) == '] ') ? ' --' : '').' ('.implode(' ', $map).')';
+					if (mb_stripos($line, '['.$tmp.']') !== false) {
+						$line .= ((mb_substr($line, -2) == '] ') ? ' --' : '').' ('.implode(' ', $map).')';
 						break;
 					}
 					// dolist   [Fields][x][Name] lastname
-					else if (mb_strpos($line, '][Name] '.$tmp) !== false) {
-						$line = $line.' ('.implode(' ', $map).')';
+					if (mb_stripos($line, '][Name] '.$tmp) !== false) {
+						$line .= ' ('.implode(' ', $map).')';
 						break;
 					}
 				}
@@ -280,8 +281,9 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			$this->setData('request', implode("\n", $lines));
 		}
 
-		$status   = $this->getSystem()->checkResponse($response) ? 'success' : 'error';
-		$response = $this->getSystem()->extractResponseData($response, true);
+		$system   = Mage::helper('maillog')->getSystem();
+		$status   = $system->checkResponse($response) ? 'success' : 'error';
+		$response = $system->extractResponseData($response, true);
 
 		$this->setData('response', $this->transformDataForHistory($response));
 		$this->setData('sync_at', date('Y-m-d H:i:s'));

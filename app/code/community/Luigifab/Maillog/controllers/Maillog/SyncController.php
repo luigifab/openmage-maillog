@@ -1,9 +1,9 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/15/01/2019
+ * Updated L/23/09/2019
  *
- * Copyright 2015-2019 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * https://www.luigifab.fr/magento/maillog
@@ -32,16 +32,14 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 		}
 		else {
 			$this->setUsedModuleName('Luigifab_Maillog');
-			$lock = Mage::helper('maillog')->getLock();
 
-			if (is_file($lock)) {
+			$lock = Mage::helper('maillog')->getLock();
+			if (is_file($lock))
 				Mage::getSingleton('adminhtml/session')->addNotice($this->__('All customers data synchronization is in progress.'));
-				Mage::getSingleton('adminhtml/session')->addNotice('➤ '.file_get_contents($lock).' <script type="text/javascript">self.setTimeout(function () { self.location.reload(); }, 5000);</script>');
-			}
 
 			$last = ''; /* Mage::getResourceModel('maillog/sync_collection')
-				->addFieldToSort('created_at', 'desc')
-				->addFieldToFilter('batch', array('notnull' => true))
+				->addFieldToFilter('batch', ['notnull' => true])
+				->setOrder('created_at', 'desc')
 				->setPageLimit(1)
 				->getFirstItem()
 				->getData('batch'); */
@@ -63,8 +61,8 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 
 		if (!empty($file)) {
 
-			$ip = !empty(getenv('HTTP_X_FORWARDED_FOR')) ? explode(',', getenv('HTTP_X_FORWARDED_FOR')) : false;
-			$ip = !empty($ip) ? trim(array_pop($ip)) : trim(getenv('REMOTE_ADDR'));
+			$ip = empty(getenv('HTTP_X_FORWARDED_FOR')) ? false : explode(',', getenv('HTTP_X_FORWARDED_FOR'));
+			$ip = empty($ip) ? getenv('REMOTE_ADDR') : array_pop($ip);
 			$ip = (preg_match('#^::f{4}:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#', $ip) === 1) ? mb_substr($ip, 7) : $ip;
 
 			Mage::log(sprintf('Client %s download %s', $ip, $file), Zend_Log::DEBUG, 'maillog.log');

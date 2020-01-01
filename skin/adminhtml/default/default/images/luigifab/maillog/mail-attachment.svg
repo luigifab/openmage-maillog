@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" version="1.1">
 <!-- Public Domain https://en.wikipedia.org/wiki/File:Mail-attachment.svg -->
-<!-- python scour -enable-id-stripping -indent=tab -strip-xml-prolog -->
 <defs>
 <linearGradient id="lg5789" y2="29.859" gradientUnits="userSpaceOnUse" x2="20.605" y1="5.7753" x1="23.506">
 <stop stop-color="#d3d7cf" offset="0"/>
