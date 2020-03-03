@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/24/09/2019
+ * Updated M/21/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -32,11 +32,6 @@ class Luigifab_Maillog_Model_Resource_Sync_Collection extends Mage_Core_Model_Re
 
 	protected function _afterLoad() {
 		$this->getConnection()->query('SET NAMES '.$this->getResource()->_getCharacterSet().';');
-		return $this;
-	}
-
-	public function setPageLimit(int $itemCountPerPage, int $offset = 1) {
-		$this->getSelect()->limit($itemCountPerPage, $itemCountPerPage * ($offset - 1));
 		return $this;
 	}
 

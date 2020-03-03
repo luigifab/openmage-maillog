@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated J/07/11/2019
+ * Updated L/24/02/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -20,128 +20,186 @@
  */
 
 $config = $this->getConfig();
-$text   = addslashes($this->__('Are you sure?'));
+$help   = $this->helper('maillog');
+$base   = 'groups[general][fields][special_config][value]';
 ?>
 
-<tr id="<?php echo $this->getHtmlId() ?>_head">
-	<td class="label" colspan="2"><?php echo $this->getLabel() ?></td>
-	<td class="scope-label"><?php echo $this->getScopeLabel() ?></td>
-	<td></td>
-</tr>
 <tr id="<?php echo $this->getHtmlId() ?>" class="grid">
 	<td colspan="4">
+		<code style="display:block; margin:0.5em 0 1.5em; font-size:0.9em; line-height:1.4em;">
+			{{picture code="..." file="..." attribute="..." helper="..."}} / Mage::helper('maillog/picture')->getTag(['code' => '...', ...]);
+			<br /><em style="text-decoration:underline;">for a product image (default helper is catalog/image and default attribute is image)</em>
+			<br />{{picture code="..." file="/x/y/xyz.xyz" id="example"}}
+			<br />{{picture code="..." file="/x/y/xyz.xyz" attribute="small_image" id="example"}}
+			<br />{{picture code="..." product="id|sku" id="example"}}
+			<br />{{picture code="..." product="id|sku" attribute="small_image" id="example"}}
+			<?php if ($this->helper('core')->isModuleEnabled('Luigifab_Apijs')): ?>
+				<br /><em style="text-decoration:underline;">for a category image (default helper is catalog/image)</em>
+				<br />{{picture code="..." file="xyz.xyz" attribute="category" id="example"}}
+				<br />{{picture code="..." category="id" id="example"}}
+				<br /><em style="text-decoration:underline;">for a wysiwyg image (default helper is catalog/image)</em>
+				<br />{{picture code="..." file="wysiwyg/xyz.xyz" attribute="wysiwyg" id="example"}}
+			<?php endif ?>
+		</code>
 		<table cellspacing="0" class="data border data-table" id="pictureConfig">
 			<thead>
 				<tr class="headings">
-					<th>code</th>
-					<th></th>
-					<th>config</th>
-					<th>taille</th>
-					<th><?php echo $this->__('Action') ?></th>
+					<th><?php echo $this->__('Code') ?> / <?php echo $this->__('Description') ?></th>
+					<th><?php echo $this->__('Breakpoint / Size (width x height)') ?></th>
 				</tr>
 			</thead>
 			<tfoot>
 				<tr>
-					<td colspan="5">
-						<button type="button" class="scalable add" onclick="maillog.addPicture();">
-							<span><?php echo $this->__('Add') ?></span>
-						</button>
+					<td colspan="2">
+						<button type="button" class="scalable add" onclick="maillog.addPicture(this);"><span><?php echo $this->__('Add') ?></span></button>
 					</td>
 				</tr>
 			</tfoot>
 			<tbody>
-				<tr><!-- template supprimé par maillog.start() en javascript -->
-					<td rowspan="3">
-						<input type="text" name="groups[general][fields][special_picture][value][0][c]"
-							value="pouet" class="input-text c" />
-					</td>
-					<td></td>
-					<td>image de base</td>
+				<tr class="template" data-next="<?php echo empty($config) ? 0 : (max(array_keys($config)) + 1) ?>">
+					<!-- supprimé par maillog.start en js -->
 					<td>
-						<input type="number" name="groups[general][fields][special_picture][value][0][w]"
-							min="0" step="1" value="260" class="input-text w" />px x
-						<input type="number" name="groups[general][fields][special_picture][value][0][h]"
-							min="0" step="1" value="200" class="input-text h" />px
+						<input type="text"
+							name="<?php echo $base ?>[IIDDXX][c]"
+							class="input-text required-entry validate-alphanum" />
+						<textarea
+							name="<?php echo $base ?>[IIDDXX][d]"
+							rows="3" cols="20" class="textarea"></textarea>
+						<button type="button" class="slink" onclick="maillog.deletePicture(this);"><?php echo $this->__('Delete') ?></button>
 					</td>
 					<td>
-						<button type="button" class="add" onclick="maillog.addPicture(this);"><?php echo $this->__('Add') ?></button>
-						<button type="button" class="add" onclick="maillog.previewPicture(this);"><?php echo $this->__('Preview') ?></button>
-						<button type="button" class="delete" onclick="maillog.deletePicture(this);"><?php echo $this->__('Delete') ?></button>
+						<ul>
+							<li>
+								<div class="bp">
+									default
+								</div>
+								<div class="sz">
+									<input type="number"
+										name="<?php echo $base ?>[IIDDXX][0][w]"
+										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									px x
+									<input type="number"
+										name="<?php echo $base ?>[IIDDXX][0][h]"
+										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									px
+								</div>
+								<div class="btn">
+									<button type="button" class="slink" onclick="maillog.addBreak(this, IIDDXX);"><?php echo $this->__('Add') ?></button>
+								</div>
+							</li>
+							<li class="breakpoint">
+								<div class="bp">
+									max-width: <input type="number"
+										name="<?php echo $base ?>[IIDDXX][KKEEYY][b]"
+										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									px
+								</div>
+								<div class="sz">
+									<input type="number"
+										name="<?php echo $base ?>[IIDDXX][KKEEYY][w]"
+										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									px x
+									<input type="number"
+										name="<?php echo $base ?>[IIDDXX][KKEEYY][h]"
+										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									px
+								</div>
+								<div class="btn">
+									<button type="button" class="slink" onclick="maillog.deleteBreak(this);"><?php echo $this->__('Delete') ?></button>
+								</div>
+							</li>
+						</ul>
 					</td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type="number" name="groups[general][fields][special_picture][value][1][b]"
-							min="0" step="1" value="380" class="input-text b" />
-						<select name="groups[general][fields][special_picture][value][1][u]" class="u">
-							<option value="px">px</option>
-							<option value="vw">vw</option>
-						</select>
-					</td>
-					<td>
-						<input type="number" name="groups[general][fields][special_picture][value][1][w]"
-							min="0" step="1" value="160" class="input-text w" />px x
-						<input type="number" name="groups[general][fields][special_picture][value][1][h]"
-							min="0" step="1" value="123" class="input-text h" />px
-					</td>
-					<td></td>
-				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type="number" name="groups[general][fields][special_picture][value][2][b]"
-							min="0" step="1" value="320" class="input-text b" />
-						<select name="groups[general][fields][special_picture][value][2][u]" class="u">
-							<option value="px">px</option>
-							<option value="vw">vw</option>
-						</select>
-					</td>
-					<td>
-						<input type="number" name="groups[general][fields][special_picture][value][2][w]"
-							min="0" step="1" value="130" class="input-text w" />px x
-						<input type="number" name="groups[general][fields][special_picture][value][2][h]"
-							min="0" step="1" value="100" class="input-text h" />px
-					</td>
-					<td></td>
-				</tr>
-				<?php foreach ([] as $picture): ?>
+				<?php foreach ($config as $idx => $data): ?>
+					<tr>
+						<td>
+							<input type="text"
+								name="<?php echo $base ?>[<?php echo $idx ?>][c]"
+								value="<?php echo $data['c'] ?>" class="input-text required-entry validate-alphanum" />
+							<textarea rows="3" cols="20"
+								name="<?php echo $base ?>[<?php echo $idx ?>][d]"
+								class="textarea" spellcheck="false"><?php echo $help->escapeEntities($data['d']) ?></textarea>
+							<button type="button" class="slink" onclick="maillog.deletePicture(this);"><?php echo $this->__('Delete') ?></button>
+						</td>
+						<td>
+							<ul>
+								<li>
+									<div class="bp">
+										default
+									</div>
+									<div class="sz">
+										<input type="number"
+											name="<?php echo $base ?>[<?php echo $idx ?>][0][w]"
+											min="0" step="1" value="<?php echo $data[0]['w'] ?>" class="input-text required-entry validate-greater-than-zero" />
+										px x
+										<input type="number"
+											name="<?php echo $base ?>[<?php echo $idx ?>][0][h]"
+											min="0" step="1" value="<?php echo $data[0]['h'] ?>" class="input-text required-entry validate-greater-than-zero" />
+										px
+									</div>
+									<div class="btn">
+										<button type="button" class="slink" onclick="maillog.addBreak(this, <?php echo $idx ?>);"><?php echo $this->__('Add') ?></button>
+									</div>
+								</li>
+								<?php foreach ($data as $key => $subdata): ?>
+									<?php if (!is_numeric($key) || !is_array($subdata) || empty($key)) continue; ?>
+									<li class="breakpoint">
+										<div class="bp">
+											max-width: <input type="number"
+												name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][b]"
+												min="0" step="1" value="<?php echo $subdata['b'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											px
+										</div>
+										<div class="sz">
+											<input type="number"
+												name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][w]"
+												min="0" step="1" value="<?php echo $subdata['w'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											px x
+											<input type="number"
+												name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][h]"
+												min="0" step="1" value="<?php echo $subdata['h'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											px
+										</div>
+										<div class="btn">
+											<button type="button" class="slink" onclick="maillog.deleteBreak(this);"><?php echo $this->__('Delete') ?></button>
+										</div>
+									</li>
+								<?php endforeach ?>
+							</ul>
+						</td>
+					</tr>
 				<?php endforeach ?>
 			</tbody>
 		</table>
-		<div id="picturePreview">
-			<div class="inf">
-				<span class="s">-</span>
-				largeur de l'affichage
-				<span class="w">-</span>
-			</div>
-			<div style="margin-left:381px;" class="max">
-				<span class="s">C</span>
-				<span class="l">381</span>
-				<span class="w"></span>
-			</div>
-			<div class="mid" style="margin-left:321px; width:calc(380px - 321px);">
-				<span class="s">B</span>
-				<span class="l">321</span>
-				<span class="r">380</span>
-				<span class="w"></span>
-			</div>
-			<div class="min" style="width:320px;">
-				<span class="s">A</span>
-				<span class="l">0</span>
-				<span class="r">320</span>
-				<span class="w"></span>
-			</div>
-		</div>
 
-		<pre id="pictureCodePreview">
-{{picture config="pouet" source=".../image.jpg"}}
-&lt;picture&gt;
-C &lt;source media="(min-width:381px)" srcset="260x200.png 1x, 520x400.png 2x"&gt;
-B &lt;source media="(max-width:380px)" srcset="160x123.png 1x, 320x246.png 2x"&gt;
-A &lt;source media="(max-width:320px)" srcset="130x100.png 1x, 260x200.png 2x"&gt;
-&lt;img src="260x200.png"&gt;
-&lt;/picture&gt;
-		</pre>
 	</td>
 </tr>
+<?php // debug local ?>
+<?php if (!empty(Mage::app()->getRequest()->getParam('test'))): ?>
+	<tr>
+		<td colspan="4">
+			<pre style="padding:0.5em; white-space:pre-wrap; background-color:beige;">
+<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+	$help->filterMail(new Varien_Object(), '{{picture code="test" file="/6/0/605003.jpg"}}', [])
+)) ?>
+
+<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+	$help->filterMail(new Varien_Object(), '{{picture code="test" attribute="category" file="605003.jpg"}}', [])
+)) ?>
+
+<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+	$help->filterMail(new Varien_Object(), '{{picture code="test" attribute="wysiwyg" file="wysiwyg/abc/605003.jpg"}}', [])
+)) ?>
+
+<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+	$this->helper('maillog/picture')->getTag(['code' => 'test', 'product' => 2])
+)) ?>
+
+<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+	$this->helper('maillog/picture')->getTag(['code' => 'test', 'category' => 9])
+)) ?>
+			</pre>
+		</td>
+	</tr>
+<?php endif ?>

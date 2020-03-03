@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/15/10/2019
+ * Updated J/16/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -26,7 +26,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 	// https://api.emarsys.net/api-demo/
 
 	// liste des locales par rapport à ce qui existe sur Emarsys
-	private $locales = [
+	protected $locales = [
 		'ar_DZ' => 40, 'ar_EG' => 40, 'ar_KW' => 40, 'ar_MA' => 40, 'ar_SA' => 40,
 		'bg_BG' => 22, 'cs_CZ' => 15, 'da_DK' => 12, 'de_AT' => 2,  'de_CH' => 2,
 		'de_DE' => 2,  'el_GR' => 45, 'en_AU' => 1,  'en_CA' => 1,  'en_GB' => 1,
@@ -43,7 +43,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 	];
 
 	// liste des pays par rapport à ce qui existe sur Emarsys
-	private $countries = [
+	protected $countries = [
 		'AD' => 4,   'AE' => 183, 'AF' => 1,   'AG' => 6,   'AL' => 2,   'AM' => 8,
 		'AN' => 204, 'AO' => 5,   'AR' => 7,   'AT' => 10,  'AU' => 9,   'AZ' => 11,
 		'BA' => 22,  'BB' => 15,  'BD' => 14,  'BE' => 17,  'BF' => 27,  'BG' => 26,
@@ -236,7 +236,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		$timestamp = gmdate('c');
 		$nonce     = md5(random_int(1000000000000000, 9999999999999999));
 		$password  = Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/general/api_password'));
-		$password  = base64_encode(sha1($nonce.$timestamp.$password, false));
+		$password  = base64_encode(sha1($nonce.$timestamp.$password));
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);

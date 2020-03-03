@@ -1,6 +1,6 @@
 <?php
 /**
- * Created D/22/03/2015
+ * Created M/21/01/2020
  * Updated M/21/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
@@ -19,28 +19,21 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Model_Resource_Email_Collection extends Mage_Core_Model_Resource_Db_Collection_Abstract {
+interface Luigifab_Maillog_Model_Interface {
 
-	public function _construct() {
-		$this->_init('maillog/email');
-	}
+	public function getType();
 
-	protected function _beforeLoad() {
-		$this->getConnection()->query('SET NAMES utf8mb4;');
-		return $this;
-	}
+	public function getFields();
 
-	protected function _afterLoad() {
-		$this->getConnection()->query('SET NAMES '.$this->getResource()->_getCharacterSet().';');
-		return $this;
-	}
+	public function mapFields($object);
 
-	public function deleteAll() {
+	public function updateCustomer(&$data);
 
-		$where = $this->getSelect()->getPart(Zend_Db_Select::WHERE);
-		if (is_array($where) && !empty($where))
-			Mage::getSingleton('core/resource')->getConnection('core_write')->delete($this->getMainTable(), implode(' ', $where));
+	public function deleteCustomer(&$data);
 
-		return $this;
-	}
+	public function updateCustomers(&$data);
+
+	public function checkResponse($data);
+
+	public function extractResponseData($data, $forHistory = false, $multiple = false);
 }

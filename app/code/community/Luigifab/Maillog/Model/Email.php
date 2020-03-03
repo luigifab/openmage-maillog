@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/09/11/2019
+ * Updated S/01/02/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -108,7 +108,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		}
 
 		$this->setData('mail_body', trim($body));
-		$this->setData('mail_parts', !empty($parts) ? gzencode(serialize($parts), 9) : null);
+		$this->setData('mail_parts', empty($parts) ? null : gzencode(serialize($parts), 9));
 	}
 
 	private function cleanWithTidy($html) {
@@ -152,6 +152,8 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		], $html);
 	}
 
+
+	// action
 	public function sendNow() {
 
 		$now = time();
@@ -225,8 +227,9 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				mb_strlen($this->getData('mail_parameters'))           // utilise les paramètres originaux
 			);
 
-			// action
-			if (($allow !== true) || Mage::getSingleton('maillog/source_bounce')->isBounce($email)) {
+			// action (sauf si l'email est vide)
+			$empty = empty($this->getData('mail_body')) || empty($this->getData('encoded_mail_subject'));
+			if ($empty || ($allow !== true) || Mage::getSingleton('maillog/source_bounce')->isBounce($email)) {
 				$this->setData('status', $allow ? 'bounce' : 'notsent');
 				$this->setData('duration', time() - $now);
 				$this->save();
@@ -338,6 +341,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					$design->getSkinUrl('images/luigifab/maillog/humanity-file.svg').'"); }'."\n".
 				'body > ul.attachments li a[type="application/pdf"] { background-image:url("'.
 					$design->getSkinUrl('images/luigifab/maillog/humanity-pdf.svg').'"); }'."\n".
+				'body > p.emailold { margin:6em; text-align:center; font-size:13px; color:#E41101; }'."\n".
 				'body > pre { margin:1em; white-space:pre-wrap; }'."\n".
 				'@media print {'."\n".
 				' body > ul.attachments { font-size:0.6rem; }'."\n".
@@ -399,9 +403,8 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 		// mail supprimé
 		// deleted=1 via cleanOldData()
-		if (!empty($this->getData('deleted'))) {
-			$html[] = '<p style="margin:6em; text-align:center; font-size:13px; color:#E41101;">'.$help->__('Sorry, your email is too old, it is not available online anymore.').'</p>';
-		}
+		if (!empty($this->getData('deleted')))
+			$html[] = '<p class="emailold">'.$help->__('Sorry, your email is too old, it is not available online anymore.').'</p>';
 
 		if ($newLocale != $oldLocale)
 			Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);

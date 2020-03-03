@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated L/23/09/2019
+ * Updated M/21/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -40,7 +40,7 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 			$last = ''; /* Mage::getResourceModel('maillog/sync_collection')
 				->addFieldToFilter('batch', ['notnull' => true])
 				->setOrder('created_at', 'desc')
-				->setPageLimit(1)
+				->setPageSize(1)
 				->getFirstItem()
 				->getData('batch'); */
 

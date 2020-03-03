@@ -1,6 +1,6 @@
 /**
  * Created D/22/03/2015
- * Updated M/10/12/2019
+ * Updated S/04/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -68,32 +68,23 @@ body.adminhtml-maillog-sync-index table.data div.details:last-child { margin-bot
 
 #maillog_sync_general option.has { font-weight:700; }
 
-#row_maillog_general_special_config ul li:hover { background-color:#DEDEDE; }
+#row_maillog_general_special_config li:hover { background-color:#DEDEDE; }
 #row_maillog_general_special_config ul span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
 #row_maillog_general_special_config ul input { margin-right:5px; width:60px; height:15px; cursor:pointer; }
 #row_maillog_general_special_config ul select { margin-right:5px; width:136px; }
 
-#row_maillog_general_special_config ul button {
-	margin:0 5px 0 0; padding:0; vertical-align:middle;
-	font-size:12px; font-weight:400; color:inherit; border:0; background:none;
-}
-
-#maillog_directives_general .form-list { display:none; }
-
-/* #pictureConfig { width:100%; }
-#pictureConfig input { width:5em; }
-#pictureConfig select { width:5em; }
-#pictureConfig tbody tr:hover { background:none !important; }
-
-#picturePreview { position:relative; padding:0 6em 0 2em; text-align:center; border:1px solid black; background-color:white; }
-#picturePreview .inf { height:1.8em; line-height:1.8em; border-left:1px solid black; }
-#picturePreview .max { height:1.8em; line-height:1.8em; border-left:1px solid black; }
-#picturePreview .mid { height:1.8em; line-height:1.8em; border-left:1px solid black; border-right:1px solid black; }
-#picturePreview .min { height:1.8em; line-height:1.8em; border-left:1px solid black; border-right:1px solid black; }
-#picturePreview .s { position:absolute; left:0; width:2em; border-right:1px solid black; background-color:#DDD; }
-#picturePreview .l { float:left; }
-#picturePreview .r { float:right; }
-#picturePreview .w { position:absolute; right:0; width:6em; border-right:1px solid black; background-color:#DDD; } */
+#row_maillog_directives_general_special_config tr.template { display:none; }
+#row_maillog_directives_general_special_config textarea { display:block; margin:0.3em 0; width:16em; color:gray; }
+#row_maillog_directives_general_special_config input { width:5em; }
+#row_maillog_directives_general_special_config .validation-advice { position:absolute; display:none; max-width:20em; background-color:white; }
+#row_maillog_directives_general_special_config .validation-failed { border-color:red; }
+#row_maillog_directives_general_special_config .validation-failed:hover ~ .validation-advice { display:block; }
+#row_maillog_directives_general_special_config tr td:first-child input { display:block; width:16em; }
+#row_maillog_directives_general_special_config li:hover { background-color:#DEDEDE; }
+#row_maillog_directives_general_special_config li { display:flex; white-space:nowrap; }
+#row_maillog_directives_general_special_config li div.bp { min-width:14em; }
+#row_maillog_directives_general_special_config li div.sz { min-width:17em; }
+#row_maillog_directives_general_special_config li div.btn { min-width:9em; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& statut &&& */
 .maillog-status {

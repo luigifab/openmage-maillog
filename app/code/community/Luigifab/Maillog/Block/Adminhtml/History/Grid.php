@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/17/10/2019
+ * Updated J/23/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -74,7 +74,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return parent::_prepareCollection();
 	}
 
-	protected function _addColumnFilterToCollection($column) {
+	protected function _addColumnFilterToCollection(object $column) {
 
 		if (in_array($column->getId(), ['mail_recipients', 'mail_subject'])) {
 			$words = explode(' ', $column->getFilter()->getValue());
@@ -237,7 +237,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	}
 
 
-	public function getChoices($onlyIds = false) {
+	public function getChoices(bool $onlyIds = false) {
 		if (is_array($this->getRequest()->getPost('choice')))
 			return $this->getRequest()->getPost('choice');
 		return $onlyIds ? [67667] : [67667 => ['position' => 5]];
@@ -248,17 +248,17 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		// embed tab
 		if (is_object($order = Mage::registry('current_order')))
 			return 'maillog_order_grid_'.$order->getId();
-		else if (is_object($customer = Mage::registry('current_customer')))
+		if (is_object($customer = Mage::registry('current_customer')))
 			return 'maillog_customer_grid_'.$customer->getId();
 
 		return parent::getId();
 	}
 
-	public function getRowClass($row) {
+	public function getRowClass(object $row) {
 		return empty($row->getData('mail_parts')) ? '' : 'parts';
 	}
 
-	public function getGridUrl($params = []) {
+	public function getGridUrl(array $params = []) {
 
 		// embed tab
 		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
@@ -269,7 +269,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return parent::getGridUrl($params);
 	}
 
-	public function getRowUrl($row) {
+	public function getRowUrl(object $row) {
 
 		// embed tab
 		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {

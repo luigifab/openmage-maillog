@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated S/19/10/2019
+ * Updated J/16/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -35,6 +35,8 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		return $this;
 	}
 
+
+	// action
 	public function updateNow($send = true) {
 
 		$now = time();
@@ -161,6 +163,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 		return empty($data) ? null : $data;
 	}
+
 
 	// gestion des données des objets et de l'historique
 	// si le saveAllData est fait dans une transaction, s'il y a un rollback, tout est perdu

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/24/08/2017
- * Updated M/20/08/2019
+ * Updated M/21/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -57,6 +57,7 @@ class Luigifab_Maillog_Model_Source_Bounce extends Mage_Eav_Model_Entity_Attribu
 				$data = Mage::getResourceModel('customer/customer_collection')
 					->addAttributeToFilter('email', $email)
 					->addAttributeToSelect('is_bounce')
+					->setPageSize(1)
 					->getFirstItem()
 					->getData('is_bounce');
 			}

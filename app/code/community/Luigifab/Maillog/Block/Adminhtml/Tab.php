@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated D/22/09/2019
+ * Updated J/23/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -38,12 +38,12 @@ class Luigifab_Maillog_Block_Adminhtml_Tab extends Mage_Adminhtml_Block_Abstract
 
 		if (!Mage::getSingleton('admin/session')->isAllowed('tools/maillog'))
 			return false;
-		else if (is_object(Mage::registry('current_order')) && !empty(Mage::registry('current_order')->getId()))
+		if (is_object(Mage::registry('current_order')) && !empty(Mage::registry('current_order')->getId()))
 			return true;
-		else if (is_object(Mage::registry('current_customer')) && !empty(Mage::registry('current_customer')->getId()))
+		if (is_object(Mage::registry('current_customer')) && !empty(Mage::registry('current_customer')->getId()))
 			return true;
-		else
-			return false;
+
+		return false;
 	}
 
 

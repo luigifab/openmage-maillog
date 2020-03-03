@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/09/11/2019
+ * Updated J/23/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -122,11 +122,12 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		if ($this->getRequest()->getParam('back') == 'order')
 			return $this->getUrl('*/sales_order/view',
 				['order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_order_grid']);
-		else if ($this->getRequest()->getParam('back') == 'customer')
+
+		if ($this->getRequest()->getParam('back') == 'customer')
 			return $this->getUrl('*/customer/edit',
 				['id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_customer_grid']);
-		else
-			return $this->getUrl('*/*/index');
+
+		return $this->getUrl('*/*/index');
 	}
 
 	protected function _prepareLayout() {

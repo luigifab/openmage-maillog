@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/09/11/2015
- * Updated S/28/09/2019
+ * Updated M/21/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -61,7 +61,8 @@ try {
 		$emails = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('mail_parts', ['notnull' => true])
 			->setOrder('email_id', 'desc')
-			->setPageLimit(1000, $p);
+			->setPageSize(1000)
+			->setCurPage($p);
 
 		Mage::log('Update v3.0! Starting update of '.$emails->getSize().' emails (from #'.$emails->getLastItem()->getId().' to #'.$emails->getFirstItem()->getId().') of step '.$p.'...', Zend_Log::INFO, 'maillog.log');
 

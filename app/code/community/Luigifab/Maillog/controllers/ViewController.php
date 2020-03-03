@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated M/20/08/2019
+ * Updated J/23/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -25,20 +25,18 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageLimit(1)
+			->setPageSize(1)
 			->getFirstItem();
 
-		if (!empty($email->getId())) {
-			$html = $email->toHtml($this->getRequest()->getParam('nomark') == '1');
-			$this->getResponse()->setBody($html);
-		}
+		if (!empty($email->getId()))
+			$this->getResponse()->setBody($email->toHtml($this->getRequest()->getParam('nomark') == '1'));
 	}
 
 	public function downloadAction() {
 
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageLimit(1)
+			->setPageSize(1)
 			->getFirstItem();
 
 		if (!empty($email->getId()) && !empty($email->getData('mail_parts'))) {
@@ -64,27 +62,26 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 					if ($type == 'application/pdf')
 						$disp = 'inline; filename="'.$part->filename.'"';
 
-					$this->getResponse()->setHttpResponseCode(200);
-					$this->getResponse()->setHeader('Content-Type', $type, true);
-					$this->getResponse()->setHeader('Content-Length', strlen($data)); // surtout pas de mb_strlen
-					$this->getResponse()->setHeader('Content-Disposition', $disp);
-					$this->getResponse()->setHeader('Last-Modified', date('r'));
-					$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);
-					$this->getResponse()->setBody($data);
-
-					return;
+					return $this->getResponse()
+						->setHttpResponseCode(200)
+						->setHeader('Content-Type', $type, true)
+						->setHeader('Content-Length', strlen($data)) // surtout pas de mb_strlen
+						->setHeader('Content-Disposition', $disp)
+						->setHeader('Cache-Control', 'no-cache, must-revalidate', true)
+						->setHeader('Last-Modified', date('r'))
+						->setBody($data);
 				}
 			}
 		}
 
-		$this->getResponse()->setHttpResponseCode(404);
+		return $this->getResponse()->setHttpResponseCode(404);
 	}
 
 	public function markAction() {
 
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageLimit(1)
+			->setPageSize(1)
 			->getFirstItem();
 
 		if (!empty($email->getId()) && ($email->getData('status') != 'read'))
@@ -93,12 +90,13 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 		// read.gif (image de 1x1 pixel transparente)
 		$data = base64_decode('R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==');
 
-		$this->getResponse()->setHttpResponseCode(200);
-		$this->getResponse()->setHeader('Content-Type', 'image/gif', true);
-		$this->getResponse()->setHeader('Content-Length', strlen($data)); // surtout pas de mb_strlen
-		$this->getResponse()->setHeader('Content-Disposition', 'inline; filename="pixel.gif"');
-		$this->getResponse()->setHeader('Last-Modified', date('r'));
-		$this->getResponse()->setHeader('Cache-Control', 'no-cache, must-revalidate', true);
-		$this->getResponse()->setBody($data);
+		$this->getResponse()
+			->setHttpResponseCode(200)
+			->setHeader('Content-Type', 'image/gif', true)
+			->setHeader('Content-Length', strlen($data)) // surtout pas de mb_strlen
+			->setHeader('Content-Disposition', 'inline; filename="pixel.gif"')
+			->setHeader('Cache-Control', 'no-cache, must-revalidate', true)
+			->setHeader('Last-Modified', date('r'))
+			->setBody($data);
 	}
 }

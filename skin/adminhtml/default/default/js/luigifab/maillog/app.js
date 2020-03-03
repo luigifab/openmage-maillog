@@ -1,6 +1,6 @@
 /**
  * Created J/03/12/2015
- * Updated S/19/10/2019
+ * Updated V/21/02/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -26,9 +26,13 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 	};
 }
 
-var maillog = {
+var maillog = new (function () {
 
-	start: function () {
+	"use strict";
+	this.template = null;
+	this.nextIdx  = 0;
+
+	this.start = function () {
 
 		if (document.getElementById('maillog_sync_bounces_stats_customer')) {
 
@@ -46,48 +50,22 @@ var maillog = {
 			j = parseInt(subscriber.textContent.trim(), 10);
 			subscriber.textContent += ' (' + Math.floor(j * 100 / i) + ' %)';
 		}
-		else if (document.getElementById('pictureConfig')) {
+		else if (document.getElementById('row_maillog_directives_general_special_config')) {
 
 			console.info('maillog.app - hello');
-			var prev, nb = 0, max = 0, html = '';
 
-			document.getElementById('pictureConfig').querySelectorAll('tbody > tr').forEach(function (elem) {
-				if (elem.querySelector('td[rowspan]')) {
-					nb  = parseInt(elem.querySelector('td[rowspan]').getAttribute('rowspan'), 10);
-					max = (380 + 1) + 'px';
-					html += '<div class="max" style="margin-left:' + max + ';">' +
-						'<span class="s">a' + 'A' + '</span>' +
-						'<span class="l">b' + max + '</span>' +
-						'<span class="w">c' + elem.querySelector('.w').value + ' x ' + elem.querySelector('.h').value + '</span>' +
-					'</div>';
-				}
-				else {
-					html += '<div class="mid" style="margin-left:' + 10 + 'px; width:' + 10 + 'px;">' +
-						'<span class="s">a' + 'B' + '</span>' +
-						'<span class="l">b' + prev + '</span>' +
-						'<span class="r">c' + elem.querySelector('.b').value + '</span>' +
-						'<span class="w">d' + elem.querySelector('.w').value + ' x ' + elem.querySelector('.h').value + '</span>' +
-					'</div>';
-					if (--nb < 2) {
-						html += '<div class="min" style="width:' + 10 + 'px;">' +
-							'<span class="s">a' + 'C' + '</span>' +
-							'<span class="l">b0</span>' +
-							'<span class="r">c' + elem.querySelector('.b').value + '</span>' +
-							'<span class="w">d' + elem.querySelector('.w').value + ' x ' + elem.querySelector('.h').value + '</span>' +
-						'</div>';
-					}
-				}
-			});
-
-			document.getElementById('picturePreview').innerHTML += html;
+			var elem = document.querySelector('tr.template');
+			this.template = elem.innerHTML;
+			this.nextIdx  = parseInt(elem.getAttribute('data-next'), 10);
+			elem.parentNode.removeChild(elem);
 		}
-	},
+	};
 
-	add: function () {
+	this.add = function () {
 
-		var sys = document.getElementById('maillog_sync_mapping_system'),
-		    mag = document.getElementById('maillog_sync_mapping_magento'),
-		    cnf = document.getElementById('maillog_sync_mapping_config');
+		var sys = document.getElementById('maillog_sync_general_mapping_system'),
+		    mag = document.getElementById('maillog_sync_general_mapping_magento'),
+		    cnf = document.getElementById('maillog_sync_general_mapping_config');
 
 		if ((sys.value.length > 0) && (mag.value.length > 0)) {
 			cnf.value = (cnf.value + '\n' + sys.value + ':' + mag.value).trim();
@@ -96,41 +74,29 @@ var maillog = {
 			mag.selectedIndex = 0;
 			this.mark();
 		}
-	},
+	};
 
-	mark: function () {
+	this.mark = function () {
 
-		var fields = document.getElementById('maillog_sync_mapping_config').value;
+		var fields = document.getElementById('maillog_sync_general_mapping_config').value;
 
-		document.getElementById('maillog_sync_mapping_system').querySelectorAll('option').forEach(function (elem) {
+		document.getElementById('maillog_sync_general_mapping_system').querySelectorAll('option').forEach(function (elem) {
 			if ((fields.indexOf('\n' + elem.value + ':') > -1) || (fields.indexOf(elem.value + ':') === 0))
 				elem.setAttribute('class', 'has');
 			else
 				elem.removeAttribute('class');
 		});
 
-		document.getElementById('maillog_sync_mapping_magento').querySelectorAll('option').forEach(function (elem) {
+		document.getElementById('maillog_sync_general_mapping_magento').querySelectorAll('option').forEach(function (elem) {
 			if (fields.indexOf(':' + elem.value) > -1)
 				elem.setAttribute('class', 'has');
 			else
 				elem.removeAttribute('class');
 		});
-	},
+	};
 
-	reset: function (elem, color) {
-		var root = elem.parentNode;
-		root.querySelectorAll('select')[0].selectedIndex = 0;
-		root.querySelectorAll('select')[1].selectedIndex = 0;
-		root.querySelectorAll('input')[0].value = color.toLowerCase();
-		root.querySelectorAll('input')[1].value = '#000000';
-	},
+	this.iframe = function (elem) {
 
-	remove: function (elem, txt) {
-		if (confirm(txt))
-			elem.parentNode.parentNode.removeChild(elem.parentNode);
-	},
-
-	iframe: function (elem) {
 		try {
 			elem.removeAttribute('onload');
 			elem.contentDocument.body.parentNode.innerHTML = decodeURIComponent(escape(self.atob(elem.firstChild.nodeValue)));
@@ -143,8 +109,64 @@ var maillog = {
 		catch (e) {
 			elem.contentDocument.body.textContent = e;
 		}
-	}
-};
+	};
+
+	this.resetLifetime = function (elem, color) {
+
+		elem = elem.parentNode;
+		elem.querySelectorAll('select')[0].selectedIndex = 0;
+		elem.querySelectorAll('select')[1].selectedIndex = 0;
+		elem.querySelectorAll('input')[0].value = color.toLowerCase();
+		elem.querySelectorAll('input')[1].value = '#000000';
+	};
+
+	this.removeLifetime = function (elem) {
+
+		if (confirm(Translator.translate('Are you sure?')))
+			elem.parentNode.parentNode.removeChild(elem.parentNode);
+	};
+
+	this.addPicture = function (elem) {
+
+		var tpl = document.createElement('tr'), root = elem.parentNode;
+		while (root.nodeName !== 'TABLE')
+			root = root.parentNode;
+
+		root = root.querySelector('tbody');
+
+		tpl.setAttribute('class', '5');
+		tpl.innerHTML = this.template.
+			replace(/IIDDXX/g, this.nextIdx).
+			replace(/KKEEYY/g, 1);
+
+		root.appendChild(tpl);
+		this.nextIdx += 1;
+	};
+
+	this.deletePicture = function (elem) {
+
+		if (confirm(Translator.translate('Are you sure?')))
+			elem.parentNode.parentNode.parentNode.removeChild(elem.parentNode.parentNode);
+	};
+
+	this.addBreak = function (elem, idx) {
+
+		var tpl = document.createElement('tr'), ul = elem.parentNode.parentNode.parentNode;
+
+		tpl.innerHTML = this.template.
+			replace(/IIDDXX/g, idx).
+			replace(/KKEEYY/g, ul.querySelectorAll('li').length);
+
+		ul.appendChild(tpl.querySelector('li.breakpoint'));
+	};
+
+	this.deleteBreak = function (elem) {
+
+		if (confirm(Translator.translate('Are you sure?')))
+			elem.parentNode.parentNode.parentNode.removeChild(elem.parentNode.parentNode);
+	};
+
+})();
 
 if (typeof self.addEventListener == 'function')
 	self.addEventListener('load', maillog.start.bind(maillog));

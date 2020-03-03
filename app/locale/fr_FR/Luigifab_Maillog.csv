@@ -62,6 +62,8 @@
 "If yes, <strong>all</strong> Magento customers not present in the file will be subscribed to the newsletter.","Si oui, <strong>tous</strong> les clients Magento non présents dans le fichier seront inscrits à la newsletter."
 "Number of subscribers","Nombre d'abonnés"
 "They are extraordinary new directives:","Il y a de nouvelles directives extraordinaires :"
+"Picture directive","Directive picture"
+"Show image dimensions","Afficher les dimensions des images"
 "Confirmation request email","Email de demande de confirmation"
 "Subscription confirmation email","Email de confirmation d'abonnement"
 "Unsubscription confirmation email","Email de confirmation de désabonnement"
@@ -138,3 +140,4 @@
 "All emails data","Toutes les données des emails"
 "Background color","Couleur d'arrière plan"
 "Text color","Couleur du texte"
+"Breakpoint / Size (width x height)","<span lang=""en"">Breakpoint</span> / Taille (largeur x hauteur)"

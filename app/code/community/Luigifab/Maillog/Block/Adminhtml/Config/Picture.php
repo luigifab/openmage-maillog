@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated M/20/08/2019
+ * Updated V/03/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -25,23 +25,13 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Picture extends Mage_Adminhtml_Blo
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
-		$config = @unserialize(Mage::getStoreConfig('maillog/maillog_directives/special_picture'));
-		$types  = [];
-
-		if (!empty($config) && is_array($config)) {
-			// ajoute les types configurés ayant disparus
-			foreach ($config as $key => $value) {
-				$type = mb_substr($key, 0, mb_stripos($key, '_'));
-				if (!in_array($type, $types))
-					$types[] = $type;
-			}
-		}
+		$config = @unserialize(Mage::getStoreConfig('maillog_directives/general/special_config'));
+		$config = is_array($config) ? $config : [];
 
 		$this->setHtmlId('row_'.$element->getHtmlId());
 		$this->setScopeLabel($element->getScopeLabel());
 		$this->setLabel($element->getLabel());
 		$this->setConfig($config);
-		$this->setTypes($types);
 
 		return $this->toHtml();
 	}

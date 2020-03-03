@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated D/10/11/2019
+ * Updated D/26/02/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -116,7 +116,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 
 	// CRON maillog_send_report
-	public function sendEmailReport($cron = null, $test = false) {
+	public function sendEmailReport($cron = null, bool $test = false) {
 
 		$oldLocale = Mage::getSingleton('core/translate')->getLocale();
 		$newLocale = Mage::app()->getStore()->isAdmin() ? $oldLocale : Mage::getStoreConfig('general/locale/code');
@@ -411,7 +411,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			return preg_replace('#/[^/]+\.php(\d*)/#', '/index.php$1/', Mage::helper('adminhtml')->getUrl($url, $params));
 	}
 
-	private function sendReportToRecipients(string $locale, array $vars) {
+	private function sendReportToRecipients(string $locale, array $vars = []) {
 
 		$emails = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/email/recipient_email')));
 		$vars['config'] = $this->getEmailUrl('adminhtml/system/config');
@@ -653,20 +653,22 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					$msg[] = empty($total = $emails->getSize()) ? ' → no items to remove' : ' → '.$total.' item(s) removed ('.$ids.')';
 					$msg[] = '';
 
-					if (!empty($total) && ($action == 'all')) {
-						$emails->deleteAll();
-					}
-					else if (!empty($total) && ($action == 'data')) {
-						// même chose que customerDeleteClean ou presque
-						foreach ($emails as $email) {
-							$email->setData('encoded_mail_recipients', null);
-							$email->setData('encoded_mail_subject', null);
-							$email->setData('mail_body', null);
-							$email->setData('mail_header', null);
-							$email->setData('mail_parameters', null);
-							$email->setData('mail_parts', null);
-							$email->setData('deleted', 1);
-							$email->save();
+					if (!empty($total)) {
+						if ($action == 'all') {
+							$emails->deleteAll();
+						}
+						else if ($action == 'data') {
+							// même chose que customerDeleteSync ou presque
+							foreach ($emails as $email) {
+								$email->setData('encoded_mail_recipients', null);
+								$email->setData('encoded_mail_subject', null);
+								$email->setData('mail_body', null);
+								$email->setData('mail_header', null);
+								$email->setData('mail_parameters', null);
+								$email->setData('mail_parts', null);
+								$email->setData('deleted', 1);
+								$email->save();
+							}
 						}
 					}
 				}
@@ -773,7 +775,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$files = [];
 
 		foreach ($allfiles as $file)
-			$files[filemtime($file)] = basename($file);
+			$files[(int) filemtime($file)] = basename($file);
 
 		if (empty($files))
 			Mage::throwException('Sorry, there is no file in directory "'.$folder.'".');

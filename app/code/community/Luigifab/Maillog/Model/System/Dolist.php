@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/18/01/2018
- * Updated M/15/10/2019
+ * Updated J/16/01/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -24,7 +24,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 	// https://api.dolist.net/doc/
 
 	// liste des pays par rapport à ce qui existe sur Dolist
-	private $countries = [
+	protected $countries = [
 		'FR' => 1,   'BE' => 2,   'NL' => 3,   'DE' => 4,   'IT' => 5,   'GB' => 6,
 		'IE' => 7,   'DK' => 8,   'GR' => 9,   'PT' => 10,  'ES' => 11,  'LU' => 23,
 		'IS' => 24,  'FO' => 25,  'NO' => 28,  'SE' => 30,  'FI' => 32,  'CH' => 36,
