@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/01/02/2020
+ * Updated L/30/03/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -20,6 +20,8 @@
  */
 
 class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
+
+	protected $_eventPrefix = 'maillog_email';
 
 	public function _construct() {
 		$this->_init('maillog/email');

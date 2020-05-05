@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/16/02/2020
+ * Updated M/21/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -85,17 +85,17 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		else if (($number / 1024) < 1024) {
 			$data = $number / 1024;
 			$data = Zend_Locale_Format::toNumber($data, ['precision' => 2]);
-			$data = $this->__('%s kB', str_replace(['.00', ',00'], '', $data));
+			$data = $this->__('%s kB', preg_replace('#[.,]00[[:>:]]#', '', $data));
 		}
 		else if (($number / 1024 / 1024) < 1024) {
 			$data = $number / 1024 / 1024;
 			$data = Zend_Locale_Format::toNumber($data, ['precision' => 2]);
-			$data = $this->__('%s MB', str_replace(['.00', ',00'], '', $data));
+			$data = $this->__('%s MB', preg_replace('#[.,]00[[:>:]]#', '', $data));
 		}
 		else {
 			$data = $number / 1024 / 1024 / 1024;
 			$data = Zend_Locale_Format::toNumber($data, ['precision' => 2]);
-			$data = $this->__('%s GB', str_replace(['.00', ',00'], '', $data));
+			$data = $this->__('%s GB', preg_replace('#[.,]00[[:>:]]#', '', $data));
 		}
 
 		return $data;
@@ -103,6 +103,9 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 
 	public function filterMail(object $varien, string $html, array $vars = []) {
+
+		Mage::unregister('maillog_last_vars');
+		Mage::register('maillog_last_vars', $vars);
 
 		// foreach/forelse
 		$pattern = '/{{foreach\s*(.*?)}}(.*?)({{forelse}}(.*?))?{{\\/foreach\s*}}/si';
@@ -265,8 +268,15 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			return (is_numeric($base) && is_numeric($check)) ? ($base > $check) : false;
 		}
 		// >=
-		if ((mb_stripos($value, ' gte ') !== false) || (mb_stripos($value, ' gteq ') !== false)) {
+		if (mb_stripos($value, ' gte ') !== false) {
 			$values = array_map('trim', explode(' gte ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
+				$check = $values[1];
+			return (is_numeric($base) && is_numeric($check)) ? ($base >= $check) : false;
+		}
+		if (mb_stripos($value, ' gteq ') !== false) {
+			$values = array_map('trim', explode(' gteq ', $value));
 			$base   = $varien->_getVariable2($values[0], $default);
 			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
@@ -281,8 +291,15 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			return (is_numeric($base) && is_numeric($check)) ? ($base < $check) : false;
 		}
 		// <=
-		if ((mb_stripos($value, ' lte ') !== false) || (mb_stripos($value, ' lteq ') !== false)) {
+		if (mb_stripos($value, ' lte ') !== false) {
 			$values = array_map('trim', explode(' lte ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
+				$check = $values[1];
+			return (is_numeric($base) && is_numeric($check)) ? ($base <= $check) : false;
+		}
+		if (mb_stripos($value, ' lteq ') !== false) {
+			$values = array_map('trim', explode(' lteq ', $value));
 			$base   = $varien->_getVariable2($values[0], $default);
 			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
@@ -296,7 +313,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$check = $values[1];
 			if (($check == 'empty') && empty($base)) // == empty
 				return true;
-			if (is_numeric($base) && ($base == 0) && !is_numeric($check)) // en PHP, tout string vaut 0 (voir observer::sendEmailReport)
+			if (is_numeric($base) && ($base == 0) && !is_numeric($check)) // en PHP, tout string vaut 0 (voir aussi observer::sendEmailReport)
 				return false;
 			return $base == $check;
 		}
@@ -308,9 +325,37 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$check = $values[1];
 			if (($check == 'empty') && empty($base)) // != empty
 				return false;
-			if (is_numeric($base) && ($base == 0) && !is_numeric($check)) // en PHP, tout string vaut 0 (voir observer::sendEmailReport)
+			if (is_numeric($base) && ($base == 0) && !is_numeric($check)) // en PHP, tout string vaut 0 (voir aussi observer::sendEmailReport)
 				return true;
 			return $base != $check;
+		}
+		// in_array
+		if (mb_stripos($value, ' in ') !== false) {
+			$values = array_map('trim', explode(' in ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			$checks = array_map('trim', explode(',', $values[1]));
+			return !empty($checks) && in_array($base, $checks);
+		}
+		if (mb_stripos($value, ' nin ') !== false) {
+			$values = array_map('trim', explode(' nin ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			$checks = array_map('trim', explode(',', $values[1]));
+			return !empty($checks) && !in_array($base, $checks);
+		}
+		// contains
+		if (mb_stripos($value, ' ct ') !== false) {
+			$values = array_map('trim', explode(' ct ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
+				$check = $values[1];
+			return mb_stripos($base, $check) !== false;
+		}
+		if (mb_stripos($value, ' nct ') !== false) {
+			$values = array_map('trim', explode(' nct ', $value));
+			$base   = $varien->_getVariable2($values[0], $default);
+			if (empty($check = $varien->_getVariable2($values[1], $default)) && !is_numeric($check))
+				$check = $values[1];
+			return mb_stripos($base, $check) === false;
 		}
 
 		return $varien->_getVariable2($value, $default);

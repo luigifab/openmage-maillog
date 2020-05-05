@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/31/01/2020
+ * Updated J/23/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,7 +22,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>4.0.0</version>
+			<version>4.1.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -133,14 +133,6 @@
 					</maillog_order_invoice>
 				</observers>
 			</sales_order_invoice_save_commit_after>
-			<!--maillog_update_picture>
-				<observers>
-					<demo>
-						<class>maillog/demo</class>
-						<method>updatePictureValues</method>
-					</demo>
-				</observers>
-			</maillog_update_picture-->
 		</events>
 	</global>
 	<frontend>

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated L/24/02/2020
+ * Updated L/27/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -51,7 +51,9 @@ $base   = 'groups[general][fields][special_config][value]';
 			<tfoot>
 				<tr>
 					<td colspan="2">
-						<button type="button" class="scalable add" onclick="maillog.addPicture(this);"><span><?php echo $this->__('Add') ?></span></button>
+						<button type="button" class="scalable add" onclick="maillog.addPicture(this);">
+							<span><?php echo $this->__('Add') ?></span>
+						</button>
 					</td>
 				</tr>
 			</tfoot>
@@ -59,13 +61,19 @@ $base   = 'groups[general][fields][special_config][value]';
 				<tr class="template" data-next="<?php echo empty($config) ? 0 : (max(array_keys($config)) + 1) ?>">
 					<!-- supprimé par maillog.start en js -->
 					<td>
-						<input type="text"
-							name="<?php echo $base ?>[IIDDXX][c]"
-							class="input-text required-entry validate-alphanum" />
-						<textarea
-							name="<?php echo $base ?>[IIDDXX][d]"
-							rows="3" cols="20" class="textarea"></textarea>
-						<button type="button" class="slink" onclick="maillog.deletePicture(this);"><?php echo $this->__('Delete') ?></button>
+						<label title="code">
+							<input type="text"
+								name="<?php echo $base ?>[IIDDXX][c]"
+								class="input-text required-entry validate-alphanum" />
+						</label>
+						<label title="description">
+							<textarea
+								name="<?php echo $base ?>[IIDDXX][d]"
+								rows="3" cols="20" class="textarea"></textarea>
+						</label>
+						<button type="button" class="slink" onclick="maillog.deletePicture(this);">
+							<?php echo $this->__('Delete') ?>
+						</button>
 					</td>
 					<td>
 						<ul>
@@ -74,38 +82,53 @@ $base   = 'groups[general][fields][special_config][value]';
 									default
 								</div>
 								<div class="sz">
-									<input type="number"
-										name="<?php echo $base ?>[IIDDXX][0][w]"
-										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									<label title="width">
+										<input type="number"
+											name="<?php echo $base ?>[IIDDXX][0][w]"
+											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									</label>
 									px x
-									<input type="number"
-										name="<?php echo $base ?>[IIDDXX][0][h]"
-										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									<label title="height">
+										<input type="number"
+											name="<?php echo $base ?>[IIDDXX][0][h]"
+											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									</label>
 									px
 								</div>
 								<div class="btn">
-									<button type="button" class="slink" onclick="maillog.addBreak(this, IIDDXX);"><?php echo $this->__('Add') ?></button>
+									<button type="button" class="slink" onclick="maillog.addBreak(this, IIDDXX);">
+										<?php echo $this->__('Add') ?>
+									</button>
 								</div>
 							</li>
 							<li class="breakpoint">
 								<div class="bp">
-									max-width: <input type="number"
-										name="<?php echo $base ?>[IIDDXX][KKEEYY][b]"
-										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									max-width:
+									<label title="max-width">
+										<input type="number"
+											name="<?php echo $base ?>[IIDDXX][KKEEYY][b]"
+											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									</label>
 									px
 								</div>
 								<div class="sz">
-									<input type="number"
-										name="<?php echo $base ?>[IIDDXX][KKEEYY][w]"
-										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									<label title="width">
+										<input type="number"
+											name="<?php echo $base ?>[IIDDXX][KKEEYY][w]"
+											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									</label>
 									px x
-									<input type="number"
-										name="<?php echo $base ?>[IIDDXX][KKEEYY][h]"
-										min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									<label title="height">
+										<input type="number"
+											name="<?php echo $base ?>[IIDDXX][KKEEYY][h]"
+											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+									</label>
 									px
 								</div>
 								<div class="btn">
-									<button type="button" class="slink" onclick="maillog.deleteBreak(this);"><?php echo $this->__('Delete') ?></button>
+									<button type="button" class="slink" onclick="maillog.deleteBreak(this);">
+										<?php echo $this->__('Delete') ?>
+									</button>
 								</div>
 							</li>
 						</ul>
@@ -114,13 +137,19 @@ $base   = 'groups[general][fields][special_config][value]';
 				<?php foreach ($config as $idx => $data): ?>
 					<tr>
 						<td>
-							<input type="text"
-								name="<?php echo $base ?>[<?php echo $idx ?>][c]"
-								value="<?php echo $data['c'] ?>" class="input-text required-entry validate-alphanum" />
-							<textarea rows="3" cols="20"
-								name="<?php echo $base ?>[<?php echo $idx ?>][d]"
-								class="textarea" spellcheck="false"><?php echo $help->escapeEntities($data['d']) ?></textarea>
-							<button type="button" class="slink" onclick="maillog.deletePicture(this);"><?php echo $this->__('Delete') ?></button>
+							<label title="code">
+								<input type="text"
+									name="<?php echo $base ?>[<?php echo $idx ?>][c]"
+									value="<?php echo $data['c'] ?>" class="input-text required-entry validate-alphanum" />
+							</label>
+							<label title="description">
+								<textarea rows="3" cols="20"
+									name="<?php echo $base ?>[<?php echo $idx ?>][d]"
+									class="textarea" spellcheck="false"><?php echo $help->escapeEntities($data['d']) ?></textarea>
+							</label>
+							<button type="button" class="slink" onclick="maillog.deletePicture(this);">
+								<?php echo $this->__('Delete') ?>
+							</button>
 						</td>
 						<td>
 							<ul>
@@ -129,40 +158,55 @@ $base   = 'groups[general][fields][special_config][value]';
 										default
 									</div>
 									<div class="sz">
-										<input type="number"
-											name="<?php echo $base ?>[<?php echo $idx ?>][0][w]"
-											min="0" step="1" value="<?php echo $data[0]['w'] ?>" class="input-text required-entry validate-greater-than-zero" />
+										<label title="width">
+											<input type="number"
+												name="<?php echo $base ?>[<?php echo $idx ?>][0][w]"
+												min="0" step="1" value="<?php echo $data[0]['w'] ?>" class="input-text required-entry validate-greater-than-zero" />
+										</label>
 										px x
-										<input type="number"
-											name="<?php echo $base ?>[<?php echo $idx ?>][0][h]"
-											min="0" step="1" value="<?php echo $data[0]['h'] ?>" class="input-text required-entry validate-greater-than-zero" />
+										<label title="height">
+											<input type="number"
+												name="<?php echo $base ?>[<?php echo $idx ?>][0][h]"
+												min="0" step="1" value="<?php echo $data[0]['h'] ?>" class="input-text required-entry validate-greater-than-zero" />
+										</label>
 										px
 									</div>
 									<div class="btn">
-										<button type="button" class="slink" onclick="maillog.addBreak(this, <?php echo $idx ?>);"><?php echo $this->__('Add') ?></button>
+										<button type="button" class="slink" onclick="maillog.addBreak(this, <?php echo $idx ?>);">
+											<?php echo $this->__('Add') ?>
+										</button>
 									</div>
 								</li>
 								<?php foreach ($data as $key => $subdata): ?>
 									<?php if (!is_numeric($key) || !is_array($subdata) || empty($key)) continue; ?>
 									<li class="breakpoint">
 										<div class="bp">
-											max-width: <input type="number"
-												name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][b]"
-												min="0" step="1" value="<?php echo $subdata['b'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											max-width:
+											<label title="max-width">
+												<input type="number"
+													name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][b]"
+													min="0" step="1" value="<?php echo $subdata['b'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											</label>
 											px
 										</div>
 										<div class="sz">
-											<input type="number"
-												name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][w]"
-												min="0" step="1" value="<?php echo $subdata['w'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											<label title="width">
+												<input type="number"
+													name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][w]"
+													min="0" step="1" value="<?php echo $subdata['w'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											</label>
 											px x
-											<input type="number"
-												name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][h]"
-												min="0" step="1" value="<?php echo $subdata['h'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											<label title="height">
+												<input type="number"
+													name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][h]"
+													min="0" step="1" value="<?php echo $subdata['h'] ?>" class="input-text required-entry validate-greater-than-zero" />
+											</label>
 											px
 										</div>
 										<div class="btn">
-											<button type="button" class="slink" onclick="maillog.deleteBreak(this);"><?php echo $this->__('Delete') ?></button>
+											<button type="button" class="slink" onclick="maillog.deleteBreak(this);">
+												<?php echo $this->__('Delete') ?>
+											</button>
 										</div>
 									</li>
 								<?php endforeach ?>
@@ -172,7 +216,6 @@ $base   = 'groups[general][fields][special_config][value]';
 				<?php endforeach ?>
 			</tbody>
 		</table>
-
 	</td>
 </tr>
 <?php // debug local ?>

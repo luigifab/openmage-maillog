@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/23/01/2020
+ * Updated J/23/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -108,7 +108,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		$html[] = '<li>'.$this->__('Recipient(s): %s', $help->getHumanEmailAddress($email->getData('mail_recipients'))).'</li>';
 		$html[] = '</ul>';
 		$html[] = '</div>';
-		$base   = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>';
+		$base   = '<html lang="mul"><head><title></title><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>';
 		$html[] = '<iframe type="text/html" scrolling="no" srcdoc="data:text/html;base64,'.base64_encode($base).'" onload="maillog.iframe(this)">'.
 			base64_encode($email->toHtml(true)).
 		'</iframe>'; // true pour nomark

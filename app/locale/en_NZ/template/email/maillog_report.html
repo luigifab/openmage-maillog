@@ -128,8 +128,8 @@
 {{depend test}}
 <pre lang="mul" style="margin:4em 1em 0;" onclick="this.innerHTML = this.innerHTML.replace(/\s+true\s+=\s+true/g, ' <b>true</b>').replace(/\s+false\s+=\s+false/g, ' <b>false</b>'); this.removeAttribute('onclick');">
 --------------------
-Example foreach var1 = [['numb' => -2], ['numb' => 0], ['numb' => 2]] with if gt/gte/lt/lte/eq/neq/empty
- i / {if var1.numb operator value or empty} / result calculated by Luigifab_Maillog_Helper_Data::variableMail() = result calculated by PHP
+Example foreach var1 = [['numb' => -2, 'text' => 'surprise'], ['numb' => 0, 'text' => 'surprise'], ['numb' => 2, 'text' => 'surprise']] with if/else
+ i / if var1.numb operator value or empty / result calculated by Luigifab_Maillog_Helper_Data::variableMail() = result calculated by PHP
 {{foreach var1}}
  A / if {{var var1.numb}} gt  0 / {{if var1.numb gt  0}} true  {{else}} false {{/if}} = {{var var1.a}}
  B / if {{var var1.numb}} gte 0 / {{if var1.numb gte 0}} true  {{else}} false {{/if}} = {{var var1.b}}
@@ -147,6 +147,14 @@ Example foreach var1 = [['numb' => -2], ['numb' => 0], ['numb' => 2]] with if gt
  N / if {{var var1.numb}} neq empty / {{if var1.numb neq empty}} true  {{else}} false {{/if}} = {{var var1.n}}
  O / if {{var var1.numb}} eq  abcde / {{if var1.numb eq  abcde}} true  {{else}} false {{/if}} = {{var var1.o}}
  P / if {{var var1.numb}} neq abcde / {{if var1.numb neq abcde}} true  {{else}} false {{/if}} = {{var var1.p}}
+ Q / if {{var var1.numb}} in  0,1,2 / {{if var1.numb in  0,1,2}} true  {{else}} false {{/if}} = {{var var1.q}}
+ R / if {{var var1.numb}} nin 0,1,2 / {{if var1.numb nin 0,1,2}} true  {{else}} false {{/if}} = {{var var1.r}}
+ S / if {{var var1.text}} ct  pri / {{if var1.text ct  pri}} true  {{else}} false {{/if}} = {{var var1.s}}
+ T / if {{var var1.text}} nct pri / {{if var1.text nct pri}} true  {{else}} false {{/if}} = {{var var1.t}}
+ U / if {{var var1.text}} ct  777 / {{if var1.text ct  777}} true  {{else}} false {{/if}} = {{var var1.u}}
+ V / if {{var var1.text}} nct 777 / {{if var1.text nct 777}} true  {{else}} false {{/if}} = {{var var1.v}}
+ W / if {{var var1.text}} ct  {{var var1.text}} / {{if var1.text ct  var1.text}} true  {{else}} false {{/if}} = {{var var1.w}}
+ X / if {{var var1.text}} nct {{var var1.text}} / {{if var1.text nct var1.text}} true  {{else}} false {{/if}} = {{var var1.x}}
 {{/foreach}}
 --------------------
 Example number 1700200

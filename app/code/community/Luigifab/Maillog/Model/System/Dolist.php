@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/18/01/2018
- * Updated J/16/01/2020
+ * Updated L/27/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -102,6 +102,10 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		$subscriber = get_class(Mage::getModel('newsletter/subscriber'));
 		$current    = get_class($object);
 
+		$isAddress  = $current == $address;
+		$isCustomer = $current == $customer;
+		$isSubscrib = $current == $subscriber;
+
 		$mapping = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/general/mapping_config')));
 		$fields  = [];
 
@@ -109,34 +113,35 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 
 			if ((mb_stripos($config, ':') !== false) && (mb_strlen($config) > 3) && (mb_stripos($config, '#') !== 0)) {
 
-				$config  = explode(':', $config);
-				$system  = trim(array_shift($config));
+				$config = explode(':', $config);
+				$system = trim(array_shift($config));
 
 				foreach ($config as $key) {
 
 					$magento = trim($key);
+					$hasData = $object->hasData($magento);
 
-					if ($current == $address) {
+					if ($isAddress) {
 						if (!empty($object->getData('is_default_billing')))
 							$magento = str_replace('address_billing_', '', $magento);
 						if (!empty($object->getData('is_default_shipping')))
 							$magento = str_replace('address_shipping_', '', $magento);
 					}
 
-					if (($current == $address) && in_array($magento, ['street', 'street_1', 'street_2', 'street_3', 'street_4'])) {
+					if ($isAddress && in_array($magento, ['street', 'street_1', 'street_2', 'street_3', 'street_4'])) {
 						if ($magento == 'street')
 							$fields[$system] = ['Name' => $system, 'Value' => implode(', ', $object->getStreet())];
 						else
 							$fields[$system] = ['Name' => $system, 'Value' => $object->getStreet(mb_substr($magento, -1))];
 					}
-					else if (($current == $address) && ($magento == 'country_id')) {
+					else if ($isAddress && ($magento == 'country_id')) {
 						$value = $object->getData($magento);
 						if (array_key_exists($value, $this->countries))
 							$fields[$system] = ['Name' => $system, 'Value' => $this->countries[$value]];
 						else
 							$fields[$system] = ['Name' => $system, 'Value' => 999]; // = Autres pays
 					}
-					else if (($current == $subscriber) && ($magento == 'subscriber_status')) {
+					else if ($isSubscrib && ($magento == 'subscriber_status')) {
 						// 0 Non inscrit (un client avec commande jamais inscrit à la newsletter)
 						// 1 Inscrit
 						// 2 Désinscrit (opt-out)
@@ -151,7 +156,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 						// 1 Désinscrit
 						$fields['OptoutEmail'] = ($object->getData($magento) == Mage_Newsletter_Model_Subscriber::STATUS_SUBSCRIBED) ? 0 : 1;
 					}
-					else if (($current == $customer) && ($magento == 'email')) {
+					else if ($isCustomer && ($magento == 'email')) {
 						$fields['Email'] = $object->getData('email');
 						// avec changement d'email
 						if ($object->getOrigData('email') != $object->getData('email')) {
@@ -159,15 +164,15 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 							$fields['Email']    = ['Name' => 'email', 'Value' => $object->getData('email')];
 						}
 					}
-					else if (($current == $customer) && ($magento == 'store_id')) {
+					else if ($isCustomer && ($magento == 'store_id')) {
 						$value = Mage::getStoreConfig('general/locale/code', $object->getStoreId());
 						// spécial
 						$fields[$system] = ['Name' => $system, 'Value' => $value];
 					}
-					else if (($current == $customer) && ($magento == 'dob') && $object->hasData($magento)) {
+					else if ($isCustomer && ($magento == 'dob') && $hasData) {
 						$fields[$system] = ['Name' => $system, 'Value' => date('Y-m-d', strtotime($object->getData($magento)))];
 					}
-					else if ($object->hasData($magento)) {
+					else if ($hasData) {
 						if (!empty($fields[$system]['Value'])) {
 							$fields[$system]['Value'] .= ' '.$object->getData($magento);
 						}

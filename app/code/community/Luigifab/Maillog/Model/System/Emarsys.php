@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/16/01/2020
+ * Updated L/27/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -117,6 +117,10 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		$subscriber = get_class(Mage::getModel('newsletter/subscriber'));
 		$current    = get_class($object);
 
+		$isAddress  = $current == $address;
+		$isCustomer = $current == $customer;
+		$isSubscrib = $current == $subscriber;
+
 		$special = Mage::getStoreConfig('maillog_sync/general/mapping_customerid_field'); // en cas de changement d'email
 		$mapping = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/general/mapping_config')));
 		$fields  = [];
@@ -125,43 +129,44 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 
 			if ((mb_stripos($config, ':') !== false) && (mb_strlen($config) > 3) && (mb_stripos($config, '#') !== 0)) {
 
-				$config  = explode(':', $config);
-				$system  = trim(array_shift($config));
+				$config = explode(':', $config);
+				$system = trim(array_shift($config));
 
 				foreach ($config as $key) {
 
 					$magento = trim($key);
+					$hasData = $object->hasData($magento);
 
-					if ($current == $address) {
+					if ($isAddress) {
 						if (!empty($object->getData('is_default_billing')))
 							$magento = str_replace('address_billing_', '', $magento);
 						if (!empty($object->getData('is_default_shipping')))
 							$magento = str_replace('address_shipping_', '', $magento);
 					}
 
-					if (($current == $address) && in_array($magento, ['street', 'street_1', 'street_2', 'street_3', 'street_4'])) {
+					if ($isAddress && in_array($magento, ['street', 'street_1', 'street_2', 'street_3', 'street_4'])) {
 						if ($magento == 'street')
 							$fields[$system] = implode(', ', $object->getStreet());
 						else
 							$fields[$system] = $object->getStreet(mb_substr($magento, -1));
 					}
-					else if (($current == $address) && ($magento == 'country_id')) {
+					else if ($isAddress && ($magento == 'country_id')) {
 						$value = $object->getData($magento);
 						if (array_key_exists($value, $this->countries))
 							$fields[$system] = $this->countries[$value];
 						else
 							$fields[$system] = '';
 					}
-					else if (($current == $subscriber) && ($magento == 'subscriber_status')) {
+					else if ($isSubscrib && ($magento == 'subscriber_status')) {
 						$fields[$system] = ($object->getData($magento) == Mage_Newsletter_Model_Subscriber::STATUS_SUBSCRIBED) ? 1 : 2;
 					}
-					else if (($current == $customer) && ($magento == 'email')) {
+					else if ($isCustomer && ($magento == 'email')) {
 						$fields[$system] = $object->getData($magento);
 						// avec changement d'email (le champs 3 est l'email sur Emarsys)
 						$fields['key_id'] = (!empty($special) && ($object->getOrigData($magento) != $object->getData($magento))) ?
 							$special : 3;
 					}
-					else if (($current == $customer) && ($magento == 'store_id')) {
+					else if ($isCustomer && ($magento == 'store_id')) {
 						$value = $object->getStoreId();
 						// spécial
 						if (!empty($value) && array_key_exists(Mage::getStoreConfig('general/locale/code', $value), $this->locales))
@@ -169,10 +174,10 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 						else
 							$fields[$system] = '';
 					}
-					else if (($current == $customer) && ($magento == 'dob') && $object->hasData($magento)) {
+					else if ($isCustomer && ($magento == 'dob') && $hasData) {
 						$fields[$system] = date('Y-m-d', strtotime($object->getData($magento)));
 					}
-					else if ($object->hasData($magento)) {
+					else if ($hasData) {
 						if (!empty($fields[$system])) {
 							$fields[$system] .= ' '.$object->getData($magento);
 						}

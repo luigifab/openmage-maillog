@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated D/26/02/2020
+ * Updated M/21/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -260,9 +260,10 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		// envoi des emails
 		$vars['test'] = $test;
 		if ($vars['test']) {
-			$vars['var1'] = [['numb' => -2], ['numb' => 0], ['numb' => 2]];
+			$vars['var1'] = [['numb' => -2, 'text' => 'surprise'], ['numb' => 0, 'text' => 'surprise'], ['numb' => 2, 'text' => 'surprise']];
 			$vars['var2'] = Mage::getResourceModel('catalog/product_collection')->setPageSize(3);
 			foreach ($vars['var1'] as $i => $n) {
+				$t = $n['text'];
 				$n = $n['numb'];
 				$vars['var1'][$i]['a'] = ($n >  0) ? 'true' : 'false';
 				$vars['var1'][$i]['b'] = ($n >= 0) ? 'true' : 'false';
@@ -276,11 +277,22 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 				$vars['var1'][$i]['j'] = ($n <= $n) ? 'true' : 'false';
 				$vars['var1'][$i]['k'] = ($n == $n) ? 'true' : 'false';
 				$vars['var1'][$i]['l'] = ($n != $n) ? 'true' : 'false';
+				// == et != avec empty
 				$vars['var1'][$i]['m'] =  empty($n) ? 'true' : 'false';
 				$vars['var1'][$i]['n'] = !empty($n) ? 'true' : 'false';
-				// en PHP, tout string vaut 0 (voir helper::variableMail)
+				// == et != // en PHP, tout string vaut 0 (voir aussi helper::variableMail)
 				$vars['var1'][$i]['o'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'false' : (($n == 'abcde') ? 'true' : 'false');
 				$vars['var1'][$i]['p'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'true'  : (($n != 'abcde') ? 'true' : 'false');
+				// in_array
+				$vars['var1'][$i]['q'] =  in_array($n, [0,1,2]) ? 'true' : 'false';
+				$vars['var1'][$i]['r'] = !in_array($n, [0,1,2]) ? 'true' : 'false';
+				// contains
+				$vars['var1'][$i]['s'] = (mb_stripos($t, 'pri') !== false) ? 'true' : 'false';
+				$vars['var1'][$i]['t'] = (mb_stripos($t, 'pri') === false) ? 'true' : 'false';
+				$vars['var1'][$i]['u'] = (mb_stripos($t, '777') !== false) ? 'true' : 'false';
+				$vars['var1'][$i]['v'] = (mb_stripos($t, '777') === false) ? 'true' : 'false';
+				$vars['var1'][$i]['w'] = (mb_stripos($t, $t) !== false) ? 'true' : 'false';
+				$vars['var1'][$i]['x'] = (mb_stripos($t, $t) === false) ? 'true' : 'false';
 			}
 		}
 

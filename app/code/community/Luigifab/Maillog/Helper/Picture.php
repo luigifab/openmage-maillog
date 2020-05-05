@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated L/24/02/2020
+ * Updated V/24/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -23,9 +23,17 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 	public function getTag(array $values) {
 
-		$config = new ArrayObject($this->getPictureConfig());
-		$values = new ArrayObject($values);
-		Mage::dispatchEvent('maillog_update_picture', ['values' => $values, 'config' => $config]);
+		$config = $this->getPictureConfig();
+
+		// event before (vendor/singleton::method)
+		// avant de commencer la recherche des valeurs
+		$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_before');
+		if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1) {
+			$event = explode('::', $event);
+			$event = Mage::helper($event[0])->{$event[1]}($values, $config);
+			if ($event !== true)
+				return $event;
+		}
 
 		// [code, file|product|category, attribute=image, helper=catalog/image]
 		//  code toujours obligatoire avec file ou product ou category
@@ -51,8 +59,9 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		}
 
 		// récupére ou charge l'éventuelle catégorie
-		if (!empty($category) && is_numeric($category))
+		if (!empty($category) && is_numeric($category)) {
 			$category = Mage::getModel('catalog/category')->load($category);
+		}
 		if (is_object($category) && !empty($category->getId())) {
 			$attribute = 'category'; // sinon ça marchera pas
 			if (empty($file))
@@ -69,16 +78,41 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		}
 
 		// action
+		if (empty($code) || empty($file) || empty($config[$code]))
+			return null;
 		if (!is_object($product))
 			$product = Mage::getModel('catalog/product');
 
-		return (empty($code) || empty($file) || empty($config[$code])) ? null :
-			$this->createTag($product, $helper, $config[$code], $extra, $attribute, $file);
+		$sizes = $config[$code];
+
+		// event ready (vendor/singleton::method)
+		// avant la génération des balises html
+		$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_ready');
+		if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1) {
+			$event = explode('::', $event);
+			$event = Mage::helper($event[0])->{$event[1]}($product, $helper, $sizes, $extra, $attribute, $file);
+			if ($event !== true)
+				return $event;
+		}
+
+		// crée les tags
+		$html = $this->createTag($product, $helper, $sizes, $extra, $attribute, $file);
+
+		// event after (vendor/singleton::method)
+		// après la génération des balises html
+		$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_after');
+		if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1) {
+			$event = explode('::', $event);
+			return Mage::helper($event[0])->{$event[1]}($html);
+		}
+
+		return $html;
 	}
 
 	private function createTag(object $product, object $helper, array $sizes, array $extra, string $attribute, string $file) {
 
 		$font = (float) Mage::getStoreConfig('maillog_directives/general/fontsize');
+		$font = ($font > 0) ? $font : 16;
 		$tags = ['<picture>'];
 
 		foreach ($sizes as $breakpoint => $size) {
@@ -91,10 +125,11 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 			// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
 			// 16 parce qu'en javascript getComputedStyle(document.documentElement).fontSize = 16 ($font)
 			if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
+				$rem    = empty($rem) ? 0 : $rem;
 				$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
 			}
 			else {
-				$rem    = round($breakpoint / (($font > 0) ? $font : 16), 1);
+				$rem    = round($breakpoint / $font, 1);
 				$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
 			}
 		}
@@ -104,7 +139,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		if (Mage::getStoreConfigFlag('maillog_directives/general/show_image_size')) {
 
-			$tags[0] = '<picture style="outline:1px dotted gray;">';
+			$tags[0] = '<picture>';
 			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; z-index:9999999; color:#FFF; background-color:#000;">...</span>');
 
 			// ajoute un js une seule fois

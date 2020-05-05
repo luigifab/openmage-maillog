@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/31/01/2020
+ * Updated V/24/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -738,7 +738,7 @@
 				<general translate="label comment">
 					<label>Emails and wysiwyg directives</label>
 					<comment>They are extraordinary new directives:</comment>
-					<frontend_model>maillog/adminhtml_config_comment</frontend_model>
+					<frontend_model>maillog/adminhtml_config_directive</frontend_model>
 					<sort_order>1</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
@@ -762,11 +762,38 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</show_image_size>
+						<update_configandvalues_before>
+							<label>Event before create tags</label>
+							<comment>Helper: vendor[/name]::method</comment>
+							<frontend_type>text</frontend_type>
+							<sort_order>12</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</update_configandvalues_before>
+						<update_configandvalues_ready>
+							<label>Event ready to create tags</label>
+							<comment>Helper: vendor[/name]::method</comment>
+							<frontend_type>text</frontend_type>
+							<sort_order>13</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</update_configandvalues_ready>
+						<update_configandvalues_after>
+							<label>Event after create tags</label>
+							<comment>Helper: vendor[/name]::method</comment>
+							<frontend_type>text</frontend_type>
+							<sort_order>14</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</update_configandvalues_after>
 						<special_config translate="label">
 							<label>Picture directive</label>
 							<frontend_model>maillog/adminhtml_config_picture</frontend_model>
 							<backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
-							<sort_order>12</sort_order>
+							<sort_order>19</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/09/11/2015
- * Updated M/21/01/2020
+ * Updated L/27/04/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -77,7 +77,7 @@ try {
 				$i++;
 			}
 			else if (($parts !== false) && (count($parts) >= 1)) {
-				// nothing to do
+				continue; // nothing to do
 			}
 			else {
 				Mage::log('Update v3.0! Removing all parts from email #'.$email->getId().' (step '.$p.')', Zend_Log::INFO, 'maillog.log');
