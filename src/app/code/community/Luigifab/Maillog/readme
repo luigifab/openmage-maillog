@@ -1,0 +1,150 @@
+Docs      : https://www.luigifab.fr/openmage/maillog
+Mirror    : https://github.com/luigifab/openmage-maillog
+Composer  : https://packagist.org/packages/luigifab/openmage-maillog
+Module    : Luigifab/Maillog
+License   : GNU GPL 2 (https://opensource.org/licenses/gpl-2.0)
+Copyright : 2015-2020 Fabrice Creuzot (luigifab) <code~luigifab~fr>
+Copyright : 2015-2016 Fabrice Creuzot <fabrice.creuzot~label-park~com>
+Copyright : 2016      Pierre-Alexandre Rouanet <pierre-alexandre.rouanet~label-park~com>
+Copyright : 2017-2018 Fabrice Creuzot <fabrice~reactive-web~fr>
+
+
+THE COMPOSER KEY FOR COMMAND LINE IS: luigifab/openmage-maillog
+THE EXTENSION KEY FOR MAGENTO CONNECT MANAGER IS: https://www.luigifab.fr/magento/connect/luigifab/Luigifab_Maillog
+
+THE MODULE AND ALL THE TRANSLATIONS AND ALL THE DOCUMENTATION ARE EXCEPTIONALLY MAGNIFICENT.
+IF YOU FOUND A MISTAKE OR A BUG, PLEASE, CONTACT ME (IN FRENCH OR IN ENGLISH) AT code~luigifab~fr
+
+CSS AND JS FILES ARE MINIFIED WITH clean-css (github.com/jakubpawlowicz/clean-css) AND uglify-js (github.com/mishoo/UglifyJS2).
+ALL FILES (INCLUDING DOCUMENTATION AND TRANSLATIONS) ARE LICENSED UNDER THE TERMS OF GNU GPL 2.0+ LICENSE.
+THAT BEING SAID SOME FILES COME FROM OTHER PROJECTS AND ARE UNDER OTHER LICENSES (SEE AT THE END OF THIS FILE).
+
+
+Rewrite
+- global | model | core/email_queue               | maillog/rewrite_queue
+- global | model | newsletter/subscriber          | maillog/rewrite_subscriber
+- global | model | newsletter_resource/subscriber | maillog/rewrite_subscriberres
+Event
+- adminhtml | admin_system_config_changed_section_maillog      | maillog/observer::updateConfig
+- adminhtml | admin_system_config_changed_section_maillog_sync | maillog/observer::updateConfig
+- adminhtml | adminhtml_customer_prepare_save                  | maillog/observer::setCustomerStoreId
+- adminhtml | newsletter_subscriber_save_before                | maillog/observer::setSubscriberStoreId
+- frontend  | customer_address_save_after                      | maillog/observer::addressSaveSync
+- frontend  | customer_login                                   | maillog/observer::customerLoginSync
+- global    | customer_delete_after                            | maillog/observer::customerDeleteSync
+- global    | customer_save_commit_after                       | maillog/observer::customerSaveSync
+- global    | newsletter_subscriber_delete_after               | maillog/observer::subscriberDeleteSync
+- global    | newsletter_subscriber_save_after                 | maillog/observer::subscriberSaveSync
+- global    | sales_order_invoice_save_commit_after            | maillog/observer::orderInvoiceSync
+Cron
+- maillog_bounces_import       | maillog/observer::bouncesFileImport
+- maillog_clean_old_data       | maillog/observer::cleanOldData
+- maillog_send_report          | maillog/observer::sendEmailReport
+- maillog_unsubscribers_import | maillog/observer::unsubscribersFileImport
+Database
+- create luigifab_maillog table
+- create luigifab_maillog_sync table
+- create is_bounce customer attribute
+- update core_config_data where path like maillog/%
+Files and directories
+- app/locale/de_AT/template/email/maillog_report.html
+- app/locale/de_CH/template/email/maillog_report.html
+- app/locale/de_DE/template/email/maillog_report.html
+- app/locale/en_AU/template/email/maillog_report.html
+- app/locale/en_CA/template/email/maillog_report.html
+- app/locale/en_GB/template/email/maillog_report.html
+- app/locale/en_IE/template/email/maillog_report.html
+- app/locale/en_NZ/template/email/maillog_report.html
+- app/locale/en_US/template/email/maillog_report.html
+- app/locale/es_AR/template/email/maillog_report.html
+- app/locale/es_CL/template/email/maillog_report.html
+- app/locale/es_CO/template/email/maillog_report.html
+- app/locale/es_CR/template/email/maillog_report.html
+- app/locale/es_ES/template/email/maillog_report.html
+- app/locale/es_MX/template/email/maillog_report.html
+- app/locale/es_PA/template/email/maillog_report.html
+- app/locale/es_PE/template/email/maillog_report.html
+- app/locale/es_VE/template/email/maillog_report.html
+- app/locale/fr_CA/template/email/maillog_report.html
+- app/locale/fr_FR/template/email/maillog_report.html
+- app/locale/it_CH/template/email/maillog_report.html
+- app/locale/it_IT/template/email/maillog_report.html
+- app/locale/pt_BR/template/email/maillog_report.html
+- app/locale/pt_PT/template/email/maillog_report.html
+- app/locale/cs_CZ/Luigifab_Maillog.csv
+- app/locale/de_AT/Luigifab_Maillog.csv
+- app/locale/de_CH/Luigifab_Maillog.csv
+- app/locale/de_DE/Luigifab_Maillog.csv
+- app/locale/es_AR/Luigifab_Maillog.csv
+- app/locale/es_CL/Luigifab_Maillog.csv
+- app/locale/es_CO/Luigifab_Maillog.csv
+- app/locale/es_CR/Luigifab_Maillog.csv
+- app/locale/es_ES/Luigifab_Maillog.csv
+- app/locale/es_MX/Luigifab_Maillog.csv
+- app/locale/es_PA/Luigifab_Maillog.csv
+- app/locale/es_PE/Luigifab_Maillog.csv
+- app/locale/es_VE/Luigifab_Maillog.csv
+- app/locale/fr_CA/Luigifab_Maillog.csv
+- app/locale/fr_FR/Luigifab_Maillog.csv
+- app/locale/it_CH/Luigifab_Maillog.csv
+- app/locale/it_IT/Luigifab_Maillog.csv
+- app/locale/ja_JP/Luigifab_Maillog.csv
+- app/locale/nl_NL/Luigifab_Maillog.csv
+- app/locale/pl_PL/Luigifab_Maillog.csv
+- app/locale/pt_BR/Luigifab_Maillog.csv
+- app/locale/pt_PT/Luigifab_Maillog.csv
+- app/locale/ru_RU/Luigifab_Maillog.csv
+- app/locale/tr_TR/Luigifab_Maillog.csv
+- app/locale/zh_CN/Luigifab_Maillog.csv
+- app/etc/modules/Luigifab_Maillog.xml
+- app/code/community/Luigifab/Maillog/
+- app/design/adminhtml/default/default/layout/luigifab/maillog.xml
+- app/design/adminhtml/default/default/template/luigifab/maillog/
+- skin/adminhtml/default/default/css/luigifab/maillog/
+- skin/adminhtml/default/default/images/luigifab/maillog/
+- skin/adminhtml/default/default/js/luigifab/maillog/
+- skin/frontend/base/default/images/luigifab/maillog/
+- maillog.php
+- maillog.sh
+
+
+Translations in de-DE (deutsch/Deutschland) by:
+- Pamela Steinborn <st.pamela~laposte~net> 2017
+- Laurent K <proflolo67~gmail~com> 2017
+- Nelly Renaud <nbrandone~gmail~com> 2017
+Translations in en-US (english/United-States) by:
+- Fabrice Creuzot (luigifab) <code~luigifab~fr> 2015-2020
+- Alexandre Laffitte <alexandre.laffitte~label-park~com> 2016
+- Philip Junietz <info~label-park~com> 2016
+- Pascale Scellier <scellier.pascale~orange~fr> 2016-2017
+- Catherine Pergisol <catherinecathe11~aol~com> 2017
+Translations in es-ES (español/España) by:
+- Liliana Moreu <lilichuster~gmail~com> 2017
+- Hélène Vergine <vergineh~gmail~com> 2017
+- Guillaume Genetet <genetet.incorporated~gmail~com> 2018 https://fr.tipeee.com/william-broome
+Translations in fr-FR (français/France) by:
+- Fabrice Creuzot (luigifab) <code~luigifab~fr> 2015-2020
+- Philip Junietz <info~label-park~com> 2016
+- Pascale Scellier <scellier.pascale~orange~fr> 2016-2017
+Translations in it-IT (italiano/Italia) by:
+- Maria Grasso <mgrasso~outlook~fr> 2017
+Translations in pt-PT (português/Portugal) by:
+- Isabel Mendes <isabel.2012~orange~fr> 2017
+- Ugo <skender_cr7~hotmail~fr> 2017
+Translations in pt-BR (português/Brasil) by:
+- Ugo <skender_cr7~hotmail~fr> 2017
+
+If you like, take some of your time to improve the translations, go to https://bit.ly/2HyCCEc
+
+
+Files: /skin/*/*/default/images/luigifab/maillog/humanity-*.svg
+Source: https://packages.ubuntu.com/source/humanity-icon-theme (0.5.2)
+Copyright: 2002-2008
+  Daniel Foré <daniel.p.fore~gmail~com>
+  Jonian Guveli <jonian.guveli~gmail~com>
+  K.Vishnoo Charan Reddy <foo.mac.v~gmail~com>
+License: GPL 2.0+ (https://opensource.org/licenses/gpl-2.0)
+
+File: /skin/adminhtml/default/default/images/luigifab/maillog/mail-attachment.svg
+Source: https://commons.wikimedia.org/wiki/File:Mail-attachment.svg
+License: This file has been released into the public domain by its author, The Tango Desktop Project.

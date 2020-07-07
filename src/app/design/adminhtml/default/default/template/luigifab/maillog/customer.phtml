@@ -1,0 +1,61 @@
+<?php
+/**
+ * Created S/14/11/2015
+ * Updated M/15/10/2019
+ *
+ * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
+ * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * https://www.luigifab.fr/openmage/maillog
+ *
+ * This program is free software, you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL) as published
+ * by the free software foundation, either version 2 of the license, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but without any warranty, without even the implied warranty of
+ * merchantability or fitness for a particular purpose. See the
+ * GNU General Public License (GPL) for more details.
+ */
+
+$customer = Mage::registry('current_customer');
+?>
+
+<?php if (is_object($customer) && Mage::getStoreConfigFlag('maillog/general/enabled')): ?>
+	<div class="entry-edit">
+		<div class="entry-edit-head">
+			<h4 class="icon-head head-customer-view"><?php echo $this->__('Transactional emails - %s', $customer->getData('email')) ?></h4>
+		</div>
+		<fieldset>
+			<?php
+				$stats = Mage::getResourceModel('maillog/email_collection');
+				$stats->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['status']); // optimisation maximale
+				$stats->addFieldToFilter('mail_recipients', ['like' => '%'.$customer->getData('email').'%']);
+
+				$isBounce = Mage::getSingleton('maillog/source_bounce')->isBounce($customer->getData('is_bounce'));
+				$isSubscribed = Mage::getModel('newsletter/subscriber')->loadByCustomer($customer)->isSubscribed();
+			?>
+			<?php if (Mage::getStoreConfigFlag('maillog_sync/bounces/enabled')): ?>
+				<p><?php echo $isBounce ? '<strong>'.$this->__('Email address is invalid.').'</strong>' : $this->__('Email address is valid.') ?>
+				<br /><?php echo $this->__('%d email(s), %d send, %d open/read.',
+					$stats->getSize(),
+					count($stats->getItemsByColumnValue('status', 'sent')) + count($stats->getItemsByColumnValue('status', 'read')),
+					count($stats->getItemsByColumnValue('status', 'read'))
+				) ?></p>
+				<?php if (!$isBounce && $isSubscribed): ?>
+					<p><?php echo $this->__('Customer is subscribed to the newsletter.') ?></p>
+				<?php endif ?>
+			<?php else: ?>
+				<p><?php echo $this->__('%d email(s), %d send, %d open/read.',
+					$stats->getSize(),
+					count($stats->getItemsByColumnValue('status', 'sent')) + count($stats->getItemsByColumnValue('status', 'read')),
+					count($stats->getItemsByColumnValue('status', 'read'))
+				) ?></p>
+				<?php if ($isSubscribed): ?>
+					<p><?php echo $this->__('Customer is subscribed to the newsletter.') ?></p>
+				<?php endif ?>
+			<?php endif ?>
+		</fieldset>
+	</div>
+<?php endif ?>
