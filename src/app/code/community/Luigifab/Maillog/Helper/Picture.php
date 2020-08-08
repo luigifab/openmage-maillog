@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated J/14/05/2020
+ * Updated M/28/07/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -115,32 +115,35 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		$font = ($font > 0) ? $font : 16;
 		$tags = ['<picture>'];
 
-		foreach ($sizes as $breakpoint => $size) {
-
-			$srcs = [
-				(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
-				(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
-			];
-
-			// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
-			// 16 parce qu'en javascript getComputedStyle(document.documentElement).fontSize = 16 ($font)
-			if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
-				$rem    = empty($rem) ? 0 : $rem;
-				$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+		if (mb_substr($file, -4) == '.svg') {
+			foreach ($sizes as $breakpoint => $size) { }
+			$tags[] = '<img src="'.$helper->init($product, $attribute, $file)->resize($size['w'], $size['h']).'" '.implode(' ', $extra).' />';
+		}
+		else {
+			foreach ($sizes as $breakpoint => $size) {
+				$srcs = [
+					(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
+					(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
+				];
+				// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
+				// 16 parce qu'en javascript getComputedStyle(document.documentElement).fontSize = 16 ($font)
+				if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
+					$rem    = empty($rem) ? 0 : $rem;
+					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+				}
+				else {
+					$rem    = round($breakpoint / $font, 1);
+					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+				}
 			}
-			else {
-				$rem    = round($breakpoint / $font, 1);
-				$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
-			}
+			$tags[] = '<img data-debug="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x" '.implode(' ', $extra).' />';
 		}
 
-		$tags[] = '<img data-debug="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x" '.implode(' ', $extra).' />';
 		$tags[] = '</picture>';
 
 		if (Mage::getStoreConfigFlag('maillog_directives/general/show_image_size')) {
 
-			$tags[0] = '<picture>';
-			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; z-index:9999999; font-size:12px; color:#FFF; background-color:#000;">...</span>');
+			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; height:14px; line-height:14px; z-index:1; font-size:12px; color:#FFF; background-color:#000;">...</span>');
 
 			// ajoute un js une seule fois
 			if (Mage::registry('maillog_debug') !== true) {
@@ -162,20 +165,24 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 }
 function maillogdebug() {
 	document.querySelectorAll("span.maillogdebug ~ picture img").forEach(function (elem) {
-		elem.setAttribute("onload", "maillogdebug()");
-		var cur = elem.currentSrc, src = (elem.parentNode.querySelector("source[srcset*=\"" + cur + "\"]")), tmp;
-		if (!src) return;
-		tmp  = src.getAttribute("data-debug");
+		elem.setAttribute("onload", "maillogdebug();");
+		var cur = elem.currentSrc, src = (elem.parentNode.querySelector("source[srcset*=\"" + cur + "\"]")), tmp = elem.getAttribute("src").substr(-4);
+		if (!src && (tmp !== ".svg")) return;
 		elem = elem.parentNode.previousSibling;
-		while ((elem.nodeName !== "BODY") && (elem.nodeName !== "SPAN"))
-			elem = elem.previousSibling;
-		tmp = tmp.slice(tmp.indexOf(" ") + 1).split("/");
-		if (cur.indexOf("/" + tmp[0] + "x") > 0)
-			elem.textContent = tmp[0];
-		else if (cur.indexOf("/" + tmp[1] + "x") > 0)
-			elem.textContent = tmp[1];
-		else
-			elem.textContent = "???";
+		while ((elem.nodeName !== "BODY") && (elem.nodeName !== "SPAN")) elem = elem.previousSibling;
+		if (tmp !== ".svg") {
+			tmp = src.getAttribute("data-debug");
+			tmp = tmp.slice(tmp.indexOf(" ") + 1).split("/");
+			if (cur.indexOf("/" + tmp[0] + "x") > 0)
+				elem.textContent = tmp[0];
+			else if (cur.indexOf("/" + tmp[1] + "x") > 0)
+				elem.textContent = tmp[1];
+			else
+				elem.textContent = "???";
+		}
+		else {
+			elem.textContent = "SVG";
+		}
 	});
 }
 self.addEventListener("load", maillogdebug);

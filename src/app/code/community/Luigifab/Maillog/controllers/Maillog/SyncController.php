@@ -29,7 +29,7 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 		return 'Luigifab_Maillog';
 	}
 
-	public function loadLayout($ids = null, $generateBlocks = true, $generateXml = true) {;
+	public function loadLayout($ids = null, $generateBlocks = true, $generateXml = true) {
 		$this->_title($this->__('Tools'))->_title($this->__('Customers synchronization'));
 		parent::loadLayout($ids, $generateBlocks, $generateXml);
 		$this->_setActiveMenu('tools/maillog_sync');

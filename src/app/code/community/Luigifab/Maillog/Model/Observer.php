@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated V/12/06/2020
+ * Updated L/13/07/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -123,8 +123,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		Mage::getSingleton('core/translate')->setLocale($newLocale)->init('adminhtml', true);
 
 		$frequency = Mage::getStoreConfig('maillog/email/frequency');
-		$errors = [];
-		$items  = [];
 
 		// chargement des emails de la période
 		// le mois dernier (mensuel/monthly), les septs derniers jour (hebdomadaire/weekly), hier (quotidien/daily)
@@ -152,6 +150,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		]);
 		$emails->setOrder('email_id', 'desc');
 
+		$errors = [];
 		foreach ($emails as $email) {
 
 			if (!in_array($email->getData('status'), ['error', 'pending']))
@@ -165,7 +164,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$errors[] = sprintf('(%d) %s / %s / %s', count($errors) + 1, $link, $hour, $state);
 		}
 
-		$vars = [
+		$items = [];
+		$vars  = [
 			'frequency'            => $frequency,
 			'date_period_from'     => $dates['start']->toString(Zend_Date::DATETIME_FULL),
 			'date_period_to'       => $dates['end']->toString(Zend_Date::DATETIME_FULL),
@@ -413,8 +413,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$day = $dateStart->toString(Zend_Date::WEEKDAY_8601) - 1;
 
 		if ($range == 'last_month') {
-			$dateEnd->subMonth(1 * $coeff)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
-			$dateStart->subMonth(1 * $coeff)->setMonth($dateEnd->getMonth())->setDay(1);
+			$dateStart->setDay(1)->subMonth(1 * $coeff);
+			$dateEnd->setDay(1)->subMonth(1 * $coeff)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
 		}
 		else if ($range == 'cur_week') {
 			$dateStart->subDay($day);

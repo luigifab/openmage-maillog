@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated J/28/05/2020
+ * Updated D/26/07/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -241,24 +241,33 @@ $base   = 'groups[general][fields][special_config][value]';
 	<tr>
 		<td colspan="4">
 			<pre style="padding:0.5em; white-space:pre-wrap; background-color:beige;">
-<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+<b>[ product file ]</b>
+<?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
 	$help->filterMail(new Varien_Object(), '{{picture code="test" file="/6/0/605003.jpg"}}', [])
 )) ?>
 
-<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+
+<b>[ category file ]</b>
+<?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
 	$help->filterMail(new Varien_Object(), '{{picture code="test" attribute="category" file="605003.jpg"}}', [])
 )) ?>
 
-<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+
+<b>[ wysiwyg file ]</b>
+<?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
 	$help->filterMail(new Varien_Object(), '{{picture code="test" attribute="wysiwyg" file="wysiwyg/abc/605003.jpg"}}', [])
 )) ?>
 
-<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
+
+<b>[ product 2 ]</b>
+<?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
 	$this->helper('maillog/picture')->getTag(['code' => 'test', 'product' => 2])
 )) ?>
 
-<?php echo str_replace(['picture', Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB)], ['<b>picture</b>', '.../'], htmlspecialchars(
-	$this->helper('maillog/picture')->getTag(['code' => 'test', 'category' => 9])
+
+<b>[ category 6 ]</b>
+<?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
+	$this->helper('maillog/picture')->getTag(['code' => 'test', 'category' => 6])
 )) ?></pre>
 		</td>
 	</tr>

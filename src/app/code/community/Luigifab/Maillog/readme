@@ -1,8 +1,8 @@
 Docs      : https://www.luigifab.fr/openmage/maillog
-Mirror    : https://github.com/luigifab/openmage-maillog
+Tracker   : https://github.com/luigifab/openmage-maillog
 Composer  : https://packagist.org/packages/luigifab/openmage-maillog
 Module    : Luigifab/Maillog
-License   : GNU GPL 2 (https://opensource.org/licenses/gpl-2.0)
+License   : GNU GPL 2+ (https://opensource.org/licenses/gpl-2.0)
 Copyright : 2015-2020 Fabrice Creuzot (luigifab) <code~luigifab~fr>
 Copyright : 2015-2016 Fabrice Creuzot <fabrice.creuzot~label-park~com>
 Copyright : 2016      Pierre-Alexandre Rouanet <pierre-alexandre.rouanet~label-park~com>
@@ -12,11 +12,9 @@ Copyright : 2017-2018 Fabrice Creuzot <fabrice~reactive-web~fr>
 THE COMPOSER KEY FOR COMMAND LINE IS: luigifab/openmage-maillog
 THE EXTENSION KEY FOR MAGENTO CONNECT MANAGER IS: https://www.luigifab.fr/magento/connect/luigifab/Luigifab_Maillog
 
-THE MODULE AND ALL THE TRANSLATIONS AND ALL THE DOCUMENTATION ARE EXCEPTIONALLY MAGNIFICENT.
 IF YOU FOUND A MISTAKE OR A BUG, PLEASE, CONTACT ME (IN FRENCH OR IN ENGLISH) AT code~luigifab~fr
-
 CSS AND JS FILES ARE MINIFIED WITH clean-css (github.com/jakubpawlowicz/clean-css) AND uglify-js (github.com/mishoo/UglifyJS2).
-ALL FILES (INCLUDING DOCUMENTATION AND TRANSLATIONS) ARE LICENSED UNDER THE TERMS OF GNU GPL 2.0+ LICENSE.
+ALL FILES (INCLUDING DOCUMENTATION AND TRANSLATIONS) ARE LICENSED UNDER THE TERMS OF THE GNU GPL 2+ LICENSE.
 THAT BEING SAID SOME FILES COME FROM OTHER PROJECTS AND ARE UNDER OTHER LICENSES (SEE AT THE END OF THIS FILE).
 
 
@@ -25,9 +23,9 @@ Rewrite
 - global | model | newsletter/subscriber          | maillog/rewrite_subscriber
 - global | model | newsletter_resource/subscriber | maillog/rewrite_subscriberres
 Event
+- adminhtml | adminhtml_customer_prepare_save                  | maillog/observer::setCustomerStoreId
 - adminhtml | admin_system_config_changed_section_maillog      | maillog/observer::updateConfig
 - adminhtml | admin_system_config_changed_section_maillog_sync | maillog/observer::updateConfig
-- adminhtml | adminhtml_customer_prepare_save                  | maillog/observer::setCustomerStoreId
 - adminhtml | newsletter_subscriber_save_before                | maillog/observer::setSubscriberStoreId
 - frontend  | customer_address_save_after                      | maillog/observer::addressSaveSync
 - frontend  | customer_login                                   | maillog/observer::customerLoginSync
@@ -94,6 +92,7 @@ Files and directories
 - app/locale/pt_BR/Luigifab_Maillog.csv
 - app/locale/pt_PT/Luigifab_Maillog.csv
 - app/locale/ru_RU/Luigifab_Maillog.csv
+- app/locale/sk_SK/Luigifab_Maillog.csv
 - app/locale/tr_TR/Luigifab_Maillog.csv
 - app/locale/zh_CN/Luigifab_Maillog.csv
 - app/etc/modules/Luigifab_Maillog.xml
@@ -120,7 +119,7 @@ Translations in en-US (english/United-States) by:
 - Catherine Pergisol <catherinecathe11~aol~com> 2017
 Translations in es-ES (español/España) by:
 - Liliana Moreu <lilichuster~gmail~com> 2017
-- Hélène Vergine <vergineh~gmail~com> 2017
+- Hélène Vergine <vergineh~gmail~com> 2017, 2020
 - Guillaume Genetet <genetet.incorporated~gmail~com> 2018 https://fr.tipeee.com/william-broome
 Translations in fr-FR (français/France) by:
 - Fabrice Creuzot (luigifab) <code~luigifab~fr> 2015-2020

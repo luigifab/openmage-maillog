@@ -3,6 +3,7 @@
 "Status: <span %s>%s</span>","Статус: <span %s>%s</span>"
 "Sender: %s","Отправитель: %s"
 "Subject: %s","Тема: %s"
+"Email %d: %s","Электронная почта %d: %s"
 "Status: %s","Статус: %s"
 " monthly","eжемесячно"
 " weekly","еженедельно"

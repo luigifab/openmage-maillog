@@ -210,7 +210,7 @@
 	{{/depend}}
 
 	<p style="font-size:0.8em; line-height:1.35em; font-style:italic; color:#6F6F6F;">{{config path='design/head/default_title'}} - Gesendete E-Mails-Bericht 💌
-	<br><a href="{{var config}}" style="color:#6F6F6F;">{{var config}}</a> - <a href="#online#" style="color:#6F6F6F;">see in my browser</a> #readimg# #mailid#cron#</p>
+	<br><a href="{{var config}}" style="color:#6F6F6F;">{{var config}}</a> - <a href="#online#" style="color:#6F6F6F;">In meinem Menü nachsehen</a> #readimg# #mailid#cron#</p>
 </div>
 
 {{depend test}}
@@ -245,12 +245,14 @@ Example foreach var1 = [['numb' => -2, 'text' => 'surprise'], ['numb' => 0, 'tex
  X / if {{var var1.text}} nct {{var var1.text}} / {{if var1.text nct var1.text}} true  {{else}} false {{/if}} = {{var var1.x}}
 {{/foreach}}
 --------------------
-Example number 1700200
+Example number 1700200 / number config='maillog/general/number'
  {{number 1700200}}
+ {{number config='maillog/general/number'}}
 
 --------------------
-Example price 99.99
+Example price 99.99 / price config='maillog/general/number'
  {{price 99.99}}
+ {{price config='maillog/general/number'}}
 
 --------------------
 Example foreach var2 = [...]

@@ -245,12 +245,14 @@ Example foreach var1 = [['numb' => -2, 'text' => 'surprise'], ['numb' => 0, 'tex
  X / if {{var var1.text}} nct {{var var1.text}} / {{if var1.text nct var1.text}} true  {{else}} false {{/if}} = {{var var1.x}}
 {{/foreach}}
 --------------------
-Example number 1700200
+Example number 1700200 / number config='maillog/general/number'
  {{number 1700200}}
+ {{number config='maillog/general/number'}}
 
 --------------------
-Example price 99.99
+Example price 99.99 / price config='maillog/general/number'
  {{price 99.99}}
+ {{price config='maillog/general/number'}}
 
 --------------------
 Example foreach var2 = [...]

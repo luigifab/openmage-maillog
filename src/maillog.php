@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated L/25/05/2020
+ * Updated J/23/07/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -19,13 +19,20 @@
  * GNU General Public License (GPL) for more details.
  */
 
-chdir(__DIR__);
+if (PHP_SAPI != 'cli')
+	exit(-1);
+
+chdir(dirname($argv[0])); // root
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
 define('MAGENTO_ROOT', getcwd());
-if ((PHP_SAPI != 'cli') || is_file('maintenance.flag') || is_file('upgrade.flag'))
+
+if (is_file('maintenance.flag') || is_file('upgrade.flag'))
 	exit(0);
+if (is_file('includes/config.php'))
+	include('includes/config.php');
+if (is_file('app/bootstrap.php'))
+	require_once('app/bootstrap.php');
 
 $success = []; $error = []; $done = [];
 $email = true; $sync = true; $dev = false;
@@ -38,11 +45,6 @@ if (in_array('--only-sync', $argv))
 	$email = false;
 if (!$sync && !$email)
 	$email = $sync = true;
-
-if (is_file('includes/config.php'))
-	include('includes/config.php');
-if (is_file('app/bootstrap.php'))
-	require_once('app/bootstrap.php');
 
 require_once('app/Mage.php');
 

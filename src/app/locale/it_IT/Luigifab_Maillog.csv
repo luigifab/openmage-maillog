@@ -11,6 +11,7 @@
 "Table size","Dimensione della tavola"
 "Email reports","Rapporti via email"
 "Separate addresses by a space.","Separare gli indirizzi con uno spazio."
+"Send an email now","Invia un'email adesso"
 "
 						<p>Synchronization allow to synchronize customer data from <strong>OpenMage</strong> to your <strong>System</strong>.<br />It is performed every minutes by cron job on the following events (whether from the backend or from the frontend):</p>
 						<ul>
@@ -74,7 +75,7 @@
 "Manual import: %s.","Importo manuale: %s."
 "Cron job #<a %s>%d</a> finished at %s.","Compito cron n°<a %s>%d</a> terminato il %s."
 "An import is in progress (cron job #<a %s>%d</a>).","An import is in progress (compito cron n°<a %s>%d</a>)."
-"last process: cron job #<a %s>%d</a> finished at %s","last process: compito cron n°<a %s>%d</a> terminato il %s"
+"not yet finished or short <a %s>cron jobs history</a>","not yet finished or short <a %s>cronologia dei compiti cron</a>."
 "Subject: %s","Soggetto: %s"
 "<a %s>Print</a> this email only if necessary.","<a %s>Stampare</a> questa email solo se necessario."
 "Sorry, your email is too old, it is not available online anymore.","Siamo spiacenti, la tua email è troppo vecchia, quindi non è più disponibile online."

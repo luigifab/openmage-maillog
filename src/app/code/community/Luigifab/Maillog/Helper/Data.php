@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/16/06/2020
+ * Updated L/03/08/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -107,6 +107,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		Mage::unregister('maillog_last_vars');
 		Mage::register('maillog_last_vars', $vars);
 
+		$store = empty($vars['store']) ? null : $vars['store'];
+
 		// foreach/forelse
 		$pattern = '/{{foreach\s*(.*?)}}(.*?)({{forelse}}(.*?))?{{\\/foreach\s*}}/si';
 		if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
@@ -197,10 +199,15 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
 
 			$locale = Mage::app()->getStore()->isAdmin() ? Mage::getSingleton('core/translate')->getLocale() :
-				Mage::getStoreConfig('general/locale/code', empty($vars['store']) ? null : $vars['store']);
+				Mage::getStoreConfig('general/locale/code', $store);
 
 			foreach ($matches as $match) {
-				$number  = $varien->_getVariable2($match[1], $match[1]);
+
+				if (mb_stripos($match[1], 'config=') !== false)
+					$number = Mage::getStoreConfig(trim(str_replace('config=', '', $match[1]), '\'"'), $store);
+				else
+					$number = $varien->_getVariable2($match[1], $match[1]);
+
 				$replace = is_numeric($number) ? Zend_Locale_Format::toNumber((float) $number, ['locale' => $locale]) : '';
 				$html    = str_replace($match[0], $replace, $html);
 			}
@@ -210,12 +217,17 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		$pattern = '/{{price\s*(.*?)}}/si';
 		if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
 
-			$currency = Mage::app()->getStore(empty($vars['store']) ? null : $vars['store']);
+			$currency = Mage::app()->getStore($store);
 			if (!empty($vars['order']) && is_object($order = $vars['order']))
 				$currency = $order;
 
 			foreach ($matches as $match) {
-				$number  = $varien->_getVariable2($match[1], $match[1]);
+
+				if (mb_stripos($match[1], 'config=') !== false)
+					$number = Mage::getStoreConfig(trim(str_replace('config=', '', $match[1]), '\'"'), $store);
+				else
+					$number = $varien->_getVariable2($match[1], $match[1]);
+
 				$replace = is_numeric($number) ? $currency->formatPrice($number) : '';
 				$html    = str_replace($match[0], $replace, $html);
 			}
@@ -751,7 +763,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		if (!empty($job->getId())) {
 
 			$url = Mage::helper('adminhtml')->getUrl('*/cronlog_history/view', ['id' => $job->getId()]);
-			$txt = $this->__('last process: cron job #<a %s>%d</a> finished at %s', 'href="'.$url.'"', $job->getId(), $this->formatDate($job->getData('finished_at'), Zend_Date::DATETIME_SHORT));
+			$txt = $this->__('Cron job #<a %s>%d</a> finished at %s.', 'href="'.$url.'"', $job->getId(), $this->formatDate($job->getData('finished_at'), Zend_Date::DATETIME_SHORT));
 
 			if (!$cronlog)
 				$txt = strip_tags($txt);
@@ -759,10 +771,10 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		else {
 			$url = $cronlog ? 'cronlog' : 'system';
 			$url = Mage::helper('adminhtml')->getUrl('*/system_config/edit', ['section' => $url]);
-			$txt = $this->__('last process: not yet finished or short <a %s>cron jobs history</a>', 'href="'.$url.'"');
+			$txt = $this->__('not yet finished or short <a %s>cron jobs history</a>', 'href="'.$url.'"');
 		}
 
-		return '<span class="fri">'.$txt.'</span>';
+		return '<span class="fri">'.$this->__('last process: %s', lcfirst($txt)).'</span>';
 	}
 
 	public function getAllTypes() {

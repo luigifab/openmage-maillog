@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/15/05/2020
+ * Updated S/01/08/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -69,7 +69,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		// recherche et remplace <!-- maillog / maillog --> par rien
 		if ((mb_stripos($body, '<!-- maillog') !== false) && (mb_stripos($body, 'maillog -->') !== false)) {
 			$body = preg_replace('#\s*<!-- maillog\s*#', ' ', $body);
-			$body = preg_replace('#\s*maillog -->\s*#',   ' ', $body);
+			$body = preg_replace('#\s*maillog -->\s*#', ' ', $body);
 		}
 
 		// minifie le code HTML en fonction de la configuration
@@ -128,7 +128,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			'#<br ?/?>\s+#',
 			'#</code>\s</pre>#',
 			'#\s+</textarea>#',
-			'#\n?<!--[^\-\->]+-->#'
+			'#\n?<!--[^\->]+-->#'
 		], [
 			'css">',
 			'</style',
