@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated D/12/07/2020
+ * Updated M/29/09/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,7 +22,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>4.3.0</version>
+			<version>4.4.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -93,44 +93,44 @@
 			</email>
 		</template>
 		<events>
-			<customer_save_commit_after>
-				<observers>
-					<maillog_customer_save>
-						<class>maillog/observer</class>
-						<method>customerSaveSync</method>
-					</maillog_customer_save>
-				</observers>
-			</customer_save_commit_after>
 			<customer_delete_after>
 				<observers>
-					<maillog_customer_delete>
+					<maillog>
 						<class>maillog/observer</class>
 						<method>customerDeleteSync</method>
-					</maillog_customer_delete>
+					</maillog>
 				</observers>
 			</customer_delete_after>
+			<customer_save_commit_after>
+				<observers>
+					<maillog>
+						<class>maillog/observer</class>
+						<method>customerSaveSync</method>
+					</maillog>
+				</observers>
+			</customer_save_commit_after>
 			<newsletter_subscriber_save_after>
 				<observers>
-					<maillog_subscriber_save>
+					<maillog>
 						<class>maillog/observer</class>
 						<method>subscriberSaveSync</method>
-					</maillog_subscriber_save>
+					</maillog>
 				</observers>
 			</newsletter_subscriber_save_after>
 			<newsletter_subscriber_delete_after>
 				<observers>
-					<maillog_subscriber_delete>
+					<maillog>
 						<class>maillog/observer</class>
 						<method>subscriberDeleteSync</method>
-					</maillog_subscriber_delete>
+					</maillog>
 				</observers>
 			</newsletter_subscriber_delete_after>
 			<sales_order_invoice_save_commit_after>
 				<observers>
-					<maillog_order_invoice>
+					<maillog>
 						<class>maillog/observer</class>
 						<method>orderInvoiceSync</method>
-					</maillog_order_invoice>
+					</maillog>
 				</observers>
 			</sales_order_invoice_save_commit_after>
 		</events>
@@ -139,18 +139,18 @@
 		<events>
 			<customer_login>
 				<observers>
-					<maillog_customer_login>
+					<maillog>
 						<class>maillog/observer</class>
 						<method>customerLoginSync</method>
-					</maillog_customer_login>
+					</maillog>
 				</observers>
 			</customer_login>
 			<customer_address_save_after>
 				<observers>
-					<maillog_address_save>
+					<maillog>
 						<class>maillog/observer</class>
 						<method>addressSaveSync</method>
-					</maillog_address_save>
+					</maillog>
 				</observers>
 			</customer_address_save_after>
 		</events>
@@ -195,18 +195,18 @@
 			</admin_system_config_changed_section_maillog_sync>
 			<adminhtml_customer_prepare_save><!-- storeId -->
 				<observers>
-					<maillog_customer_storeid>
+					<maillog>
 						<class>maillog/observer</class>
 						<method>setCustomerStoreId</method>
-					</maillog_customer_storeid>
+					</maillog>
 				</observers>
 			</adminhtml_customer_prepare_save>
 			<newsletter_subscriber_save_before><!-- storeId -->
 				<observers>
-					<maillog_subscriber_storeid>
+					<maillog>
 						<class>maillog/observer</class>
 						<method>setSubscriberStoreId</method>
-					</maillog_subscriber_storeid>
+					</maillog>
 				</observers>
 			</newsletter_subscriber_save_before>
 		</events>
@@ -276,8 +276,8 @@
 		</maillog>
 		<maillog_directives>
 			<general>
-				<!-- fontsize = self.getComputedStyle(document.documentElement).fontSize -->
-				<fontsize>16</fontsize>
+				<!-- font_size = self.getComputedStyle(document.documentElement).fontSize -->
+				<font_size>16</font_size>
 			</general>
 		</maillog_directives>
 		<newsletter>

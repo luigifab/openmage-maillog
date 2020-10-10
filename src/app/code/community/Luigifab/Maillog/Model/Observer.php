@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated L/13/07/2020
+ * Updated M/06/10/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -120,203 +120,175 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 		$oldLocale = Mage::getSingleton('core/translate')->getLocale();
 		$newLocale = Mage::app()->getStore()->isAdmin() ? $oldLocale : Mage::getStoreConfig('general/locale/code');
-		Mage::getSingleton('core/translate')->setLocale($newLocale)->init('adminhtml', true);
+		$locales   = [];
 
-		$frequency = Mage::getStoreConfig('maillog/email/frequency');
-
-		// chargement des emails de la période
-		// le mois dernier (mensuel/monthly), les septs derniers jour (hebdomadaire/weekly), hier (quotidien/daily)
-		if ($frequency == Mage_Adminhtml_Model_System_Config_Source_Cron_Frequency::CRON_MONTHLY) {
-			$frequency = $this->_('monthly');
-			$dates = $this->getDateRange('last_month');
-		}
-		else if ($frequency == Mage_Adminhtml_Model_System_Config_Source_Cron_Frequency::CRON_WEEKLY) {
-			$frequency = $this->_('weekly');
-			$dates = $this->getDateRange('last_week');
-		}
-		else {
-			$frequency = $this->_('daily');
-			$dates = $this->getDateRange('last_day');
-		}
-
-		// chargement des emails de la période
-		// optimisation maximale de manière à ne charger que le nécessaire (pas le contenu des emails)
-		$emails = Mage::getResourceModel('maillog/email_collection');
-		$emails->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['email_id', 'status', 'mail_subject', 'created_at']); // opt. maximale
-		$emails->addFieldToFilter('created_at', [
-			'datetime' => true,
-			'from' => $dates['start']->toString(Zend_Date::RFC_3339),
-			'to'   => $dates['end']->toString(Zend_Date::RFC_3339)
-		]);
-		$emails->setOrder('email_id', 'desc');
-
-		$errors = [];
+		// recherche des langues et des emails
+		$emails = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/email/recipient_email')));
 		foreach ($emails as $email) {
-
-			if (!in_array($email->getData('status'), ['error', 'pending']))
-				continue;
-
-			$link = '<a href="'.$this->getEmailUrl('adminhtml/maillog_history/view', ['id' => $email->getId()]).'" style="font-weight:700; color:#E41101; text-decoration:none;">'.$this->__('Email %d: %s', $email->getId(), $email->getSubject()).'</a>';
-
-			$state = $this->__('Status: %s', $this->__(ucfirst($email->getData('status'))));
-			$hour  = $this->__('Created At: %s', $this->formatDate($email->getData('created_at')));
-
-			$errors[] = sprintf('(%d) %s / %s / %s', count($errors) + 1, $link, $hour, $state);
+			if (!in_array($email, ['hello@example.org', 'hello@example.com', '']))
+				$locales[$newLocale][] = $email;
 		}
 
-		$items = [];
-		$vars  = [
-			'frequency'            => $frequency,
-			'date_period_from'     => $dates['start']->toString(Zend_Date::DATETIME_FULL),
-			'date_period_to'       => $dates['end']->toString(Zend_Date::DATETIME_FULL),
-			'total_email'          => count($emails),
-			'total_pending'        => count($emails->getItemsByColumnValue('status', 'pending')),
-			'total_sending'        => count($emails->getItemsByColumnValue('status', 'sending')),
-			'total_sent'           => count($emails->getItemsByColumnValue('status', 'sent')),
-			'total_read'           => count($emails->getItemsByColumnValue('status', 'read')),
-			'total_error'          => count($emails->getItemsByColumnValue('status', 'error')),
-			'total_unsent'         => count($emails->getItemsByColumnValue('status', 'notsent')),
-			'total_bounce'         => count($emails->getItemsByColumnValue('status', 'bounce')),
-			'error_list'           => implode('</li><li style="margin:0.8em 0 0.5em;">', $errors),
-			'import_bounces'       => trim(strip_tags($this->getImportStatus('bounces', 'bounces'), '<br> <span>')),
-			'import_unsubscribers' => trim(strip_tags($this->getImportStatus('unsubscribers', 'unsubscribers'), '<br> <span>')),
-			'sync'                 => Mage::getStoreConfigFlag('maillog_sync/general/enabled'),
-			'items'                => &$items
-		];
+		// génère et envoie le rapport
+		foreach ($locales as $locale => $recipients) {
 
-		// chargement des statistiques des emails et des synchronisations
-		// optimisation maximale de manière à ne faire que des COUNT en base de données
-		// ne génère pas les données de la semaine courante dans le rapport du lundi et du mardi
-		// ne recherche pas les données au dela de la durée de vie maximale (email et sync)
-		$emails = Mage::getResourceModel('maillog/email_collection');
-		$syncs  = Mage::getResourceModel('maillog/sync_collection');
+			Mage::getSingleton('core/translate')->setLocale($locale)->init('adminhtml', true);
+			$frequency = Mage::getStoreConfig('maillog/email/frequency');
+			$errors = [];
 
-		$curWeek  = !in_array(Mage::getSingleton('core/locale')->date()->toString(Zend_Date::WEEKDAY_8601), [1, 2]);
-		$curMonth = Mage::getSingleton('core/locale')->date()->toString(Zend_Date::DAY_SHORT) > 9;
-		foreach (['week_' => true, 'month_' => false] as $key => $week) {
+			// recherche des dates
+			if ($frequency == Mage_Adminhtml_Model_System_Config_Source_Cron_Frequency::CRON_MONTHLY) {
+				$frequency = $this->_('monthly');
+				$dates = $this->getDateRange('last_month');
+			}
+			else if ($frequency == Mage_Adminhtml_Model_System_Config_Source_Cron_Frequency::CRON_WEEKLY) {
+				$frequency = $this->_('weekly');
+				$dates = $this->getDateRange('last_week');
+			}
+			else {
+				$frequency = $this->_('daily');
+				$dates = $this->getDateRange('last_day');
+			}
 
-			for ($i = 1; $i <= 14; $i++) {
+			// chargement des emails
+			// optimisation maximale de manière à ne charger que le nécessaire (pas le contenu des emails)
+			$emails = Mage::getResourceModel('maillog/email_collection');
+			$emails->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['email_id', 'status', 'mail_subject', 'created_at']); // opt. maximale
+			$emails->addFieldToFilter('created_at', [
+				'datetime' => true,
+				'from' => $dates['start']->toString(Zend_Date::RFC_3339),
+				'to'   => $dates['end']->toString(Zend_Date::RFC_3339)
+			]);
+			$emails->setOrder('email_id', 'desc');
 
-				// cherche les dates
-				if (($i == 1) && ($week && $curWeek || !$week && $curMonth)) {
-					$variation = false;
-					$dates     = $this->getDateRange($week ? 'cur_week' : 'cur_month');
-					$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339),
-						'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
-					$oldWhere  = [];
-				}
-				else if ($week && $curWeek || !$week && $curMonth) {
-					$variation = ($i < 14);
-					$dates     = $this->getDateRange($week ? 'last_week' : 'last_month', $week ? $i - 2 : $i - 1);
-					$oldDates  = $this->getDateRange($week ? 'last_week' : 'last_month', $week ? $i - 2 + 1 : $i - 1 + 1);
+			// recherche des erreurs
+			foreach ($emails as $email) {
+
+				if (!in_array($email->getData('status'), ['error', 'pending']))
+					continue;
+
+				$errors[] = sprintf('(%d) %s / %s / %s',
+					count($errors) + 1,
+					'<a href="'.$this->getEmailUrl('adminhtml/maillog_history/view', ['id' => $email->getId()]).'" style="font-weight:700; color:#E41101; text-decoration:none;">'.$this->__('Email %d: %s', $email->getId(), $email->getSubject()).'</a>',
+					$this->__('Created At: %s', $this->formatDate($email->getData('created_at'))),
+					$this->__('Status: %s', $this->__(ucfirst($email->getData('status'))))
+				);
+			}
+
+			$vars = [
+				'frequency'            => $frequency,
+				'date_period_from'     => $dates['start']->toString(Zend_Date::DATETIME_FULL),
+				'date_period_to'       => $dates['end']->toString(Zend_Date::DATETIME_FULL),
+				'total_email'          => count($emails),
+				'total_pending'        => count($emails->getItemsByColumnValue('status', 'pending')),
+				'total_sending'        => count($emails->getItemsByColumnValue('status', 'sending')),
+				'total_sent'           => count($emails->getItemsByColumnValue('status', 'sent')),
+				'total_read'           => count($emails->getItemsByColumnValue('status', 'read')),
+				'total_error'          => count($emails->getItemsByColumnValue('status', 'error')),
+				'total_unsent'         => count($emails->getItemsByColumnValue('status', 'notsent')),
+				'total_bounce'         => count($emails->getItemsByColumnValue('status', 'bounce')),
+				'error_list'           => implode('</li><li style="margin:0.8em 0 0.5em;">', $errors),
+				'import_bounces'       => trim(strip_tags($this->getImportStatus('bounces', 'bounces'), '<br> <span>')),
+				'import_unsubscribers' => trim(strip_tags($this->getImportStatus('unsubscribers', 'unsubscribers'), '<br> <span>')),
+				'sync'                 => Mage::getStoreConfigFlag('maillog_sync/general/enabled')
+			];
+
+			// chargement des statistiques des emails et des synchronisations
+			// optimisation maximale de manière à ne faire que des COUNT en base de données
+			// ne génère pas les données de la semaine courante dans le rapport du lundi et du mardi
+			// ne recherche pas les données au dela de la durée de vie maximale (email et sync)
+			$emails = Mage::getResourceModel('maillog/email_collection');
+			$syncs  = Mage::getResourceModel('maillog/sync_collection');
+
+			foreach (['week_' => true, 'month_' => false] as $key => $isWeek) {
+
+				for ($i = 1; $i <= 14; $i++) {
+
+					$variation = ($i > 1) && ($i < 14);
+					$dates     = $this->getDateRange($isWeek ? 'last_week' : 'last_month', $i - 1);
+					$oldDates  = $this->getDateRange($isWeek ? 'last_week' : 'last_month', $i - 0);
 					$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339),
 						'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
 					$oldWhere  = ['from' => $oldDates['start']->toString(Zend_Date::RFC_3339),
 						'to' => $oldDates['end']->toString(Zend_Date::RFC_3339)];
-				}
-				else {
-					$variation = ($i < 14);
-					$dates     = $this->getDateRange($week ? 'last_week' : 'last_month', $week ? $i - 1 : $i);
-					$oldDates  = $this->getDateRange($week ? 'last_week' : 'last_month', $week ? $i - 1 + 1 : $i + 1);
-					$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339),
-						'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
-					$oldWhere  = ['from' => $oldDates['start']->toString(Zend_Date::RFC_3339),
-						'to' => $oldDates['end']->toString(Zend_Date::RFC_3339)];
-				}
 
-				// affiche les dates
-				if ($week) {
-					$items[$i][$key.'period'] = $this->__('Week %d', $dates['start']->toString(Zend_Date::WEEK)).
-						((($i == 1) && $curWeek) ? '*' : '').
-						'<br><small>'.$dates['start']->toString(Zend_Date::DATE_SHORT).' - '.
-						$dates['end']->toString(Zend_Date::DATE_SHORT).'</small>';
-				}
-				else {
-					$items[$i][$key.'period'] = ucfirst($dates['start']->toString(Zend_Date::MONTH_NAME).' '.
-						$dates['start']->toString(Zend_Date::YEAR)).
-						((($i == 1) && $curMonth) ? '*' : '').
-						'<br><small>'.$dates['start']->toString(Zend_Date::DATE_SHORT).' - '.
-						$dates['end']->toString(Zend_Date::DATE_SHORT).'</small>';
-				}
-
-				// calcul les statistiques
-				$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation);
-				$items[$i][$key.'total_email']       = array_shift($tmp);
-				$items[$i][$key.'variation_email']   = array_shift($tmp);
-				$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation, ['in'  => ['sent', 'read']]);
-				$items[$i][$key.'percent_sent']      = array_shift($tmp);
-				$items[$i][$key.'variation_sent']    = array_shift($tmp);
-				$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation, ['in'  => ['sent', 'read']], 'read');
-				$items[$i][$key.'percent_read']      = array_shift($tmp);
-				$items[$i][$key.'variation_read']    = array_shift($tmp);
-
-				// calcul les statistiques
-				$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation);
-				$items[$i][$key.'total_sync']        = array_shift($tmp);
-				$items[$i][$key.'variation_sync']    = array_shift($tmp);
-				$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation, 'success');
-				$items[$i][$key.'percent_success']   = array_shift($tmp);
-				$items[$i][$key.'variation_success'] = array_shift($tmp);
-
-				// supprime éventuellement les variations de l'itération précédente
-				if ($i > 1) {
-					if ($items[$i][$key.'total_email'] == 'n/a') {
-						$items[$i - 1][$key.'variation_email'] = 'n/a';
-						$items[$i - 1][$key.'variation_sent']  = 'n/a';
-						$items[$i - 1][$key.'variation_read']  = 'n/a';
+					// affiche les dates
+					if ($isWeek) {
+						$vars['items'][$i][$key.'period'] = $this->__('Week %d', $dates['start']->toString(Zend_Date::WEEK)).
+							'<br><small>'.$dates['start']->toString(Zend_Date::DATE_SHORT).' - '.
+							$dates['end']->toString(Zend_Date::DATE_SHORT).'</small>';
 					}
-					if ($items[$i][$key.'total_sync'] == 'n/a') {
-						$items[$i - 1][$key.'variation_sync']    = 'n/a';
-						$items[$i - 1][$key.'variation_success'] = 'n/a';
+					else {
+						$vars['items'][$i][$key.'period'] = ucfirst($dates['start']->toString(Zend_Date::MONTH_NAME).' '.
+							$dates['start']->toString(Zend_Date::YEAR)).
+							'<br><small>'.$dates['start']->toString(Zend_Date::DATE_SHORT).' - '.
+							$dates['end']->toString(Zend_Date::DATE_SHORT).'</small>';
 					}
+
+					// calcul les statistiques
+					$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation);
+					$vars['items'][$i][$key.'total_email']       = array_shift($tmp);
+					$vars['items'][$i][$key.'variation_email']   = array_shift($tmp);
+					$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation, ['in'  => ['sent', 'read']]);
+					$vars['items'][$i][$key.'percent_sent']      = array_shift($tmp);
+					$vars['items'][$i][$key.'variation_sent']    = array_shift($tmp);
+					$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation, ['in'  => ['sent', 'read']], 'read');
+					$vars['items'][$i][$key.'percent_read']      = array_shift($tmp);
+					$vars['items'][$i][$key.'variation_read']    = array_shift($tmp);
+
+					// calcul les statistiques
+					$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation);
+					$vars['items'][$i][$key.'total_sync']        = array_shift($tmp);
+					$vars['items'][$i][$key.'variation_sync']    = array_shift($tmp);
+					$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation, 'success');
+					$vars['items'][$i][$key.'percent_success']   = array_shift($tmp);
+					$vars['items'][$i][$key.'variation_success'] = array_shift($tmp);
 				}
 			}
-		}
 
-		// envoi des emails
-		$vars['test'] = $test;
-		if ($vars['test']) {
-			$vars['var1'] = [['numb' => -2, 'text' => 'surprise'], ['numb' => 0, 'text' => 'surprise'], ['numb' => 2, 'text' => 'surprise']];
-			$vars['var2'] = Mage::getResourceModel('catalog/product_collection')->setPageSize(3);
-			foreach ($vars['var1'] as $i => $n) {
-				$t = $n['text'];
-				$n = $n['numb'];
-				$vars['var1'][$i]['a'] = ($n >  0) ? 'true' : 'false';
-				$vars['var1'][$i]['b'] = ($n >= 0) ? 'true' : 'false';
-				$vars['var1'][$i]['c'] = ($n <  0) ? 'true' : 'false';
-				$vars['var1'][$i]['d'] = ($n <= 0) ? 'true' : 'false';
-				$vars['var1'][$i]['e'] = ($n == 0) ? 'true' : 'false';
-				$vars['var1'][$i]['f'] = ($n != 0) ? 'true' : 'false';
-				$vars['var1'][$i]['g'] = ($n >  $n) ? 'true' : 'false';
-				$vars['var1'][$i]['h'] = ($n >= $n) ? 'true' : 'false';
-				$vars['var1'][$i]['i'] = ($n <  $n) ? 'true' : 'false';
-				$vars['var1'][$i]['j'] = ($n <= $n) ? 'true' : 'false';
-				$vars['var1'][$i]['k'] = ($n == $n) ? 'true' : 'false';
-				$vars['var1'][$i]['l'] = ($n != $n) ? 'true' : 'false';
-				// == et != avec empty
-				$vars['var1'][$i]['m'] =  empty($n) ? 'true' : 'false';
-				$vars['var1'][$i]['n'] = !empty($n) ? 'true' : 'false';
-				// == et != // en PHP, tout string vaut 0 (voir aussi helper::variableMail)
-				$vars['var1'][$i]['o'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'false' : (($n == 'abcde') ? 'true' : 'false');
-				$vars['var1'][$i]['p'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'true'  : (($n != 'abcde') ? 'true' : 'false');
-				// in_array
-				$vars['var1'][$i]['q'] =  in_array($n, [0,1,2]) ? 'true' : 'false';
-				$vars['var1'][$i]['r'] = !in_array($n, [0,1,2]) ? 'true' : 'false';
-				// contains
-				$vars['var1'][$i]['s'] = (mb_stripos($t, 'pri') !== false) ? 'true' : 'false';
-				$vars['var1'][$i]['t'] = (mb_stripos($t, 'pri') === false) ? 'true' : 'false';
-				$vars['var1'][$i]['u'] = (mb_stripos($t, '777') !== false) ? 'true' : 'false';
-				$vars['var1'][$i]['v'] = (mb_stripos($t, '777') === false) ? 'true' : 'false';
-				$vars['var1'][$i]['w'] = (mb_stripos($t, $t) !== false) ? 'true' : 'false';
-				$vars['var1'][$i]['x'] = (mb_stripos($t, $t) === false) ? 'true' : 'false';
+			// envoi des emails
+			$vars['test'] = $test;
+			if ($vars['test']) {
+				$vars['var1'] = [['numb' => -2, 'text' => 'surprise'], ['numb' => 0, 'text' => 'surprise'], ['numb' => 2, 'text' => 'surprise']];
+				$vars['var2'] = Mage::getResourceModel('catalog/product_collection')->setPageSize(3);
+				foreach ($vars['var1'] as $i => $n) {
+					$t = $n['text'];
+					$n = $n['numb'];
+					$vars['var1'][$i]['a'] = ($n >  0) ? 'true' : 'false';
+					$vars['var1'][$i]['b'] = ($n >= 0) ? 'true' : 'false';
+					$vars['var1'][$i]['c'] = ($n <  0) ? 'true' : 'false';
+					$vars['var1'][$i]['d'] = ($n <= 0) ? 'true' : 'false';
+					$vars['var1'][$i]['e'] = ($n == 0) ? 'true' : 'false';
+					$vars['var1'][$i]['f'] = ($n != 0) ? 'true' : 'false';
+					$vars['var1'][$i]['g'] = ($n >  $n) ? 'true' : 'false';
+					$vars['var1'][$i]['h'] = ($n >= $n) ? 'true' : 'false';
+					$vars['var1'][$i]['i'] = ($n <  $n) ? 'true' : 'false';
+					$vars['var1'][$i]['j'] = ($n <= $n) ? 'true' : 'false';
+					$vars['var1'][$i]['k'] = ($n == $n) ? 'true' : 'false';
+					$vars['var1'][$i]['l'] = ($n != $n) ? 'true' : 'false';
+					// == et != avec empty
+					$vars['var1'][$i]['m'] =  empty($n) ? 'true' : 'false';
+					$vars['var1'][$i]['n'] = !empty($n) ? 'true' : 'false';
+					// == et != // en PHP, tout string vaut 0 (voir aussi helper::variableMail)
+					$vars['var1'][$i]['o'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'false' : (($n == 'abcde') ? 'true' : 'false');
+					$vars['var1'][$i]['p'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'true'  : (($n != 'abcde') ? 'true' : 'false');
+					// in_array
+					$vars['var1'][$i]['q'] =  in_array($n, [0,1,2]) ? 'true' : 'false';
+					$vars['var1'][$i]['r'] = !in_array($n, [0,1,2]) ? 'true' : 'false';
+					// contains
+					$vars['var1'][$i]['s'] = (mb_stripos($t, 'pri') !== false) ? 'true' : 'false';
+					$vars['var1'][$i]['t'] = (mb_stripos($t, 'pri') === false) ? 'true' : 'false';
+					$vars['var1'][$i]['u'] = (mb_stripos($t, '777') !== false) ? 'true' : 'false';
+					$vars['var1'][$i]['v'] = (mb_stripos($t, '777') === false) ? 'true' : 'false';
+					$vars['var1'][$i]['w'] = (mb_stripos($t, $t) !== false) ? 'true' : 'false';
+					$vars['var1'][$i]['x'] = (mb_stripos($t, $t) === false) ? 'true' : 'false';
+				}
 			}
+
+			$this->sendReportToRecipients($locale, $recipients, $vars);
 		}
 
-		$this->sendReportToRecipients($newLocale, $vars);
-		if ($newLocale != $oldLocale)
-			Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);
-
-		return Mage::registry('maillog_last_emailid');
+		Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);
 	}
 
 	private function getNumbers(array $where, array $oldWhere, object $collection, bool $variation = true, $status1 = null, $status2 = null) {
@@ -395,15 +367,15 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 		// nombre d'email/sync période actuelle, variation par rapport à la période précédente
 		if (empty($status1))
-			return [$nb1, ($nb3 != 0) ? floor(($nb1 - $nb3) / $nb3 * 100) : ($variation ? 0 : 'n/a')];
+			return [$nb1, ($nb3 != 0) ? floor(($nb1 - $nb3) / $nb3 * 100) : ($variation ? 0 : '')];
 
 		// pourcentage période actuelle, variation par rapport à la période précédente
 		$pct1 = ($nb1 > 0) ? ($nb2 * 100) / $nb1 : 0;
 		$pct2 = ($nb3 > 0) ? ($nb4 * 100) / $nb3 : 0;
-		return [floor($pct1), ($pct2 != 0) ? floor(($pct1 - $pct2) / $pct2 * 100) : ($variation ? 0 : 'n/a')];
+		return [floor($pct1), ($pct2 != 0) ? floor(($pct1 - $pct2) / $pct2 * 100) : ($variation ? 0 : '')];
 	}
 
-	private function getDateRange(string $range, int $coeff = 0) {
+	private function getDateRange(string $range, int $coeff = 1) {
 
 		$dateStart = Mage::getSingleton('core/locale')->date()->setHour(0)->setMinute(0)->setSecond(0);
 		$dateEnd   = Mage::getSingleton('core/locale')->date()->setHour(23)->setMinute(59)->setSecond(59);
@@ -413,8 +385,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$day = $dateStart->toString(Zend_Date::WEEKDAY_8601) - 1;
 
 		if ($range == 'last_month') {
-			$dateStart->setDay(1)->subMonth(1 * $coeff);
-			$dateEnd->setDay(1)->subMonth(1 * $coeff)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
+			$dateStart->setDay(3)->subMonth(1 * $coeff)->setDay(1);
+			$dateEnd->setDay(3)->subMonth(1 * $coeff)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
 		}
 		else if ($range == 'cur_week') {
 			$dateStart->subDay($day);
@@ -425,8 +397,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$dateEnd->subDay(1);
 		}
 		else if ($range == 'last_week') {
-			$dateStart->subDay($day + 7 * $coeff + 7);
-			$dateEnd->subDay($day + 7 * $coeff + 1);
+			$dateStart->subDay($day + 7 * $coeff);
+			$dateEnd->subDay($day + 7 * $coeff - 6);
 		}
 		else if ($range == 'last_day') {
 			$dateStart->subDay(1);
@@ -444,41 +416,36 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			return preg_replace('#/[^/]+\.php(\d*)/#', '/index.php$1/', Mage::helper('adminhtml')->getUrl($url, $params));
 	}
 
-	private function sendReportToRecipients(string $locale, array $vars = []) {
+	private function sendReportToRecipients(string $locale, array $emails, array $vars = []) {
 
-		$emails = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/email/recipient_email')));
 		$vars['config'] = $this->getEmailUrl('adminhtml/system/config');
 		$vars['config'] = mb_substr($vars['config'], 0, mb_strripos($vars['config'], '/system/config'));
 
 		foreach ($emails as $email) {
 
-			if (!in_array($email, ['hello@example.org', 'hello@example.com', ''])) {
+			$sender   = Mage::getStoreConfig('maillog/email/sender_email_identity');
+			$template = Mage::getModel('core/email_template');
 
-				$sender   = Mage::getStoreConfig('maillog/email/sender_email_identity');
-				$template = Mage::getModel('core/email_template');
-
-				if ($vars['test']) {
-					$template->getMail()->createAttachment(
-						gzencode(file_get_contents(Mage::getModuleDir('etc', 'Luigifab_Maillog').'/tidy.conf'), 9),
-						'application/x-gzip',
-						Zend_Mime::DISPOSITION_ATTACHMENT,
-						Zend_Mime::ENCODING_BASE64,
-						'tidy.gz'
-					);
-				}
-
-				$template->setSentSuccess(false);
-				$template->setDesignConfig(['store' => null]);
-				$template->loadDefault('maillog_email_template', $locale);
-				$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name'));
-				$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email'));
-				$template->setSentSuccess($template->send($email, null, $vars));
-
-				if (!$template->getSentSuccess())
-					Mage::throwException($this->__('Can not send the report by email to %s.', $email));
-
-				//exit($template->getProcessedTemplate($vars));
+			if ($vars['test']) {
+				$template->getMail()->createAttachment(
+					gzencode(file_get_contents(Mage::getModuleDir('etc', 'Luigifab_Maillog').'/tidy.conf'), 9),
+					'application/x-gzip',
+					Zend_Mime::DISPOSITION_ATTACHMENT,
+					Zend_Mime::ENCODING_BASE64,
+					'tidy.gz'
+				);
 			}
+
+			$template->setSentSuccess(false);
+			$template->setDesignConfig(['store' => null]);
+			$template->loadDefault('maillog_email_template', $locale);
+			$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name'));
+			$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email'));
+			$template->setSentSuccess($template->send($email, null, $vars));
+			//exit($template->getProcessedTemplate($vars));
+
+			if (!$template->getSentSuccess())
+				Mage::throwException($this->__('Can not send the report by email to %s.', $email));
 		}
 	}
 
@@ -521,7 +488,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$this->sendSync($observer->getData('customer'), 'customer', 'email', 'update');
 	}
 
-	// EVENT address_save_after (frontend)
+	// EVENT customer_address_save_after (frontend)
 	public function addressSaveSync(Varien_Event_Observer $observer) {
 
 		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true))

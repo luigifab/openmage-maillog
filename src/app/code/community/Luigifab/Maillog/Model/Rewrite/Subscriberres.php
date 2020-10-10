@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/26/09/2018
- * Updated D/13/10/2019
+ * Updated L/05/10/2019
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -21,7 +21,7 @@
 
 class Luigifab_Maillog_Model_Rewrite_Subscriberres extends Mage_Newsletter_Model_Resource_Subscriber {
 
-	public function loadByEmail(string $subscriberEmail, int $storeId = 0) {
+	public function loadByEmail($subscriberEmail, $storeId = 0) {
 
 		if (Mage::getStoreConfigFlag('customer/account_share/scope')) {
 

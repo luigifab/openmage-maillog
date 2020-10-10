@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated M/28/07/2020
+ * Updated M/06/10/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -27,9 +27,8 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// event before (vendor/singleton::method)
 		// avant de commencer la recherche des valeurs
-		$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_before');
-		if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1) {
-			$event = (array) explode('::', $event); // (yes)
+		if (!empty($this->_update_configandvalues_before)) {
+			$event = $this->_update_configandvalues_before;
 			$event = Mage::helper($event[0])->{$event[1]}($values, $config);
 			if ($event !== true)
 				return $event;
@@ -46,10 +45,24 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// récupére ou charge l'éventuel produit
 		if (!empty($product)) {
-			if (is_numeric($product))
-				$product = Mage::getModel('catalog/product')->load($product);
-			else if (is_string($product))
-				$product = Mage::getModel('catalog/product')->load($product, 'sku');
+			if (is_numeric($product)) {
+				$id = $product;
+				$storeId  = Mage::app()->getStore()->getId();
+				$resource = Mage::getResourceSingleton('catalog/product');
+				$product  = Mage::getModel('catalog/product')
+					->setId($id)
+					->setData('name', $resource->getAttributeRawValue($id, 'name', $storeId))
+					->setData($attribute, $resource->getAttributeRawValue($id, $attribute, $storeId));
+			}
+			else if (is_string($product)) {
+				$id = Mage::getModel('catalog/product')->getIdBySku($product);
+				$storeId  = Mage::app()->getStore()->getId();
+				$resource = Mage::getResourceSingleton('catalog/product');
+				$product  = Mage::getModel('catalog/product')
+					->setId($id)
+					->setData('name', $resource->getAttributeRawValue($id, 'name', $storeId))
+					->setData($attribute, $resource->getAttributeRawValue($id, $attribute, $storeId));
+			}
 		}
 		if (is_object($product) && !empty($product->getId())) {
 			if (empty($file))
@@ -60,7 +73,13 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// récupére ou charge l'éventuelle catégorie
 		if (!empty($category) && is_numeric($category)) {
-			$category = Mage::getModel('catalog/category')->load($category);
+			$id = $category;
+			$storeId  = Mage::app()->getStore()->getId();
+			$resource = Mage::getResourceSingleton('catalog/category');
+			$category = Mage::getModel('catalog/category')
+				->setId($id)
+				->setData('name', $resource->getAttributeRawValue($id, 'name', $storeId))
+				->setData($attribute, $resource->getAttributeRawValue($id, $attribute, $storeId));
 		}
 		if (is_object($category) && !empty($category->getId())) {
 			$attribute = 'category'; // sinon ça marchera pas
@@ -87,9 +106,8 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// event ready (vendor/singleton::method)
 		// avant la génération des balises html
-		$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_ready');
-		if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1) {
-			$event = (array) explode('::', $event); // (yes)
+		if (!empty($this->_update_configandvalues_ready)) {
+			$event = $this->_update_configandvalues_ready;
 			$event = Mage::helper($event[0])->{$event[1]}($product, $helper, $sizes, $extra, $attribute, $file);
 			if ($event !== true)
 				return $event;
@@ -100,9 +118,8 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// event after (vendor/singleton::method)
 		// après la génération des balises html
-		$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_after');
-		if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1) {
-			$event = (array) explode('::', $event); // (yes)
+		if (!empty($this->_update_configandvalues_after)) {
+			$event = $this->_update_configandvalues_after;
 			return Mage::helper($event[0])->{$event[1]}($html);
 		}
 
@@ -111,12 +128,10 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 	private function createTag(object $product, object $helper, array $sizes, array $extra, string $attribute, string $file) {
 
-		$font = (float) Mage::getStoreConfig('maillog_directives/general/fontsize');
-		$font = ($font > 0) ? $font : 16;
 		$tags = ['<picture>'];
 
 		if (mb_substr($file, -4) == '.svg') {
-			foreach ($sizes as $breakpoint => $size) { }
+			$size   = end($sizes);
 			$tags[] = '<img src="'.$helper->init($product, $attribute, $file)->resize($size['w'], $size['h']).'" '.implode(' ', $extra).' />';
 		}
 		else {
@@ -126,13 +141,13 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 					(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
 				];
 				// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
-				// 16 parce qu'en javascript getComputedStyle(document.documentElement).fontSize = 16 ($font)
+				// 16 parce qu'en javascript getComputedStyle(document.documentElement).fontSize = 16 ($this->_font_size)
 				if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
 					$rem    = empty($rem) ? 0 : $rem;
 					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
 				}
 				else {
-					$rem    = round($breakpoint / $font, 1);
+					$rem    = round($breakpoint / $this->_font_size, 1);
 					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
 				}
 			}
@@ -141,7 +156,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		$tags[] = '</picture>';
 
-		if (Mage::getStoreConfigFlag('maillog_directives/general/show_image_size')) {
+		if ($this->_show_image_size) {
 
 			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; height:14px; line-height:14px; z-index:1; font-size:12px; color:#FFF; background-color:#000;">...</span>');
 
@@ -197,47 +212,72 @@ self.addEventListener("resize", maillogdebug);
 
 	private function getPictureConfig() {
 
-		if (empty($this->pictureConfig)) {
+		if (empty($this->_pictureConfig)) {
 
-			$config = @unserialize(Mage::getStoreConfig('maillog_directives/general/special_config'), ['allowed_classes' => false]);
-			$config = is_array($config) ? $config : [];
+			// config général
+			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_before');
+			if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1)
+				$this->_update_configandvalues_before = (array) explode('::', $event); // (yes)
 
-			// à partir de
-			// $config[0] => Array(
-			//  [c] => test
-			//  [d] =>
-			//  [0] => Array( [w] => 560 [h] => 480 )
-			//  [1] => Array( [b] => 320 [w] => 209 [h] => 177 )
-			//  [3] => Array( [b] => 768 [w] => 420 [h] => 360 )
-			//  [2] => Array( [b] => 380 [w] => 252 [h] => 216 )
-			// )
-			// génère
-			// $config[test] => Array(
-			//  [320] => Array( [b] => 320 [w] => 209 [h] => 177 )
-			//  [380] => Array( [b] => 380 [w] => 252 [h] => 216 )
-			//  [768] => Array( [b] => 768 [w] => 420 [h] => 360 )
-			//  [769] => Array( [w] => 560 [h] => 480 )
-			// )
-			foreach ($config as $key => $data) {
+			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_ready');
+			if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1)
+				$this->_update_configandvalues_ready = (array) explode('::', $event); // (yes)
 
-				$config[$data['c']] = [];
-				foreach ($data as $subdata) {
-					if (is_array($subdata))
-						$config[$data['c']][empty($subdata['b']) ? 0 : $subdata['b']] = $subdata;
+			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_after');
+			if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1)
+				$this->_update_configandvalues_after = (array) explode('::', $event); // (yes)
+
+			$this->_font_size = (float) Mage::getStoreConfig('maillog_directives/general/font_size');
+			$this->_font_size = ($this->_font_size > 0) ? $this->_font_size : 16;
+
+			$this->_show_image_size = Mage::getStoreConfigFlag('maillog_directives/general/show_image_size');
+
+			// config des tags (avec mise en cache)
+			$config = @json_decode(Mage::app()->loadCache('maillog_config'), true);
+			if (empty($config) || !is_array($config)) {
+
+				$config = @unserialize(Mage::getStoreConfig('maillog_directives/general/special_config'), ['allowed_classes' => false]);
+				$config = is_array($config) ? $config : [];
+
+				// à partir de
+				// $config[0] => Array(
+				//  [c] => test
+				//  [d] =>
+				//  [0] => Array( [w] => 560 [h] => 480 )
+				//  [1] => Array( [b] => 320 [w] => 209 [h] => 177 )
+				//  [3] => Array( [b] => 768 [w] => 420 [h] => 360 )
+				//  [2] => Array( [b] => 380 [w] => 252 [h] => 216 )
+				// )
+				// génère
+				// $config[test] => Array(
+				//  [320] => Array( [b] => 320 [w] => 209 [h] => 177 )
+				//  [380] => Array( [b] => 380 [w] => 252 [h] => 216 )
+				//  [768] => Array( [b] => 768 [w] => 420 [h] => 360 )
+				//  [769] => Array( [w] => 560 [h] => 480 )
+				// )
+				foreach ($config as $key => $data) {
+
+					$config[$data['c']] = [];
+					foreach ($data as $subdata) {
+						if (is_array($subdata))
+							$config[$data['c']][empty($subdata['b']) ? 0 : $subdata['b']] = $subdata;
+					}
+					unset($config[$key]);
+
+					ksort($config[$data['c']]);
+					$last = array_keys($config[$data['c']]);
+					$last = array_pop($last);
+					$config[$data['c']][$last + 1] = $config[$data['c']][0];
+					unset($config[$data['c']][0]);
 				}
-				unset($config[$key]);
 
-				ksort($config[$data['c']]);
-				$last = array_keys($config[$data['c']]);
-				$last = array_pop($last);
-				$config[$data['c']][$last + 1] = $config[$data['c']][0];
-				unset($config[$data['c']][0]);
+				if (Mage::app()->useCache('config')) // ici la balise XML du cache, ci-dessous une clef et le tag du cache
+					Mage::app()->saveCache(json_encode($config), 'maillog_config', ['CONFIG']);
 			}
 
-			$this->pictureConfig = $config;
+			$this->_pictureConfig = $config;
 		}
 
-		return $this->pictureConfig;
-
+		return $this->_pictureConfig;
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated L/03/08/2020
+ * Updated J/08/10/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -761,10 +761,9 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			->getFirstItem();
 
 		if (!empty($job->getId())) {
-
 			$url = Mage::helper('adminhtml')->getUrl('*/cronlog_history/view', ['id' => $job->getId()]);
 			$txt = $this->__('Cron job #<a %s>%d</a> finished at %s.', 'href="'.$url.'"', $job->getId(), $this->formatDate($job->getData('finished_at'), Zend_Date::DATETIME_SHORT));
-
+			$txt = lcfirst(trim($txt, '.'));
 			if (!$cronlog)
 				$txt = strip_tags($txt);
 		}
@@ -774,7 +773,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			$txt = $this->__('not yet finished or short <a %s>cron jobs history</a>', 'href="'.$url.'"');
 		}
 
-		return '<span class="fri">'.$this->__('last process: %s', lcfirst($txt)).'</span>';
+		return $this->__('last process: %s', $txt);
 	}
 
 	public function getAllTypes() {

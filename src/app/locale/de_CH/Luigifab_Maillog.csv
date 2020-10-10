@@ -53,6 +53,7 @@
 "Subscribe customers not present in the file","Die in der Datei nicht anwesenden Kunden abonnieren"
 "If yes, <strong>all</strong> OpenMage customers not present in the file will be subscribed to the newsletter.","Wenn ja, <strong>alle</strong> die in der Datei nicht anwesenden OpenMage-Kunden werden dem Newsletter abonniert."
 "Number of subscribers","Abonnentenanzahl"
+"Confirmation request email","E-Mail zur Anfrage der Bestellbestätigung"
 "Recipient(s)","Empfänger"
 "Sent At","Am gesendet"
 "Duration","Dauer"

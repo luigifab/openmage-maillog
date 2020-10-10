@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/08/05/2020
+ * Updated L/05/10/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -74,7 +74,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return parent::_prepareCollection();
 	}
 
-	protected function _addColumnFilterToCollection(object $column) {
+	protected function _addColumnFilterToCollection($column) {
 
 		if (in_array($column->getId(), ['mail_recipients', 'mail_subject'])) {
 			$words = explode(' ', $column->getFilter()->getValue());
@@ -269,7 +269,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return parent::getGridUrl($params);
 	}
 
-	public function getRowUrl(object $row) {
+	public function getRowUrl($row) {
 
 		// embed tab
 		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {

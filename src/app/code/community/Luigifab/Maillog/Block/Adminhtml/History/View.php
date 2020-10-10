@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/31/05/2020
+ * Updated J/08/10/2020
  *
  * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -47,8 +47,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 			'class'   => 'delete'
 		]);
 
-		if (Mage::getStoreConfigFlag('maillog/general/send') && empty($email->getData('deleted')) &&
-		    !in_array($email->getData('status'), ['notsent', 'bounce'])) {
+		if (Mage::getStoreConfigFlag('maillog/general/enabled') && Mage::getStoreConfigFlag('maillog/general/send') &&
+		    empty($email->getData('deleted')) && !in_array($email->getData('status'), ['notsent', 'bounce'])) {
 			$this->_addButton('resend', [
 				'label'   => $this->__('Resend email'),
 				'onclick' => "deleteConfirm('".$confirm."', '".$this->getUrl('*/*/resend', $params)."');",
