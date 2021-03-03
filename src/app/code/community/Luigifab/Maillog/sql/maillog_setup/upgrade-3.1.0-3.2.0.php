@@ -1,11 +1,12 @@
 <?php
 /**
  * Created M/01/05/2018
- * Updated V/12/06/2020
+ * Updated M/02/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -32,7 +33,15 @@ ignore_user_abort(true);
 set_time_limit(0);
 
 try {
+	// ajoute la colonne duration
+	$table = $this->getTable('maillog/email');
+	if (!$this->getConnection()->tableColumnExists($table, 'duration'))
+		$this->run('ALTER TABLE '.$table.' ADD COLUMN duration int(4) NOT NULL DEFAULT -1 AFTER sent_at');
+
+	// ménage
 	$this->run('
+		ALTER TABLE '.$table.' MODIFY COLUMN mail_sender varchar(255) NULL DEFAULT NULL;
+
 		DROP TABLE IF EXISTS '.$this->getTable('maillog/sync').';
 		CREATE TABLE '.$this->getTable('maillog/sync').' (
 			sync_id                 int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -41,13 +50,12 @@ try {
 			sync_at                 datetime         NULL DEFAULT NULL,
 			duration                int(4)           NOT NULL DEFAULT -1,
 			user                    varchar(50)      NULL DEFAULT NULL,
+			model                   varchar(75)      NULL DEFAULT NULL,
 			action                  varchar(250)     NULL DEFAULT NULL,
 			request                 text             NULL DEFAULT NULL,
 			response                text             NULL DEFAULT NULL,
 			PRIMARY KEY (sync_id)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-		ALTER TABLE '.$this->getTable('maillog/email').' MODIFY COLUMN mail_sender varchar(255) NULL DEFAULT NULL;
 
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE
 			   path LIKE "crontab/jobs/maillog%import/schedule/cron_expr"
@@ -66,19 +74,8 @@ try {
 			OR path LIKE "modules/email/template"
 			OR path LIKE "cronlog/email/template";
 	');
-
-	// ajoute la colonne duration
-	// ADD COLUMN IF NOT EXISTS, à partir de MariaDB 10.0.2, n'existe pas dans MySQL 8.0
-	// https://mariadb.com/kb/en/mariadb/alter-table/
-	// https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
-	$sql = $this->getConnection()->fetchOne('SELECT VERSION()');
-	$col = 'duration int(4) NOT NULL DEFAULT -1 AFTER sent_at';
-	if ((mb_stripos($sql, 'MariaDB') !== false) && version_compare($sql, '10.0.2', '>='))
-		$this->run('ALTER TABLE '.$this->getTable('maillog/email').' ADD COLUMN IF NOT EXISTS '.$col);
-	else
-		$this->run('ALTER TABLE '.$this->getTable('maillog/email').' ADD COLUMN '.$col);
 }
-catch (Exception $e) {
+catch (Throwable $e) {
 	$lock->unlock();
 	throw $e;
 }

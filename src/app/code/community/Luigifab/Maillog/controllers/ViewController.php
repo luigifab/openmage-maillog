@@ -1,11 +1,12 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated V/15/05/2020
+ * Updated D/21/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -28,8 +29,11 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 			->setPageSize(1)
 			->getFirstItem();
 
-		if (!empty($email->getId()))
+		if (!empty($email->getId())) {
+			$locale = Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE); // charge les trads du module
+			Mage::getSingleton('core/translate')->setLocale($locale)->init('adminhtml', true);
 			$this->getResponse()->setBody($email->toHtml($this->getRequest()->getParam('nomark') == '1'));
+		}
 	}
 
 	public function downloadAction() {
@@ -41,10 +45,8 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		if (!empty($email->getId()) && !empty($email->getData('mail_parts'))) {
 
-			$parts = @unserialize(gzdecode($email->getData('mail_parts')), ['allowed_classes' => ['Zend_Mime_Part']]);
-			$parts = (!empty($parts) && is_array($parts)) ? $parts : [];
-
-			$nb = (int) $this->getRequest()->getParam('part', 0);
+			$parts = $email->getEmailParts();
+			$nb    = (int) $this->getRequest()->getParam('part', 0);
 
 			foreach ($parts as $key => $part) {
 

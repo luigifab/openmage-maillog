@@ -1,11 +1,12 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated M/06/10/2020
+ * Updated V/12/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -103,9 +104,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			// email de test
 			if (!empty(Mage::app()->getRequest()->getPost('maillog_email_test')))
-				$this->sendEmailReport(null, true);
+				$this->sendEmailReport();
 			else if (!empty(Mage::app()->getRequest()->getPost('maillog_sync_email_test')))
-				$this->sendEmailReport(null, true);
+				$this->sendEmailReport();
 		}
 		else {
 			$config->delete();
@@ -116,13 +117,13 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 
 	// CRON maillog_send_report
-	public function sendEmailReport($cron = null, bool $test = false) {
+	public function sendEmailReport($cron = null) {
 
 		$oldLocale = Mage::getSingleton('core/translate')->getLocale();
-		$newLocale = Mage::app()->getStore()->isAdmin() ? $oldLocale : Mage::getStoreConfig('general/locale/code');
+		$newLocale = Mage::app()->getStore()->isAdmin() ? $oldLocale : Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE);
 		$locales   = [];
 
-		// recherche des langues et des emails
+		// recherche des langues (@todo) et des emails
 		$emails = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/email/recipient_email')));
 		foreach ($emails as $email) {
 			if (!in_array($email, ['hello@example.org', 'hello@example.com', '']))
@@ -139,15 +140,15 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			// recherche des dates
 			if ($frequency == Mage_Adminhtml_Model_System_Config_Source_Cron_Frequency::CRON_MONTHLY) {
 				$frequency = $this->_('monthly');
-				$dates = $this->getDateRange('last_month');
+				$dates = $this->getDateRange('month');
 			}
 			else if ($frequency == Mage_Adminhtml_Model_System_Config_Source_Cron_Frequency::CRON_WEEKLY) {
 				$frequency = $this->_('weekly');
-				$dates = $this->getDateRange('last_week');
+				$dates = $this->getDateRange('week');
 			}
 			else {
 				$frequency = $this->_('daily');
-				$dates = $this->getDateRange('last_day');
+				$dates = $this->getDateRange('day');
 			}
 
 			// chargement des emails
@@ -195,7 +196,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			// chargement des statistiques des emails et des synchronisations
 			// optimisation maximale de manière à ne faire que des COUNT en base de données
-			// ne génère pas les données de la semaine courante dans le rapport du lundi et du mardi
 			// ne recherche pas les données au dela de la durée de vie maximale (email et sync)
 			$emails = Mage::getResourceModel('maillog/email_collection');
 			$syncs  = Mage::getResourceModel('maillog/sync_collection');
@@ -205,8 +205,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 				for ($i = 1; $i <= 14; $i++) {
 
 					$variation = ($i > 1) && ($i < 14);
-					$dates     = $this->getDateRange($isWeek ? 'last_week' : 'last_month', $i - 1);
-					$oldDates  = $this->getDateRange($isWeek ? 'last_week' : 'last_month', $i - 0);
+					$dates     = $this->getDateRange($isWeek ? 'week' : 'month', $i - 1);
+					$oldDates  = $this->getDateRange($isWeek ? 'week' : 'month', $i - 0);
 					$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339),
 						'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
 					$oldWhere  = ['from' => $oldDates['start']->toString(Zend_Date::RFC_3339),
@@ -243,45 +243,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation, 'success');
 					$vars['items'][$i][$key.'percent_success']   = array_shift($tmp);
 					$vars['items'][$i][$key.'variation_success'] = array_shift($tmp);
-				}
-			}
-
-			// envoi des emails
-			$vars['test'] = $test;
-			if ($vars['test']) {
-				$vars['var1'] = [['numb' => -2, 'text' => 'surprise'], ['numb' => 0, 'text' => 'surprise'], ['numb' => 2, 'text' => 'surprise']];
-				$vars['var2'] = Mage::getResourceModel('catalog/product_collection')->setPageSize(3);
-				foreach ($vars['var1'] as $i => $n) {
-					$t = $n['text'];
-					$n = $n['numb'];
-					$vars['var1'][$i]['a'] = ($n >  0) ? 'true' : 'false';
-					$vars['var1'][$i]['b'] = ($n >= 0) ? 'true' : 'false';
-					$vars['var1'][$i]['c'] = ($n <  0) ? 'true' : 'false';
-					$vars['var1'][$i]['d'] = ($n <= 0) ? 'true' : 'false';
-					$vars['var1'][$i]['e'] = ($n == 0) ? 'true' : 'false';
-					$vars['var1'][$i]['f'] = ($n != 0) ? 'true' : 'false';
-					$vars['var1'][$i]['g'] = ($n >  $n) ? 'true' : 'false';
-					$vars['var1'][$i]['h'] = ($n >= $n) ? 'true' : 'false';
-					$vars['var1'][$i]['i'] = ($n <  $n) ? 'true' : 'false';
-					$vars['var1'][$i]['j'] = ($n <= $n) ? 'true' : 'false';
-					$vars['var1'][$i]['k'] = ($n == $n) ? 'true' : 'false';
-					$vars['var1'][$i]['l'] = ($n != $n) ? 'true' : 'false';
-					// == et != avec empty
-					$vars['var1'][$i]['m'] =  empty($n) ? 'true' : 'false';
-					$vars['var1'][$i]['n'] = !empty($n) ? 'true' : 'false';
-					// == et != // en PHP, tout string vaut 0 (voir aussi helper::variableMail)
-					$vars['var1'][$i]['o'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'false' : (($n == 'abcde') ? 'true' : 'false');
-					$vars['var1'][$i]['p'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'true'  : (($n != 'abcde') ? 'true' : 'false');
-					// in_array
-					$vars['var1'][$i]['q'] =  in_array($n, [0,1,2]) ? 'true' : 'false';
-					$vars['var1'][$i]['r'] = !in_array($n, [0,1,2]) ? 'true' : 'false';
-					// contains
-					$vars['var1'][$i]['s'] = (mb_stripos($t, 'pri') !== false) ? 'true' : 'false';
-					$vars['var1'][$i]['t'] = (mb_stripos($t, 'pri') === false) ? 'true' : 'false';
-					$vars['var1'][$i]['u'] = (mb_stripos($t, '777') !== false) ? 'true' : 'false';
-					$vars['var1'][$i]['v'] = (mb_stripos($t, '777') === false) ? 'true' : 'false';
-					$vars['var1'][$i]['w'] = (mb_stripos($t, $t) !== false) ? 'true' : 'false';
-					$vars['var1'][$i]['x'] = (mb_stripos($t, $t) === false) ? 'true' : 'false';
 				}
 			}
 
@@ -384,23 +345,15 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		// permet d'obtenir des semaines du lundi au dimanche
 		$day = $dateStart->toString(Zend_Date::WEEKDAY_8601) - 1;
 
-		if ($range == 'last_month') {
+		if ($range == 'month') {
 			$dateStart->setDay(3)->subMonth(1 * $coeff)->setDay(1);
 			$dateEnd->setDay(3)->subMonth(1 * $coeff)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
 		}
-		else if ($range == 'cur_week') {
-			$dateStart->subDay($day);
-			$dateEnd->subDay(1);
-		}
-		else if ($range == 'cur_month') {
-			$dateStart->setDay(1);
-			$dateEnd->subDay(1);
-		}
-		else if ($range == 'last_week') {
+		else if ($range == 'week') {
 			$dateStart->subDay($day + 7 * $coeff);
 			$dateEnd->subDay($day + 7 * $coeff - 6);
 		}
-		else if ($range == 'last_day') {
+		else if ($range == 'day') {
 			$dateStart->subDay(1);
 			$dateEnd->subDay(1);
 		}
@@ -419,14 +372,14 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	private function sendReportToRecipients(string $locale, array $emails, array $vars = []) {
 
 		$vars['config'] = $this->getEmailUrl('adminhtml/system/config');
-		$vars['config'] = mb_substr($vars['config'], 0, mb_strripos($vars['config'], '/system/config'));
+		$vars['config'] = mb_substr($vars['config'], 0, mb_strrpos($vars['config'], '/system/config'));
 
 		foreach ($emails as $email) {
 
 			$sender   = Mage::getStoreConfig('maillog/email/sender_email_identity');
 			$template = Mage::getModel('core/email_template');
 
-			if ($vars['test']) {
+			if (!empty($_GET) || !empty($_POST)) {
 				$template->getMail()->createAttachment(
 					gzencode(file_get_contents(Mage::getModuleDir('etc', 'Luigifab_Maillog').'/tidy.conf'), 9),
 					'application/x-gzip',
@@ -455,27 +408,13 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 		$customer = $observer->getData('customer');
 
-		$emails = Mage::getResourceModel('maillog/email_collection');
-		$emails->addFieldToFilter('deleted', ['neq' => 1]);
-		$emails->addFieldToFilter('mail_recipients', ['like' => '%<'.$customer->getData('email').'>%']);
+		Mage::getResourceModel('maillog/email_collection')
+			->addFieldToFilter('mail_recipients', ['like' => '%<'.$customer->getData('email').'>%'])
+			->deleteAll();
 
-		// même chose que cleanOldData ou presque
-		foreach ($emails as $email) {
-			$email->setData('mail_recipients', 'customer@removed');
-			$email->setData('mail_subject', str_replace($customer->getData('lastname'), 'Removed', $email->getData('mail_subject')));
-			$email->setData('encoded_mail_recipients', null);
-			$email->setData('encoded_mail_subject', null);
-			$email->setData('mail_body', null);
-			$email->setData('mail_header', null);
-			$email->setData('mail_parameters', null);
-			$email->setData('mail_parts', null);
-			$email->setData('deleted', 1);
-			$email->save();
-		}
-
-		$syncs = Mage::getResourceModel('maillog/sync_collection');
-		$syncs->addFieldToFilter('action', ['like' => '%:customer:'.$customer->getId().':%']);
-		$syncs->deleteAll();
+		Mage::getResourceModel('maillog/sync_collection')
+			->addFieldToFilter('action', ['like' => '%:customer:'.$customer->getId().':%'])
+			->deleteAll();
 
 		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true))
 			$this->sendSync($customer, 'customer', 'email', 'delete');
@@ -579,8 +518,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// réduit l'historique des synchronisations (qui est configuré en minutes) et des emails (qui est configuré en mois)
 	public function cleanOldData($cron = null) {
 
-		$msg   = [];
-		$total = 0;
+		$msg = [];
+		$cnt = 0;
 
 		$val = Mage::getStoreConfig('maillog_sync/general/lifetime');
 		if (!empty($val) && is_numeric($val)) {
@@ -588,17 +527,17 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$syncs = Mage::getResourceModel('maillog/sync_collection');
 			$syncs->addFieldToFilter('status', ['eq' => 'success']);
 			$syncs->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$val.' MINUTE)')]);
-			$total += $syncs->getSize();
+			$cnt += $syncs->getSize();
 			$syncs->deleteAll();
 
 			$syncs = Mage::getResourceModel('maillog/sync_collection');
 			$syncs->addFieldToFilter('status', ['neq' => 'success']);
 			$syncs->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.(3 * $val).' MINUTE)')]);
-			$total += $syncs->getSize();
+			$cnt += $syncs->getSize();
 			$syncs->deleteAll();
 
 			$msg[] = 'Remove successful synchronizations after '.($val / 60 / 24).' days';
-			$msg[] = empty($total) ? ' → no items to remove' : ' → '.$total.' item(s) removed';
+			$msg[] = empty($cnt) ? ' → no items to remove' : ' → '.$cnt.' item(s) removed';
 			$msg[] = '';
 		}
 
@@ -652,15 +591,14 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					$ids = $emails->getAllIds();
 					$ids = (count($ids) > 100) ? implode(', ', array_slice($ids, 0, 100)).'...' : implode(', ', $ids);
 
-					$msg[] = empty($total = $emails->getSize()) ? ' → no items to remove' : ' → '.$total.' item(s) removed ('.$ids.')';
+					$msg[] = empty($cnt = $emails->getSize()) ? ' → no items to remove' : ' → '.$cnt.' item(s) removed ('.$ids.')';
 					$msg[] = '';
 
-					if (!empty($total)) {
+					if (!empty($cnt)) {
 						if ($action == 'all') {
 							$emails->deleteAll();
 						}
 						else if ($action == 'data') {
-							// même chose que customerDeleteSync ou presque
 							foreach ($emails as $email) {
 								$email->setData('encoded_mail_recipients', null);
 								$email->setData('encoded_mail_subject', null);
@@ -694,8 +632,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$folder = Mage::getStoreConfig('maillog_sync/bounces/directory');
 			$folder = str_replace('//', '/', Mage::getBaseDir('var').'/'.trim($folder, "/ \t\n\r\0\x0B").'/');
 			$config = Mage::getStoreConfig('maillog_sync/bounces/format');
-			$type   = mb_substr($config, 0, 3);
-			$source = $this->todayFile($folder, $type);
+			$source = $this->todayFile($folder, $type = mb_substr($config, 0, 3));
 
 			$newItems = $this->dataFromFile($folder, $source, $config);
 
@@ -709,7 +646,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			Mage::unregister('maillog_no_sync');
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 
 			$error = empty($diff['errors']) ? $e->getMessage() : implode("\n", $diff['errors']);
 			$this->writeLog($folder, $source, $error, $cron);
@@ -732,8 +669,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$folder = Mage::getStoreConfig('maillog_sync/unsubscribers/directory');
 			$folder = str_replace('//', '/', Mage::getBaseDir('var').'/'.trim($folder, "/ \t\n\r\0\x0B").'/');
 			$config = Mage::getStoreConfig('maillog_sync/unsubscribers/format');
-			$type   = mb_substr($config, 0, 3);
-			$source = $this->todayFile($folder, $type);
+			$source = $this->todayFile($folder, $type = mb_substr($config, 0, 3));
 
 			$newItems = $this->dataFromFile($folder, $source, $config);
 
@@ -747,7 +683,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			Mage::unregister('maillog_no_sync');
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 
 			$error = empty($diff['errors']) ? $e->getMessage() : implode("\n", $diff['errors']);
 			$this->writeLog($folder, $source, $error, $cron);
@@ -887,7 +823,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 						$diff['invalidated'][] = $email;
 					}
 				}
-				catch (Exception $e) {
+				catch (Throwable $e) {
 					$diff['errors'][] = $email.' - '.$e->getMessage();
 				}
 			}
@@ -923,7 +859,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 							$diff['validated'][] = $email;
 						}
 					}
-					catch (Exception $e) {
+					catch (Throwable $e) {
 						$diff['errors'][] = $email.' - '.$e->getMessage();
 					}
 				}
@@ -966,7 +902,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 						$diff['unsubscribed'][] = $email;
 					}
 				}
-				catch (Exception $e) {
+				catch (Throwable $e) {
 					$diff['errors'][] = $email.' - '.$e->getMessage();
 				}
 			}
@@ -1001,7 +937,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 							$diff['subscribed'][] = $email;
 						}
 					}
-					catch (Exception $e) {
+					catch (Throwable $e) {
 						$diff['errors'][] = $email.' - '.$e->getMessage();
 					}
 				}
@@ -1044,7 +980,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		@rmdir($skipdir);
 	}
 
-	private function writeLog(string $folder, $source, $diff, $cron = null) {
+	private function writeLog(string $folder, string $source, $diff, $cron = null) {
 
 		$diff = is_string($diff) ? ['started_at' => date('Y-m-d H:i:s'), 'exception' => $diff] : $diff;
 

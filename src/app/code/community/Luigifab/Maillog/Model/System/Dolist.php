@@ -1,11 +1,12 @@
 <?php
 /**
  * Created J/18/01/2018
- * Updated S/13/06/2020
+ * Updated M/02/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -19,7 +20,7 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System {
+class Luigifab_Maillog_Model_System_Dolist implements Luigifab_Maillog_Model_Interface {
 
 	// https://api.dolist.net/doc/
 
@@ -65,6 +66,10 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 
 
 	// gestion des champs
+	public function getMapping() {
+		return array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/emarsys/mapping_config')));
+	}
+
 	public function getFields() {
 
 		// https://api.dolist.net/doc/CustomFields#GetFieldList
@@ -92,7 +97,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		return $fields;
 	}
 
-	public function mapFields($object) {
+	public function mapFields(object $object) {
 
 		if (!is_object($object))
 			return [];
@@ -106,7 +111,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		$isCustomer = $current == $customer;
 		$isSubscrib = $current == $subscriber;
 
-		$mapping = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/general/mapping_config')));
+		$mapping = $this->getMapping();
 		$fields  = [];
 
 		foreach ($mapping as $config) {
@@ -165,7 +170,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 						}
 					}
 					else if ($isCustomer && ($code == 'store_id')) {
-						$value = Mage::getStoreConfig('general/locale/code', $object->getStoreId());
+						$value = Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $object->getStoreId());
 						// spécial
 						$fields[$system] = ['Name' => $system, 'Value' => $value];
 					}
@@ -197,7 +202,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 
 
 	// gestion des données
-	public function updateCustomer(&$data) {
+	public function updateCustomer(array &$data) {
 
 		// déplace les données en prennant soin de conserver Email et OptoutEmail
 		// [Email => string, 'Fields' => array, OptoutEmail => int]
@@ -251,11 +256,11 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		return $result;
 	}
 
-	public function deleteCustomer(&$data) {
+	public function deleteCustomer(array &$data) {
 		return ['error' => 'not supported by api'];
 	}
 
-	public function updateCustomers(&$data) {
+	public function updateCustomers(array &$data) {
 		return ['error' => 'not supported by api'];
 	}
 
@@ -276,7 +281,7 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		return false;
 	}
 
-	public function extractResponseData($data, $forHistory = false, $multiple = false) {
+	public function extractResponseData($data, bool $forHistory = false, bool $multiple = false) {
 
 		if (is_object($data)) {
 
@@ -294,7 +299,11 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 		return json_decode(json_encode($data), true);
 	}
 
-	private function sendRequest($service, $method, $data) {
+	private function sendRequest(string $service, string $method, array $data) {
+
+		$url = Mage::getStoreConfig('maillog_sync/dolist/api_url');
+		if (empty($url))
+			return null;
 
 		try {
 			//ini_set('soap.wsdl_cache_enabled', 0);
@@ -303,32 +312,32 @@ class Luigifab_Maillog_Model_System_Dolist extends Luigifab_Maillog_Model_System
 			if (!isset($this->auth) || (!empty($this->auth->GetAuthenticationTokenResult->DeprecatedDate) &&
 			    ((strtotime($this->auth->GetAuthenticationTokenResult->DeprecatedDate) + 30) > time()))) {
 
-				$proxy    = Mage::getStoreConfig('maillog_sync/general/api_url').'AuthenticationService.svc?wsdl';
-				$location = Mage::getStoreConfig('maillog_sync/general/api_url').'AuthenticationService.svc/soap1.1';
+				$proxy    = $url.'AuthenticationService.svc?wsdl';
+				$location = $url.'AuthenticationService.svc/soap1.1';
 				$client   = new SoapClient($proxy, ['trace' => 1, 'location' => $location]);
 
 				$this->auth = $client->GetAuthenticationToken([
 					'authenticationRequest' => [
-						'AuthenticationKey' => Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/general/api_password')),
-						'AccountID'         => Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/general/api_username'))
+						'AuthenticationKey' => Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/dolist/api_password')),
+						'AccountID'         => Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/dolist/api_username'))
 					]
 				]);
 			}
 
-			$proxy    = Mage::getStoreConfig('maillog_sync/general/api_url').$service.'.svc?wsdl';
-			$location = Mage::getStoreConfig('maillog_sync/general/api_url').$service.'.svc/soap1.1';
+			$proxy    = $url.$service.'.svc?wsdl';
+			$location = $url.$service.'.svc/soap1.1';
 			$client   = new SoapClient($proxy, ['trace' => 1, 'location' => $location]);
 
 			ini_restore('default_socket_timeout');
 
 			return $client->{$method}([
 				'token' => [
-					'AccountID' => Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/general/api_username')),
+					'AccountID' => Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/dolist/api_username')),
 					'Key'       => $this->auth->GetAuthenticationTokenResult->Key
 				]
 			] + $data);
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 			return $e->getMessage();
 		}
 	}

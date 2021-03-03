@@ -1,11 +1,12 @@
 <?php
 /**
  * Created W/26/09/2018
- * Updated L/05/10/2019
+ * Updated S/26/12/2020
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -21,7 +22,7 @@
 
 class Luigifab_Maillog_Model_Rewrite_Subscriberres extends Mage_Newsletter_Model_Resource_Subscriber {
 
-	public function loadByEmail($subscriberEmail, $storeId = 0) {
+	public function loadByEmail($subscriberEmail, int $storeId = 0) {
 
 		if (Mage::getStoreConfigFlag('customer/account_share/scope')) {
 

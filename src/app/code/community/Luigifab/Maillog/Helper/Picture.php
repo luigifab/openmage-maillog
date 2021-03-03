@@ -1,11 +1,12 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated M/06/10/2020
+ * Updated V/19/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -67,7 +68,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		if (is_object($product) && !empty($product->getId())) {
 			if (empty($file))
 				$file = $product->getData($attribute);
-			if (empty($values['alt']))
+			if (!array_key_exists('alt', $values))
 				$values['alt'] = $this->escapeEntities($product->getData('name'), true);
 		}
 
@@ -85,7 +86,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 			$attribute = 'category'; // sinon ça marchera pas
 			if (empty($file))
 				$file = $category->getData('image');
-			if (empty($values['alt']))
+			if (!array_key_exists('alt', $values))
 				$values['alt'] = $this->escapeEntities($category->getData('name'), true);
 		}
 
@@ -165,7 +166,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 				// event custom js (vendor/singleton::method)
 				$event = Mage::getStoreConfig('maillog_directives/general/update_maillogdebug_js');
-				if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1) {
+				if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1) {
 					$event  = (array) explode('::', $event); // (yes)
 					$custom = Mage::helper($event[0])->{$event[1]}();
 				}
@@ -216,15 +217,15 @@ self.addEventListener("resize", maillogdebug);
 
 			// config général
 			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_before');
-			if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1)
+			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
 				$this->_update_configandvalues_before = (array) explode('::', $event); // (yes)
 
 			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_ready');
-			if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1)
+			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
 				$this->_update_configandvalues_ready = (array) explode('::', $event); // (yes)
 
 			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_after');
-			if (!empty($event) && preg_match('#\w+(?:/\w+)::\w+#', $event) === 1)
+			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
 				$this->_update_configandvalues_after = (array) explode('::', $event); // (yes)
 
 			$this->_font_size = (float) Mage::getStoreConfig('maillog_directives/general/font_size');
@@ -233,7 +234,7 @@ self.addEventListener("resize", maillogdebug);
 			$this->_show_image_size = Mage::getStoreConfigFlag('maillog_directives/general/show_image_size');
 
 			// config des tags (avec mise en cache)
-			$config = @json_decode(Mage::app()->loadCache('maillog_config'), true);
+			$config = Mage::app()->useCache('config') ? @json_decode(Mage::app()->loadCache('maillog_config'), true) : null;
 			if (empty($config) || !is_array($config)) {
 
 				$config = @unserialize(Mage::getStoreConfig('maillog_directives/general/special_config'), ['allowed_classes' => false]);
@@ -271,8 +272,8 @@ self.addEventListener("resize", maillogdebug);
 					unset($config[$data['c']][0]);
 				}
 
-				if (Mage::app()->useCache('config')) // ici la balise XML du cache, ci-dessous une clef et le tag du cache
-					Mage::app()->saveCache(json_encode($config), 'maillog_config', ['CONFIG']);
+				if (Mage::app()->useCache('config'))
+					Mage::app()->saveCache(json_encode($config), 'maillog_config', [Mage_Core_Model_Config::CACHE_TAG]);
 			}
 
 			$this->_pictureConfig = $config;

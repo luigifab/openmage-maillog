@@ -1,11 +1,12 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated V/12/06/2020
+ * Updated M/02/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -41,12 +42,15 @@ try {
 	}
 
 	$table = $this->getTable('core_config_data');
-	$this->run('UPDATE '.$table.' SET path = REPLACE(path, "maillog/sync/", "maillog_sync/general/") WHERE path LIKE "maillog/sync/%"');
-	$this->run('UPDATE '.$table.' SET path = REPLACE(path, "maillog/bounces/", "maillog_sync/bounces/") WHERE path LIKE "maillog/bounces/%"');
-	$this->run('UPDATE '.$table.' SET path = REPLACE(path, "maillog/unsubscribers/", "maillog_sync/unsubscribers/") WHERE path LIKE "maillog/unsubscribers/%"');
+	$this->run('UPDATE '.$table.' SET path = REPLACE(path, "maillog/sync/", "maillog_sync/general/")
+		WHERE path LIKE "maillog/sync/%"');
+	$this->run('UPDATE '.$table.' SET path = REPLACE(path, "maillog/bounces/", "maillog_sync/bounces/")
+		WHERE path LIKE "maillog/bounces/%"');
+	$this->run('UPDATE '.$table.' SET path = REPLACE(path, "maillog/unsubscribers/", "maillog_sync/unsubscribers/")
+		WHERE path LIKE "maillog/unsubscribers/%"');
 	Mage::getConfig()->reinit();
 }
-catch (Exception $e) {
+catch (Throwable $e) {
 	$lock->unlock();
 	throw $e;
 }

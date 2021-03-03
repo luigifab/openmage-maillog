@@ -1,11 +1,12 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated S/13/06/2020
+ * Updated V/12/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -26,22 +27,34 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 		$customerAttributes = Mage::getModel('customer/entity_attribute_collection');
 		$addressAttributes  = Mage::getModel('customer/entity_address_attribute_collection');
 
-		$options = ['customerid' => [], 'system' => [], 'core' => []];
-		$values  = '|'.preg_replace('#\s+#', '|', Mage::getStoreConfig('maillog_sync/general/mapping_config')).'|';
-		$value   = Mage::getStoreConfig('maillog_sync/general/mapping_customerid_field');
+		$code = (array) explode('_', $element->getHtmlId()); // (yes)
+		$code = $code[2];
 
-		$system  = $this->helper('maillog')->getSystem();
+		$options = ['customerid' => [], 'system' => [], 'core' => []];
+		$system  = $this->helper('maillog')->getSystem($code);
+		$values  = '|'.implode('|', $system->getMapping()).'|';
 		$fields  = $system->getFields();
 
-		$search  = ['A) System', '<textarea', ' selected="selected"', '<select', '>selected:', '>has:', '>disabled:'];
+		$search  = [
+			'A) System',
+			'<textarea',
+			' selected="selected"',
+			'<select',
+			'>selected:',
+			'>has:',
+			'>disabled:',
+			'class=" select"'
+		];
+
 		$replace = [
-			'A) '.$system->getType(),
+			'A) '.ucfirst($code),
 			'<textarea lang="mul" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="maillog.mark();"',
 			'',
 			'<select lang="mul"',
 			'selected="selected" class="has">',
 			'class="has">',
-			'disabled="disabled">'
+			'disabled="disabled">',
+			'class="select maillog"'
 		];
 
 		// pour le champ id client
@@ -50,6 +63,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 			$options['customerid'][] = ['value' => '', 'label' => '--'];
 
+			$value = $element->getValue();
 			if (!empty($value) && empty($fields)) {
 				$options['customerid'][] = ['value' => $value, 'label' => 'selected:'.$value];
 			}
@@ -85,7 +99,8 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$search[]  = 'name="'.$element->getName().'"';
 			$replace[] = '';
 			$search[]  = '<td class="scope-label">'.$this->__('[GLOBAL]').'</td>';
-			$replace[] = '<td rowspan="2" class="scope-label" style="vertical-align:middle;"><button type="button" onclick="maillog.add();">'.$this->__('Add').'</button></td>';
+			$replace[] = '<td rowspan="2" class="scope-label" style="vertical-align:middle;">'.
+				'<button type="button" onclick="maillog.add(\''.$code.'\');">'.$this->__('Add').'</button></td>';
 		}
 
 		// pour le champ b) openmage

@@ -1,10 +1,11 @@
 /**
  * Created D/22/03/2015
- * Updated J/16/07/2020
+ * Updated S/20/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -60,32 +61,38 @@ body.adminhtml-maillog-sync-index table.data div.details {
 body.adminhtml-maillog-sync-index table.data div.details:last-child { margin-bottom:5px; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& system/config &&& */
-#maillog_sync_general .comment,    #maillog_directives_general .comment { padding-bottom:1em; }
-#maillog_sync_general .comment p,  #maillog_directives_general .comment p  { margin-bottom:0; line-height:150%; }
-#maillog_sync_general .comment ul, #maillog_directives_general .comment ul { margin:0.4em 0; }
-#maillog_sync_general .comment li, #maillog_directives_general .comment li { margin:0; line-height:1.5em; }
-#maillog_sync_general .comment li:before, #maillog_directives_general .comment li:before { content:"➤\0000A0"; }
+select.maillog option.has { font-weight:700; }
 
-#maillog_sync_general option.has { font-weight:700; }
+.comment.maillogcomment { padding-bottom:1em; }
+.comment.maillogcomment p  { margin-bottom:0; line-height:150%; }
+.comment.maillogcomment ul { margin:0.4em 0; }
+.comment.maillogcomment li { margin:0; line-height:1.5em; }
+.comment.maillogcomment li:before { content:"➤\0000A0"; }
+.comment.maillogcomment a { margin:0; }
 
-#row_maillog_general_special_config li:hover { background-color:#DEDEDE; }
-#row_maillog_general_special_config ul span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
-#row_maillog_general_special_config ul input { margin-right:5px; width:60px; height:15px; cursor:pointer; }
-#row_maillog_general_special_config ul select { margin-right:5px; width:136px; }
+.maillogexamples { display:block; margin:1.5em 0; padding-left:6px; font-size:0.9em; line-height:1.4em; border-left:3px solid #AAA; }
+.maillogexamples pre > span { display:block; column-count:3; -moz-column-count:3; -webkit-column-count:3; }
 
-#row_maillog_directives_general_special_config tr.template { display:none; }
-#row_maillog_directives_general_special_config input.cde { display:block; margin-top:0.3em; width:95%; }
-#row_maillog_directives_general_special_config input.cmt { display:block; margin-top:0.3em; width:95%; color:gray; }
-#row_maillog_directives_general_special_config td.config { padding-bottom:0.5em; }
-#row_maillog_directives_general_special_config .validation-advice { position:absolute; display:none; max-width:20em; background-color:white; }
-#row_maillog_directives_general_special_config .validation-failed { border-color:red; }
-#row_maillog_directives_general_special_config .validation-failed:hover ~ .validation-advice { display:block; }
-#row_maillog_directives_general_special_config .line { display:flex; white-space:nowrap; padding-right:1em; }
-#row_maillog_directives_general_special_config .line:hover { background-color:#DEDEDE; }
-#row_maillog_directives_general_special_config .line input { width:5em; }
-#row_maillog_directives_general_special_config div.bp { min-width:12em; }
-#row_maillog_directives_general_special_config div.sz { min-width:13em; }
-#row_maillog_directives_general_special_config div.rt { min-width:4em; }
+#lifetimeConfig li:hover { background-color:#DEDEDE; }
+#lifetimeConfig span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
+#lifetimeConfig input { margin-right:5px; width:60px; height:15px; cursor:pointer; }
+#lifetimeConfig select { margin-right:5px; width:136px; }
+
+#pictureConfig { margin:10px 0 15px; }
+#pictureConfig thead tr.headings th { position:sticky; top:37px; padding:2px 5px; background:url("../../../images/sort_row_bg.gif") 0 50% repeat-x; }
+#pictureConfig tr.template { display:none; }
+#pictureConfig td.config { padding-bottom:0.5em; }
+#pictureConfig input.cde { display:block; margin-top:0.3em; width:95%; }
+#pictureConfig input.cmt { display:block; margin-top:0.3em; width:95%; color:gray; }
+#pictureConfig .validation-advice { position:absolute; display:none; max-width:20em; background-color:white; }
+#pictureConfig .validation-failed { border-color:red; }
+#pictureConfig .validation-failed:hover ~ .validation-advice { display:block; }
+#pictureConfig .line { display:flex; white-space:nowrap; padding-right:1em; }
+#pictureConfig .line:hover { background-color:#DEDEDE; }
+#pictureConfig .line input { width:5em; }
+#pictureConfig .bp { min-width:12em; }
+#pictureConfig .sz { min-width:13em; }
+#pictureConfig .rt { min-width:4em; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& statut &&& */
 .maillog-status {

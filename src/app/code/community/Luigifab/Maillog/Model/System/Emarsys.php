@@ -1,12 +1,13 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated S/13/06/2020
+ * Updated D/14/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2016      | Pierre-Alexandre Rouanet <pierre-alexandre.rouanet~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -20,7 +21,7 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_System {
+class Luigifab_Maillog_Model_System_Emarsys implements Luigifab_Maillog_Model_Interface {
 
 	// https://help.emarsys.com/hc/fr/articles/115004499373-Overview-of-Contact-Management-Endpoints
 	// https://api.emarsys.net/api-demo/
@@ -81,10 +82,14 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 
 
 	// gestion des champs
+	public function getMapping() {
+		return array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/emarsys/mapping_config')));
+	}
+
 	public function getFields() {
 
 		// https://help.emarsys.com/hc/fr/articles/115004466193-Listing-Available-Fields
-		$result = $this->sendRequest('GET', 'field/translate', mb_substr(Mage::getSingleton('core/locale')->getLocaleCode(), 0, 2));
+		$result = $this->sendRequest('GET', 'field/translate', substr(Mage::getSingleton('core/locale')->getLocaleCode(), 0, 2));
 		$fields = [];
 
 		if ($this->checkResponse($result)) {
@@ -107,7 +112,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		return $fields;
 	}
 
-	public function mapFields($object) {
+	public function mapFields(object $object) {
 
 		if (!is_object($object))
 			return [];
@@ -121,8 +126,8 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		$isCustomer = $current == $customer;
 		$isSubscrib = $current == $subscriber;
 
-		$special = Mage::getStoreConfig('maillog_sync/general/mapping_customerid_field'); // en cas de changement d'email
-		$mapping = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/general/mapping_config')));
+		$special = Mage::getStoreConfig('maillog_sync/emarsys/mapping_customerid_field'); // en cas de changement d'email
+		$mapping = $this->getMapping();
 		$fields  = [];
 
 		foreach ($mapping as $config) {
@@ -168,9 +173,10 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 					}
 					else if ($isCustomer && ($code == 'store_id')) {
 						$value = $object->getStoreId();
+						$check = Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $value);
 						// spécial
-						if (!empty($value) && array_key_exists(Mage::getStoreConfig('general/locale/code', $value), $this->locales))
-							$fields[$system] = $this->locales[Mage::getStoreConfig('general/locale/code', $value)];
+						if (!empty($value) && array_key_exists($check, $this->locales))
+							$fields[$system] = $this->locales[$check];
 						else
 							$fields[$system] = '';
 					}
@@ -198,7 +204,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 
 
 	// gestion des données
-	public function updateCustomer(&$data) {
+	public function updateCustomer(array &$data) {
 
 		// https://help.emarsys.com/hc/fr/articles/115004492994-Creating-a-New-Contact
 		// https://help.emarsys.com/hc/fr/articles/115004494794-Updating-a-Contact
@@ -206,13 +212,13 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		return $this->sendRequest('PUT', $method, $data);
 	}
 
-	public function deleteCustomer(&$data) {
+	public function deleteCustomer(array &$data) {
 
 		// https://help.emarsys.com/hc/fr/articles/115004465793-Deleting-a-Contact
 		return $this->sendRequest('POST', 'contact/delete', $data);
 	}
 
-	public function updateCustomers(&$data) {
+	public function updateCustomers(array &$data) {
 
 		// https://help.emarsys.com/hc/fr/articles/115004493054-Creating-Multiple-Contacts
 		// https://help.emarsys.com/hc/fr/articles/115004494854-Updating-Multiple-Contacts
@@ -225,7 +231,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		return mb_stripos($data, 'HTTP/1.1 200') === 0;
 	}
 
-	public function extractResponseData($data, $forHistory = false, $multiple = false) {
+	public function extractResponseData($data, bool $forHistory = false, bool $multiple = false) {
 
 		if (mb_stripos($data, '{') !== false) {
 			$data = mb_substr($data, mb_stripos($data, '{'));
@@ -236,11 +242,15 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		return $data;
 	}
 
-	private function sendRequest($type, $method, $data) {
+	private function sendRequest(string $type, string $method, $data) {
+
+		$url = Mage::getStoreConfig('maillog_sync/emarsys/api_url');
+		if (empty($url))
+			return null;
 
 		$timestamp = gmdate('c');
 		$nonce     = md5(random_int(1000000000000000, 9999999999999999));
-		$password  = Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/general/api_password'));
+		$password  = Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/emarsys/api_password'));
 		$password  = base64_encode(sha1($nonce.$timestamp.$password));
 
 		$ch = curl_init();
@@ -270,18 +280,18 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 				break;
 		}
 
-		curl_setopt($ch, CURLOPT_URL, Mage::getStoreConfig('maillog_sync/general/api_url').$method);
+		curl_setopt($ch, CURLOPT_URL, $url.$method);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, [
 			'X-WSSE: UsernameToken '.
-				'Username="'.Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/general/api_username')).'", '.
+				'Username="'.Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/emarsys/api_username')).'", '.
 				'PasswordDigest="'.$password.'", Nonce="'.$nonce.'", Created="'.$timestamp.'"',
 			'Content-Type: application/json; charset="utf-8"'
 		]);
 
-		$response = curl_exec($ch);
-		$response = ((curl_errno($ch) !== 0) || ($response === false)) ? 'CURL_ERROR_'.curl_errno($ch).' '.curl_error($ch) : $response;
+		$result = curl_exec($ch);
+		$result = ((curl_errno($ch) !== 0) || ($result === false)) ? trim('CURL_ERROR_'.curl_errno($ch).' '.curl_error($ch)) : $result;
 		curl_close($ch);
 
-		return $response;
+		return $result;
 	}
 }

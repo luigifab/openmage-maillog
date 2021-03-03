@@ -1,7 +1,7 @@
 {
     "type": "magento-module",
     "name": "luigifab/openmage-maillog",
-    "description": "A module to show history of emails sent and to sync customers with Emarsys and Dolist for OpenMage and Magento.",
+    "description": "A module to show history of emails sent and to sync customers with Emarsys and Dolist for OpenMage.",
     "homepage": "https://github.com/luigifab/openmage-maillog",
     "license": "GPL-2.0-or-later",
     "authors": [
@@ -23,6 +23,10 @@
         {
             "type": "other",
             "url": "https://gandi.link/f/4b904048"
+        },
+        {
+            "type": "other",
+            "url": "https://ekwateur.fr/?parrain=EKW001147103"
         }
     ],
     "require": {
@@ -57,6 +61,7 @@
             ["src/app/locale/es_PE/template/email/maillog_report.html", "app/locale/es_PE/template/email/maillog_report.html"],
             ["src/app/locale/es_VE/template/email/maillog_report.html", "app/locale/es_VE/template/email/maillog_report.html"],
             ["src/app/locale/fr_CA/template/email/maillog_report.html", "app/locale/fr_CA/template/email/maillog_report.html"],
+            ["src/app/locale/fr_CH/template/email/maillog_report.html", "app/locale/fr_CH/template/email/maillog_report.html"],
             ["src/app/locale/fr_FR/template/email/maillog_report.html", "app/locale/fr_FR/template/email/maillog_report.html"],
             ["src/app/locale/it_CH/template/email/maillog_report.html", "app/locale/it_CH/template/email/maillog_report.html"],
             ["src/app/locale/it_IT/template/email/maillog_report.html", "app/locale/it_IT/template/email/maillog_report.html"],
@@ -76,6 +81,7 @@
             ["src/app/locale/es_PE/Luigifab_Maillog.csv", "app/locale/es_PE/Luigifab_Maillog.csv"],
             ["src/app/locale/es_VE/Luigifab_Maillog.csv", "app/locale/es_VE/Luigifab_Maillog.csv"],
             ["src/app/locale/fr_CA/Luigifab_Maillog.csv", "app/locale/fr_CA/Luigifab_Maillog.csv"],
+            ["src/app/locale/fr_CH/Luigifab_Maillog.csv", "app/locale/fr_CH/Luigifab_Maillog.csv"],
             ["src/app/locale/fr_FR/Luigifab_Maillog.csv", "app/locale/fr_FR/Luigifab_Maillog.csv"],
             ["src/app/locale/it_CH/Luigifab_Maillog.csv", "app/locale/it_CH/Luigifab_Maillog.csv"],
             ["src/app/locale/it_IT/Luigifab_Maillog.csv", "app/locale/it_IT/Luigifab_Maillog.csv"],
@@ -87,11 +93,13 @@
             ["src/app/locale/ru_RU/Luigifab_Maillog.csv", "app/locale/ru_RU/Luigifab_Maillog.csv"],
             ["src/app/locale/sk_SK/Luigifab_Maillog.csv", "app/locale/sk_SK/Luigifab_Maillog.csv"],
             ["src/app/locale/tr_TR/Luigifab_Maillog.csv", "app/locale/tr_TR/Luigifab_Maillog.csv"],
+            ["src/app/locale/uk_UA/Luigifab_Maillog.csv", "app/locale/uk_UA/Luigifab_Maillog.csv"],
             ["src/app/locale/zh_CN/Luigifab_Maillog.csv", "app/locale/zh_CN/Luigifab_Maillog.csv"],
             ["src/app/etc/modules/Luigifab_Maillog.xml", "app/etc/modules/Luigifab_Maillog.xml"],
             ["src/app/code/community/Luigifab/Maillog/", "app/code/community/Luigifab/Maillog/"],
             ["src/app/design/adminhtml/default/default/layout/luigifab/maillog.xml", "app/design/adminhtml/default/default/layout/luigifab/maillog.xml"],
             ["src/app/design/adminhtml/default/default/template/luigifab/maillog/", "app/design/adminhtml/default/default/template/luigifab/maillog/"],
+            ["src/app/design/frontend/base/default/template/luigifab/maillog/", "app/design/frontend/base/default/template/luigifab/maillog/"],
             ["src/skin/adminhtml/default/default/css/luigifab/maillog/", "skin/adminhtml/default/default/css/luigifab/maillog/"],
             ["src/skin/adminhtml/default/default/images/luigifab/maillog/", "skin/adminhtml/default/default/images/luigifab/maillog/"],
             ["src/skin/adminhtml/default/default/js/luigifab/maillog/", "skin/adminhtml/default/default/js/luigifab/maillog/"],

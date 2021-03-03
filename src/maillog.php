@@ -1,11 +1,12 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated J/23/07/2020
+ * Updated M/09/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -25,12 +26,9 @@ if (PHP_SAPI != 'cli')
 chdir(dirname($argv[0])); // root
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-define('MAGENTO_ROOT', getcwd());
 
 if (is_file('maintenance.flag') || is_file('upgrade.flag'))
 	exit(0);
-if (is_file('includes/config.php'))
-	include('includes/config.php');
 if (is_file('app/bootstrap.php'))
 	require_once('app/bootstrap.php');
 
@@ -71,7 +69,7 @@ if ($email) {
 			$email->sendNow();
 			$success[] = 'email:'.$email->getId();
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 			$email->setData('status', 'error')->save();
 			$error[] = 'email:'.$email->getId().' '.$e->getMessage();
 		}
@@ -105,7 +103,7 @@ if ($sync) {
 				$done[]    = $info[4];
 			}
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 			$sync->setData('status', 'error')->save();
 			$error[] = 'sync:'.$sync->getId().' '.$e->getMessage();
 		}

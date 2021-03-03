@@ -1,11 +1,12 @@
 <?php
 /**
  * Created M/21/01/2020
- * Updated M/21/01/2020
+ * Updated S/26/12/2020
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -21,19 +22,19 @@
 
 interface Luigifab_Maillog_Model_Interface {
 
-	public function getType();
+	public function getMapping();
 
 	public function getFields();
 
-	public function mapFields($object);
+	public function mapFields(object $object);
 
-	public function updateCustomer(&$data);
+	public function updateCustomer(array &$data);
 
-	public function deleteCustomer(&$data);
+	public function deleteCustomer(array &$data);
 
-	public function updateCustomers(&$data);
+	public function updateCustomers(array &$data);
 
 	public function checkResponse($data);
 
-	public function extractResponseData($data, $forHistory = false, $multiple = false);
+	public function extractResponseData($data, bool $forHistory = false, bool $multiple = false);
 }

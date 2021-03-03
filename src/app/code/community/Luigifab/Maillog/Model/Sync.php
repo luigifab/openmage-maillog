@@ -1,11 +1,12 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated D/31/05/2020
+ * Updated V/12/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -29,7 +30,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 
 	// action
-	public function updateNow($send = true) {
+	public function updateNow() {
 
 		$now = time();
 		if (empty($this->getId()))
@@ -42,6 +43,8 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		try {
 			$this->setData('status', 'running');
 			$this->save();
+
+			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
 
 			// chargement des objets du client
 			if ($info[1] == 'customer') {
@@ -83,31 +86,25 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			// note très très importante, le + fait en sorte que ce qui est déjà présent n'est pas écrasé
 			// par exemple, si entity_id est trouvé dans $customer, même si entity_id est trouvé dans $billing,
 			// c'est bien l'entity_id de customer qui est utilisé
-			$allow  = Mage::getStoreConfigFlag('maillog_sync/general/send') ? Mage::helper('maillog')->canSend(...$info) : false;
-			$system = Mage::helper('maillog')->getSystem();
-			$data   = $system->mapFields($customer);
-			$data  += $system->mapFields($billing);
-			$data  += $system->mapFields($shipping);
-			$data  += $system->mapFields($subscriber);
-			$data  += $system->mapFields($object);
+			$allow = Mage::getStoreConfigFlag('maillog_sync/'.$code.'/send') ? Mage::helper('maillog')->canSend(...$info) : false;
+			$data  = $system->mapFields($customer);
+			$data += $system->mapFields($billing);
+			$data += $system->mapFields($shipping);
+			$data += $system->mapFields($subscriber);
+			$data += $system->mapFields($object);
 
 			if ($allow !== true) {
 				$this->setData('duration', time() - $now);
-				$this->saveAllData($data, null, false);
-				$this->setData('status', 'notsync');
 				$this->setData('response', $allow);
-				$this->save();
-			}
-			else if ($send) {
-				$result = $system->updateCustomer($data);
-				$this->setData('duration', time() - $now);
-				$this->saveAllData($data, $result);
+				$this->saveAllData($system, $data);
 			}
 			else {
-				$this->saveAllData($data, null);
+				$result = $system->updateCustomer($data);
+				$this->setData('duration', time() - $now);
+				$this->saveAllData($system, $data, $result);
 			}
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 			Mage::logException($e);
 		}
 
@@ -128,29 +125,28 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			$this->setData('status', 'running');
 			$this->save();
 
+			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
+
 			// simulation du client
 			$customer = Mage::getModel('customer/customer');
 			$customer->setOrigData('email', $info[4]);
 			$customer->setData('email', $info[4]);
 
-			$allow  = Mage::getStoreConfigFlag('maillog_sync/general/send') ? Mage::helper('maillog')->canSend(...$info) : false;
-			$system = Mage::helper('maillog')->getSystem();
-			$data   = $system->mapFields($customer);
+			$allow = Mage::getStoreConfigFlag('maillog_sync/'.$code.'/send') ? Mage::helper('maillog')->canSend(...$info) : false;
+			$data  = $system->mapFields($customer);
 
 			if ($allow !== true) {
 				$this->setData('duration', time() - $now);
-				$this->saveAllData($data, null, false);
-				$this->setData('status', 'notsync');
 				$this->setData('response', $allow);
-				$this->save();
+				$this->saveAllData($system, $data);
 			}
 			else {
 				$result = $system->deleteCustomer($data);
 				$this->setData('duration', time() - $now);
-				$this->saveAllData($data, $result);
+				$this->saveAllData($system, $data, $result);
 			}
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 			Mage::logException($e);
 		}
 
@@ -161,7 +157,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 	// gestion des données des objets et de l'historique
 	// si le saveAllData est fait dans une transaction, s'il y a un rollback, tout est perdu
 	// dans ce cas ne pas oublier de refaire un saveAllData
-	private function initSpecialObject($customer) {
+	private function initSpecialObject(object $customer) {
 
 		$object = new Varien_Object();
 		$object->setData('last_sync_date', date('Y-m-d H:i:s'));
@@ -225,7 +221,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		return $object;
 	}
 
-	private function transformDataForHistory($data, $asString = true) {
+	private function transformDataForHistory(array $data, bool $asString = true) {
 
 		$inline = [];
 
@@ -248,15 +244,16 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		return $asString ? trim(implode($inline)) : $inline;
 	}
 
-	public function saveAllData($request, $response, $save = true) {
+	public function saveAllData(object $system, $request = null, $response = null) {
 
 		if (!empty($request) && is_array($request)) {
 
 			ksort($request);
-			$mapping = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/general/mapping_config')));
-			$lines   = explode("\n", $this->transformDataForHistory($request));
 
-			foreach ($mapping as $map) {
+			$maps  = $system->getMapping();
+			$lines = explode("\n", $this->transformDataForHistory($request));
+
+			foreach ($maps as $map) {
 				$map = explode(':', $map);
 				$tmp = trim(array_shift($map));
 				foreach ($lines as &$line) {
@@ -277,15 +274,14 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			$this->setData('request', implode("\n", $lines));
 		}
 
-		$system   = Mage::helper('maillog')->getSystem();
-		$status   = $system->checkResponse($response) ? 'success' : 'error';
-		$response = $system->extractResponseData($response, true);
+		if (!empty($response)) {
+			$status   = $system->checkResponse($response) ? 'success' : 'error';
+			$response = $system->extractResponseData($response, true);
+			$this->setData('response', is_array($response) ? $this->transformDataForHistory($response) : $response);
+		}
 
-		$this->setData('response', $this->transformDataForHistory($response));
 		$this->setData('sync_at', date('Y-m-d H:i:s'));
-		$this->setData('status', $status);
-
-		if ($save)
-			$this->save();
+		$this->setData('status', empty($status) ? 'notsync' : $status);
+		$this->save();
 	}
 }

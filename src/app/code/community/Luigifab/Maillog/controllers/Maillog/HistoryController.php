@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/04/10/2020
+ * Updated M/02/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -69,7 +70,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 	public function testAction() {
 
 		if (Mage::getStoreConfigFlag('maillog/email/enabled')) {
-			Mage::getSingleton('maillog/observer')->sendEmailReport(null, true);
+			Mage::getSingleton('maillog/observer')->sendEmailReport();
 			$this->_redirect('*/*/view', ['id' => Mage::registry('maillog_last_emailid')]);
 		}
 		else {
@@ -102,7 +103,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully deleted.', $id));
 			}
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 			Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
 		}
 
@@ -121,7 +122,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Email number %d will be resent.', $id));
 			}
 		}
-		catch (Exception $e) {
+		catch (Throwable $e) {
 			Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
 		}
 

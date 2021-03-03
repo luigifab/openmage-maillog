@@ -1,11 +1,12 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated D/26/07/2020
+ * Updated V/19/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -19,25 +20,25 @@
  * GNU General Public License (GPL) for more details.
  */
 
-$config = $this->getConfig();
 $help   = $this->helper('maillog');
-$base   = 'groups[general][fields][special_config][value]';
+$config = $this->getConfig();
+
+$titleCode = $help->escapeEntities($this->__('Code'));
+$titleDesc = $help->escapeEntities($this->__('Description'));
 ?>
 
 <tr id="<?php echo $this->getHtmlId() ?>" class="grid">
 	<td colspan="4">
-		<table cellspacing="0" style="margin:10px 0 15px;" class="data border data-table" id="pictureConfig">
+		<table cellspacing="0" class="data border data-table" id="pictureConfig">
 			<thead>
 				<tr class="headings">
 					<th style="width:20em;"><?php echo $this->__('Code') ?> / <?php echo $this->__('Description') ?></th>
 					<th><?php echo $this->__('Breakpoint / Size (<em>width</em> x <em>height</em>) / Ratio') ?></th>
-					<th><?php echo $this->__('Action') ?></th>
 				</tr>
 			</thead>
 			<tfoot>
 				<tr>
-					<td colspan="2"></td>
-					<td class="a-center">
+					<td colspan="2">
 						<button type="button" class="scalable add" onclick="maillog.addPicture(this);">
 							<span><?php echo $this->__('Add') ?></span>
 						</button>
@@ -47,16 +48,20 @@ $base   = 'groups[general][fields][special_config][value]';
 			<tbody>
 				<tr class="template" data-next="<?php echo empty($config) ? 0 : (max(array_keys($config)) + 1) ?>">
 					<td>
-						<label title="code">
-							<input type="text"
-								name="<?php echo $base ?>[IIDDXX][c]"
+						<label>
+							<input type="text" placeholder="<?php echo $titleCode ?>"
+								name="groups[general][fields][special_config][value][IIDDXX][c]"
 								class="input-text cde required-entry validate-alphanum" />
 						</label>
-						<label title="description">
-							<input type="text"
-								name="<?php echo $base ?>[IIDDXX][d]"
+						<label>
+							<input type="text" placeholder="<?php echo $titleDesc ?>"
+								name="groups[general][fields][special_config][value][IIDDXX][d]"
 								class="input-text cmt" />
 						</label>
+						<br />
+						<button type="button" class="slink" onclick="maillog.deletePicture(this);">
+							<?php echo $this->__('Delete') ?>
+						</button>
 					</td>
 					<td class="config">
 						<ul>
@@ -67,13 +72,13 @@ $base   = 'groups[general][fields][special_config][value]';
 								<div class="sz">
 									<label title="width (px)">
 										<input type="number"
-											name="<?php echo $base ?>[IIDDXX][0][w]"
+											name="groups[general][fields][special_config][value][IIDDXX][0][w]"
 											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
 									</label>
 									x
 									<label title="height (px)">
 										<input type="number"
-											name="<?php echo $base ?>[IIDDXX][0][h]"
+											name="groups[general][fields][special_config][value][IIDDXX][0][h]"
 											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
 									</label>
 								</div>
@@ -83,20 +88,20 @@ $base   = 'groups[general][fields][special_config][value]';
 									max-width:
 									<label title="max-width (px)">
 										<input type="number"
-											name="<?php echo $base ?>[IIDDXX][KKEEYY][b]"
+											name="groups[general][fields][special_config][value][IIDDXX][KKEEYY][b]"
 											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
 									</label>
 								</div>
 								<div class="sz">
 									<label title="width (px)">
 										<input type="number"
-											name="<?php echo $base ?>[IIDDXX][KKEEYY][w]"
+											name="groups[general][fields][special_config][value][IIDDXX][KKEEYY][w]"
 											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
 									</label>
 									x
 									<label title="height (px)">
 										<input type="number"
-											name="<?php echo $base ?>[IIDDXX][KKEEYY][h]"
+											name="groups[general][fields][special_config][value][IIDDXX][KKEEYY][h]"
 											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
 									</label>
 								</div>
@@ -119,25 +124,26 @@ $base   = 'groups[general][fields][special_config][value]';
 							</div>
 						</div>
 					</td>
-					<td class="a-center">
-						<button type="button" class="slink" onclick="maillog.deletePicture(this);">
-							<?php echo $this->__('Delete') ?>
-						</button>
-					</td>
 				</tr>
 				<?php foreach ($config as $idx => $data): ?>
 					<tr class="config">
 						<td>
-							<label title="code">
-								<input type="text"
-									name="<?php echo $base ?>[<?php echo $idx ?>][c]"
-									value="<?php echo $data['c'] ?>" class="input-text cde required-entry validate-alphanum" />
+							<label>
+								<input type="text" placeholder="<?php echo $titleCode ?>"
+									name="groups[general][fields][special_config][value][<?php echo $idx ?>][c]"
+									value="<?php echo $data['c'] ?>"
+									class="input-text cde required-entry validate-alphanum" />
 							</label>
-							<label title="description">
-								<input type="text"
-									name="<?php echo $base ?>[<?php echo $idx ?>][d]"
-									value="<?php echo str_replace("\n", ' ', $help->escapeEntities($data['d'], true)) ?>" class="input-text cmt" />
+							<label>
+								<input type="text" placeholder="<?php echo $titleDesc ?>"
+									name="groups[general][fields][special_config][value][<?php echo $idx ?>][d]"
+									value="<?php echo str_replace("\n", ' ', $help->escapeEntities($data['d'], true)) ?>"
+									class="input-text cmt" />
 							</label>
+							<br />
+							<button type="button" class="slink" onclick="maillog.deletePicture(this);">
+								<?php echo $this->__('Delete') ?>
+							</button>
 						</td>
 						<td class="config">
 							<ul>
@@ -148,14 +154,16 @@ $base   = 'groups[general][fields][special_config][value]';
 									<div class="sz">
 										<label title="width (px)">
 											<input type="number"
-												name="<?php echo $base ?>[<?php echo $idx ?>][0][w]"
-												min="0" step="1" value="<?php echo $data[0]['w'] ?>" class="input-text required-entry validate-greater-than-zero" />
+												name="groups[general][fields][special_config][value][<?php echo $idx ?>][0][w]"
+												min="0" step="1" value="<?php echo $data[0]['w'] ?>"
+												class="input-text required-entry validate-greater-than-zero" />
 										</label>
 										x
 										<label title="height (px)">
 											<input type="number"
-												name="<?php echo $base ?>[<?php echo $idx ?>][0][h]"
-												min="0" step="1" value="<?php echo $data[0]['h'] ?>" class="input-text required-entry validate-greater-than-zero" />
+												name="groups[general][fields][special_config][value][<?php echo $idx ?>][0][h]"
+												min="0" step="1" value="<?php echo $data[0]['h'] ?>"
+												class="input-text required-entry validate-greater-than-zero" />
 										</label>
 									</div>
 									<div class="rt">
@@ -169,21 +177,24 @@ $base   = 'groups[general][fields][special_config][value]';
 											max-width:
 											<label title="max-width (px)">
 												<input type="number"
-													name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][b]"
-													min="0" step="1" value="<?php echo $subdata['b'] ?>" class="input-text required-entry validate-greater-than-zero" />
+													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $key ?>][b]"
+													min="0" step="1" value="<?php echo $subdata['b'] ?>"
+													class="input-text required-entry validate-greater-than-zero" />
 											</label>
 										</div>
 										<div class="sz">
 											<label title="width (px)">
 												<input type="number"
-													name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][w]"
-													min="0" step="1" value="<?php echo $subdata['w'] ?>" class="input-text required-entry validate-greater-than-zero" />
+													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $key ?>][w]"
+													min="0" step="1" value="<?php echo $subdata['w'] ?>"
+													class="input-text required-entry validate-greater-than-zero" />
 											</label>
 											x
 											<label title="height (px)">
 												<input type="number"
-													name="<?php echo $base ?>[<?php echo $idx ?>][<?php echo $key ?>][h]"
-													min="0" step="1" value="<?php echo $subdata['h'] ?>" class="input-text required-entry validate-greater-than-zero" />
+													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $key ?>][h]"
+													min="0" step="1" value="<?php echo $subdata['h'] ?>"
+													class="input-text required-entry validate-greater-than-zero" />
 											</label>
 										</div>
 										<div class="rt">
@@ -208,16 +219,11 @@ $base   = 'groups[general][fields][special_config][value]';
 								</div>
 							</div>
 						</td>
-						<td class="a-center">
-							<button type="button" class="slink" onclick="maillog.deletePicture(this);">
-								<?php echo $this->__('Delete') ?>
-							</button>
-						</td>
 					</tr>
 				<?php endforeach ?>
 			</tbody>
 		</table>
-		<code style="display:block; margin:0.5em 0 1.5em; padding-left:6px; font-size:0.9em; line-height:1.4em; border-left:3px solid #AAA;">
+		<code class="maillogexamples">
 			      {{picture code="..." file="..." attribute="..." helper="..."}}
 			<br />Mage::helper('maillog/picture')->getTag(['code' => '...', 'file' => '...', 'attribute' => '...', 'helper' => '...']);
 			<br />
@@ -243,19 +249,19 @@ $base   = 'groups[general][fields][special_config][value]';
 			<pre style="padding:0.5em; white-space:pre-wrap; background-color:beige;">
 <b>[ product file ]</b>
 <?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
-	$help->filterMail(new Varien_Object(), '{{picture code="test" file="/6/0/605003.jpg"}}', [])
+	Mage::getModel('varien/filter_template')->filter('{{picture code="test" file="/6/0/605003.jpg"}}')
 )) ?>
 
 
 <b>[ category file ]</b>
 <?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
-	$help->filterMail(new Varien_Object(), '{{picture code="test" attribute="category" file="605003.jpg"}}', [])
+	Mage::getModel('varien/filter_template')->filter('{{picture code="test" attribute="category" file="605003.jpg"}}')
 )) ?>
 
 
 <b>[ wysiwyg file ]</b>
 <?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
-	$help->filterMail(new Varien_Object(), '{{picture code="test" attribute="wysiwyg" file="wysiwyg/abc/605003.jpg"}}', [])
+	Mage::getModel('varien/filter_template')->filter('{{picture code="test" attribute="wysiwyg" file="wysiwyg/abc/605003.jpg"}}')
 )) ?>
 
 

@@ -1,11 +1,12 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated V/08/05/2020
+ * Updated D/07/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -122,8 +123,9 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 		return false;
 	}
 
+
 	public function decorateStatus($value, $row, $column, $isExport) {
-		return sprintf('<span class="maillog-status grid-%s">%s</span>', $row->getData('status'), $value);
+		return $isExport ? $value : sprintf('<span class="maillog-status grid-%s">%s</span>', $row->getData('status'), $value);
 	}
 
 	public function decorateDate($value, $row, $column, $isExport) {
@@ -133,12 +135,12 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 	public function decorateDetails($value, $row, $column, $isExport) {
 
 		if (in_array($row->getData('sync_at'), ['', '0000-00-00 00:00:00', null]))
-			$text = sprintf('<div>By <em>%s</em> for <em>%s</em><br />Created at <em>%s UTC</em></div>',
-				$row->getData('user'), $row->getData('action'),
+			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> -- %s<br />Created at <em>%s UTC</em></div>',
+				$row->getData('user'), $row->getData('action'), $row->getData('model'),
 				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT));
 		else
-			$text = sprintf('<div>By <em>%s</em> for <em>%s</em><br />Created at <em>%s UTC</em> and synced at <em>%s UTC</em> %s</div>',
-				$row->getData('user'), $row->getData('action'),
+			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> -- %s<br />Created at <em>%s UTC</em> and synced at <em>%s UTC</em> %s</div>',
+				$row->getData('user'), $row->getData('action'), $row->getData('model'),
 				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT),
 				$this->formatDate($row->getData('sync_at'), Zend_Date::DATETIME_SHORT),
 				empty($duration = $this->helper('maillog')->getHumanDuration($row->getData('duration'))) ? '' : '(duration '.$duration.')');

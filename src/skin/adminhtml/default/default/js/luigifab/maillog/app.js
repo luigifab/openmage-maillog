@@ -1,10 +1,11 @@
 /**
  * Created J/03/12/2015
- * Updated D/31/05/2020
+ * Updated D/17/01/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -29,18 +30,20 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 var maillog = new (function () {
 
 	"use strict";
+	this.types    = ['dolist', 'emarsys'];
 	this.template = null;
 	this.nextIdx  = 0;
 
 	this.start = function () {
 
+		var elem, customer, bounce, subscriber, i, j;
+
 		if (document.getElementById('maillog_sync_bounces_stats_customer')) {
 
 			console.info('maillog.app - hello');
-			var customer   = document.getElementById('maillog_sync_bounces_stats_customer'),
-			    bounce     = document.getElementById('maillog_sync_bounces_stats_bounce'),
-			    subscriber = document.getElementById('maillog_sync_unsubscribers_stats_subscriber'),
-			    i, j;
+			customer   = document.getElementById('maillog_sync_bounces_stats_customer');
+			bounce     = document.getElementById('maillog_sync_bounces_stats_bounce');
+			subscriber = document.getElementById('maillog_sync_unsubscribers_stats_subscriber');
 
 			i = parseInt(customer.textContent.trim(), 10);
 			j = parseInt(bounce.textContent.trim(), 10);
@@ -50,22 +53,22 @@ var maillog = new (function () {
 			j = parseInt(subscriber.textContent.trim(), 10);
 			subscriber.textContent += ' (' + Math.floor(j * 100 / i) + ' %)';
 		}
-		else if (document.getElementById('row_maillog_directives_general_special_config')) {
+		else if (elem = document.getElementById('row_maillog_directives_general_special_config')) {
 
 			console.info('maillog.app - hello');
 
-			var elem = document.querySelector('tr.template');
+			elem = elem.querySelector('tr.template');
 			this.template = elem.innerHTML;
 			this.nextIdx  = parseInt(elem.getAttribute('data-next'), 10);
 			elem.parentNode.removeChild(elem);
 		}
 	};
 
-	this.add = function () {
+	this.add = function (code) {
 
-		var sys = document.getElementById('maillog_sync_general_mapping_system'),
-		    mag = document.getElementById('maillog_sync_general_mapping_openmage'),
-		    cnf = document.getElementById('maillog_sync_general_mapping_config');
+		var sys = document.getElementById('maillog_sync_' + code + '_mapping_system'),
+		    mag = document.getElementById('maillog_sync_' + code + '_mapping_openmage'),
+		    cnf = document.getElementById('maillog_sync_' + code + '_mapping_config');
 
 		if ((sys.value.length > 0) && (mag.value.length > 0)) {
 			cnf.value = (cnf.value + '\n' + sys.value + ':' + mag.value).trim();
@@ -76,22 +79,25 @@ var maillog = new (function () {
 		}
 	};
 
-	this.mark = function () {
+	this.mark = function (fields) {
 
-		var fields = document.getElementById('maillog_sync_general_mapping_config').value;
+		this.types.forEach(function (code) {
 
-		document.getElementById('maillog_sync_general_mapping_system').querySelectorAll('option').forEach(function (elem) {
-			if ((fields.indexOf('\n' + elem.value + ':') > -1) || (fields.indexOf(elem.value + ':') === 0))
-				elem.setAttribute('class', 'has');
-			else
-				elem.removeAttribute('class');
-		});
+			fields = document.getElementById('maillog_sync_' + code + '_mapping_config').value;
 
-		document.getElementById('maillog_sync_general_mapping_openmage').querySelectorAll('option').forEach(function (elem) {
-			if (fields.indexOf(':' + elem.value) > -1)
-				elem.setAttribute('class', 'has');
-			else
-				elem.removeAttribute('class');
+			document.getElementById('maillog_sync_' + code + '_mapping_system').querySelectorAll('option').forEach(function (elem) {
+				if ((fields.indexOf('\n' + elem.value + ':') > -1) || (fields.indexOf(elem.value + ':') === 0))
+					elem.setAttribute('class', 'has');
+				else
+					elem.removeAttribute('class');
+			});
+
+			document.getElementById('maillog_sync_' + code + '_mapping_openmage').querySelectorAll('option').forEach(function (elem) {
+				if (fields.indexOf(':' + elem.value) > -1)
+					elem.setAttribute('class', 'has');
+				else
+					elem.removeAttribute('class');
+			});
 		});
 	};
 

@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/31/05/2020
+ * Updated V/12/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -51,9 +52,6 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 			['model' => 'newsletter_resource/subscriber']
 		];
 
-		if (version_compare(Mage::getVersion(), '1.9.1.0', '<'))
-			unset($rewrites[0]);
-
 		foreach ($rewrites as $rewrite) {
 			foreach ($rewrite as $type => $class) {
 				if (($type == 'model') && (mb_stripos(Mage::getConfig()->getModelClassName($class), 'luigifab') === false))
@@ -71,17 +69,17 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 	private function checkChanges() {
 
 		$zend = file_get_contents(BP.'/lib/Zend/Mail/Transport/Sendmail.php');
-		if (mb_stripos($zend, 'return Mage::helper(\'maillog\')->sendMail($this, $this->_mail, $this->_parts);') === false)
+		if (mb_strpos($zend, 'return Mage::helper(\'maillog\')->sendMail($this, $this->_mail, $this->_parts);') === false)
 			return 'lib/Zend/Mail/Transport/Sendmail.php';
 
 		$varien = file_get_contents(BP.'/lib/Varien/Filter/Template.php');
-		if (mb_stripos($varien, '$value = Mage::helper(\'maillog\')->filterMail($this, $value, $this->_templateVars);') === false)
+		if (mb_strpos($varien, 'Luigifab_Maillog_Model_Filter') === false)
 			return 'lib/Varien/Filter/Template.php';
-		if (mb_stripos($varien, 'return Mage::helper(\'maillog\')->variableMail($this, $value, $default);') === false)
+		if (mb_strpos($varien, 'function filter2(') === false)
 			return 'lib/Varien/Filter/Template.php';
-		if (mb_stripos($varien, 'public function _getVariable2(') === false)
+		if (mb_strpos($varien, 'function _getVariable2') === false)
 			return 'lib/Varien/Filter/Template.php';
-		if (mb_stripos($varien, 'if (empty($value))') === false)
+		if (mb_strpos($varien, '(\'maillog\')') !== false)
 			return 'lib/Varien/Filter/Template.php';
 
 		return true;

@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/08/10/2020
+ * Updated V/05/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -31,10 +32,10 @@ class Luigifab_Maillog_Block_Adminhtml_History extends Mage_Adminhtml_Block_Widg
 
 		$this->_removeButton('add');
 
-		$enabled = Mage::getStoreConfigFlag('maillog/general/enabled') && !empty(Mage::getStoreConfig('maillog/email/recipient_email'));
+		$enabled = Mage::getStoreConfigFlag('maillog/general/enabled') && Mage::getStoreConfigFlag('maillog/email/enabled');
 		$this->_addButton('test', [
 			'label'   => $this->__('Send an email now'),
-			'onclick' => $enabled ? "setLocation('".$this->getUrl('*/*/test')."');" : '',
+			'onclick' => $enabled ? "setLocation('".$this->getUrl('*/*/test')."?test=1');" : '',
 			'class'   => $enabled ? 'add' : 'add disabled'
 		]);
 	}

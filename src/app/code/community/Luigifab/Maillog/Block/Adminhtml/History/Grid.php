@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated L/05/10/2020
+ * Updated D/07/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -47,12 +48,12 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 		if (is_object($order = Mage::registry('current_order'))) {
 			$this->setId('maillog_order_grid_'.$order->getId());
-			$this->back = ['back' => 'order', 'bid' => $order->getId()];
+			$this->_backUrl = ['back' => 'order', 'bid' => $order->getId()];
 			$this->_defaultFilter = ['mail_subject' => $order->getData('increment_id')];
 		}
 		else if (is_object($customer = Mage::registry('current_customer'))) {
 			$this->setId('maillog_customer_grid_'.$customer->getId());
-			$this->back = ['back' => 'customer', 'bid' => $customer->getId()];
+			$this->_backUrl = ['back' => 'customer', 'bid' => $customer->getId()];
 			$this->_defaultFilter = ['mail_recipients' => $customer->getData('email')];
 		}
 	}
@@ -204,9 +205,9 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'actions'   => [
 				[
 					'caption' => $this->__('View'),
-					'url'     => empty($this->back['bid']) ?
-						['base' => '*/maillog_history/view'] :
-						['base' => '*/maillog_history/view/back/'.$this->back['back'].'/bid/'.$this->back['bid']],
+					'url'     => (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) ?
+						['base' => '*/maillog_history/view/back/'.$this->_backUrl['back'].'/bid/'.$this->_backUrl['bid']] :
+						['base' => '*/maillog_history/view'],
 					'field'   => 'id'
 				]
 			],
@@ -217,9 +218,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'is_system' => true
 		]);
 
-		// filtrage des colonnes
-		// embed tab
-		if (!empty($this->back['bid'])) {
+		// embed tab (filtrage des colonnes)
+		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
 			unset($this->_columns['type'], $this->_columns['mail_recipients'], $this->_columns['size']);
 		}
 		else {
@@ -258,30 +258,31 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return empty($row->getData('mail_parts')) ? '' : 'parts';
 	}
 
-	public function getGridUrl(array $params = []) {
+	public function getGridUrl() {
 
 		// embed tab
 		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
 			$query = empty($query = getenv('QUERY_STRING')) ? '' : '?'.$query;
-			return $this->getUrl('*/maillog_history/index', array_merge($params, $this->back)).$query;
+			return $this->getUrl('*/maillog_history/index', $this->_backUrl).$query;
 		}
 
-		return parent::getGridUrl($params);
+		return parent::getGridUrl();
 	}
 
 	public function getRowUrl($row) {
 
 		// embed tab
 		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
-			$params = array_merge($this->back, ['id' => $row->getId()]);
+			$params = array_merge($this->_backUrl, ['id' => $row->getId()]);
 			return empty($this->getRequest()->getParam('test')) ? $this->getUrl('*/maillog_history/view', $params) : false;
 		}
 
 		return empty($this->getRequest()->getParam('test')) ? $this->getUrl('*/*/view', ['id' => $row->getId()]) : false;
 	}
 
+
 	public function decorateStatus($value, $row, $column, $isExport) {
-		return sprintf('<span class="maillog-status grid-%s">%s</span>', $row->getData('status'), $value);
+		return $isExport ? $value : sprintf('<span class="maillog-status grid-%s">%s</span>', $row->getData('status'), $value);
 	}
 
 	public function decorateDuration($value, $row, $column, $isExport) {
@@ -303,6 +304,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	public function decorateSubject($value, $row, $column, $isExport) {
 		return $row->getSubject();
 	}
+
 
 	protected function _toHtml() {
 		return str_replace('class="data', 'class="adminhtml-maillog-history data', parent::_toHtml());

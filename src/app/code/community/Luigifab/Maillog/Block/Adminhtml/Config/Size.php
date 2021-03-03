@@ -1,11 +1,12 @@
 <?php
 /**
  * Created V/19/06/2015
- * Updated S/28/09/2019
+ * Updated V/12/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -30,7 +31,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Size extends Mage_Adminhtml_Block_
 
 		$database = Mage::getSingleton('core/resource');
 		$read = $database->getConnection('core_read');
-		$name = (mb_stripos($element->getHtmlId(), 'sync') !== false) ? 'maillog/sync' : 'maillog/email';
+		$name = (mb_stripos($element->getHtmlId(), 'sync') === false) ? 'maillog/email' : 'maillog/sync';
 
 		$select = $read->select()
 			->from('information_schema.TABLES', '(data_length + index_length) AS size_bytes')

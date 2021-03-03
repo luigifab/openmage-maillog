@@ -1,11 +1,12 @@
 <?php
 /**
  * Created D/15/05/2016
- * Updated J/23/05/2019
+ * Updated V/12/02/2021
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -27,7 +28,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Status extends Mage_Adminhtml_Bloc
 	}
 
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		$key = (mb_stripos($element->getHtmlId(), 'bounces') !== false) ? 'bounces' : 'unsubscribers';
+		$key = (mb_stripos($element->getHtmlId(), 'bounces') === false) ? 'unsubscribers' : 'bounces';
 		return $this->helper('maillog')->getImportStatus($key, $element->getHtmlId());
 	}
 }

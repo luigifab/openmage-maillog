@@ -1,11 +1,12 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated J/23/01/2020
+ * Updated S/26/12/2020
  *
- * Copyright 2015-2020 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
+ * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -19,8 +20,7 @@
  * GNU General Public License (GPL) for more details.
  */
 
-use Mage_Adminhtml_Block_Widget_Tab_Interface as Mage_Adminhtml_BWT_Interface;
-class Luigifab_Maillog_Block_Adminhtml_Tab extends Mage_Adminhtml_Block_Abstract implements Mage_Adminhtml_BWT_Interface {
+class Luigifab_Maillog_Block_Adminhtml_Tab extends Mage_Adminhtml_Block_Abstract implements Mage_Adminhtml_Block_Widget_Tab_Interface {
 
 	public function getTabLabel() {
 		return $this->__('Transactional emails');
