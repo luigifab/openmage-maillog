@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/21/02/2021
+ * Updated V/19/03/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -168,7 +168,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 			$replace = $currency->formatPrice($number);
 
 		if (array_key_exists('nodecimal', $attrs))
-			$replace = preg_replace('#[.,]00<#', '<', $replace);
+			$replace = preg_replace('#[.,]00[[:>:]]#', '', $replace);
 
 		return $replace;
 	}
@@ -278,7 +278,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 				if (is_callable($callback)) {
 					try {
 						$replace = $callback($construction);
-						if (!$debug || in_array($construction[1], ['inlinecss', 'block']) || !empty($replace))
+						if (!$debug || !empty($replace) || in_array($construction[1], ['inlinecss', 'block']))
 							$value = str_replace($construction[0], (is_object($replace) || is_array($replace)) ? '' : $replace, $value);
 					}
 					catch (Throwable $e) {

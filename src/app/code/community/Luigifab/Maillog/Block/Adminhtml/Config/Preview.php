@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated V/19/02/2021
+ * Updated M/16/03/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -70,11 +70,21 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 			foreach ($names as $name)
 				$langs[] = mb_substr($name, mb_strpos($name, '/locale/') + 8, 5);
 
-			$html[] = '<td class="label" style="width:50%;">';
-			$html[] = '<a href="'.$this->getUrl('*/maillog_preview/index', ['code' => $code, 'store' => $store]).'">'.$this->__($label).'</a>';
-			$html[] = '<br />'.$code;
-			$html[] = '<br /><em>'.$file.' − '.implode(' ', $langs).'</em>';
-			$html[] = '</td>';
+			if (empty($langs)) {
+				$html[] = '<td class="label" style="width:50%;">';
+				$html[] = $this->__($label);
+				$html[] = '<br />'.$code;
+				$html[] = '<br /><em>'.$file.' − no templates found</em>';
+				$html[] = '</td>';
+			}
+			else {
+				$url    = $this->getUrl('*/maillog_preview/index', ['code' => $code, 'file' => urlencode($file), 'store' => $store]);
+				$html[] = '<td class="label" style="width:50%;">';
+				$html[] = '<a href="'.$url.'">'.$this->__($label).'</a>';
+				$html[] = '<br />'.$code;
+				$html[] = '<br /><em>'.$file.' − '.implode(' ', $langs).'</em>';
+				$html[] = '</td>';
+			}
 
 			if (!$start && $end)
 				$html[] = '</tr>';

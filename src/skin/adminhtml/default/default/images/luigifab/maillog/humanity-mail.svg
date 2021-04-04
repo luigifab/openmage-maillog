@@ -1,48 +1,48 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="48" height="48" version="1.1">
+<svg width="48" height="48" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <!-- Humanity icon theme GNU GPL 2 https://opensource.org/licenses/gpl-2.0 -->
 <defs>
-<radialGradient id="rg2506" xlink:href="#lg5060-6" gradientUnits="userSpaceOnUse" cy="486.65" cx="605.71" gradientTransform="matrix(-.065534 0 0 .024706 -21.829 10.577)" r="117.14"/>
+<radialGradient id="rg2506" cx="605.71" cy="486.65" r="117.14" gradientTransform="matrix(-.065534 0 0 .024706 -21.829 10.577)" gradientUnits="userSpaceOnUse" xlink:href="#lg5060-6"/>
 <linearGradient id="lg5060-6">
 <stop offset="0"/>
 <stop stop-opacity="0" offset="1"/>
 </linearGradient>
-<radialGradient id="rg2504" xlink:href="#lg5060-6" gradientUnits="userSpaceOnUse" cy="486.65" cx="605.71" gradientTransform="matrix(.065534 0 0 .024706 -69.175 10.577)" r="117.14"/>
-<linearGradient id="lg2501" y2="609.51" gradientUnits="userSpaceOnUse" x2="302.86" gradientTransform="matrix(.065534 0 0 .024706 -69.188 10.577)" y1="366.65" x1="302.86">
+<radialGradient id="rg2504" cx="605.71" cy="486.65" r="117.14" gradientTransform="matrix(.065534 0 0 .024706 -69.175 10.577)" gradientUnits="userSpaceOnUse" xlink:href="#lg5060-6"/>
+<linearGradient id="lg2501" x1="302.86" x2="302.86" y1="366.65" y2="609.51" gradientTransform="matrix(.065534 0 0 .024706 -69.188 10.577)" gradientUnits="userSpaceOnUse">
 <stop stop-opacity="0" offset="0"/>
 <stop offset=".5"/>
 <stop stop-opacity="0" offset="1"/>
 </linearGradient>
-<linearGradient id="lg2432" y2="15.738" spreadMethod="reflect" gradientUnits="userSpaceOnUse" x2="25.525" gradientTransform="translate(0 -2.6325)" y1="30.189" x1="25.525">
+<linearGradient id="lg2432" x1="25.525" x2="25.525" y1="30.189" y2="15.738" gradientTransform="translate(0 -2.6325)" gradientUnits="userSpaceOnUse" spreadMethod="reflect">
 <stop stop-color="#1e1e1e" offset="0"/>
 <stop stop-color="#1e1e1e" stop-opacity="0" offset="1"/>
 </linearGradient>
-<linearGradient id="lg2435" y2="44.001" gradientUnits="userSpaceOnUse" x2="25.577" gradientTransform="matrix(1 0 0 1.1071 7.4172e-7 -5.6607)" y1="15" x1="25.577">
+<linearGradient id="lg2435" x1="25.577" x2="25.577" y1="15" y2="44.001" gradientTransform="matrix(1 0 0 1.1071 7.4172e-7 -5.6607)" gradientUnits="userSpaceOnUse">
 <stop stop-color="#fff" offset="0"/>
 <stop stop-color="#fff" stop-opacity="0" offset="1"/>
 </linearGradient>
-<linearGradient id="lg2438" y2="48.072" gradientUnits="userSpaceOnUse" x2="20.053" gradientTransform="translate(0 -1)" y1="8.1634" x1="20.053">
+<linearGradient id="lg2438" x1="20.053" x2="20.053" y1="8.1634" y2="48.072" gradientTransform="translate(0 -1)" gradientUnits="userSpaceOnUse">
 <stop stop-color="#f2f2f2" offset="0"/>
 <stop stop-color="#dbdbdb" offset=".87427"/>
 <stop stop-color="#999" offset="1"/>
 </linearGradient>
-<linearGradient id="lg2441" y2="14.038" gradientUnits="userSpaceOnUse" x2="28.103" gradientTransform="matrix(1 0 0 1.1014 -2.7099e-7 -5.5128)" y1="45" x1="28.103">
+<linearGradient id="lg2441" x1="28.103" x2="28.103" y1="45" y2="14.038" gradientTransform="matrix(1 0 0 1.1014 -2.7099e-7 -5.5128)" gradientUnits="userSpaceOnUse">
 <stop stop-color="#787878" offset="0"/>
 <stop stop-color="#b4b4b4" offset="1"/>
 </linearGradient>
-<linearGradient id="lg2449" y2="15.738" spreadMethod="reflect" gradientUnits="userSpaceOnUse" x2="25.525" gradientTransform="translate(0 -1.1505)" y1="30.189" x1="25.525">
+<linearGradient id="lg2449" x1="25.525" x2="25.525" y1="30.189" y2="15.738" gradientTransform="translate(0 -1.1505)" gradientUnits="userSpaceOnUse" spreadMethod="reflect">
 <stop stop-color="#fff" offset="0"/>
 <stop stop-color="#fff" stop-opacity="0" offset="1"/>
 </linearGradient>
 </defs>
-<g transform="translate(-5.984e-4,-4.0002542)">
+<g transform="translate(-.0005984 -4.0003)">
 <g transform="matrix(1.0008 0 0 1.0008 69.539 20.344)" stroke-width="1.0304">
-<rect opacity=".40206" height="6" width="31.644" y="19.636" x="-61.324" fill="url(#lg2501)"/>
-<path opacity=".40206" d="m-29.68 19.636v5.9997c3.3749 0.01129 8.1588-1.3442 8.1588-3.0002s-3.7661-2.9994-8.1588-2.9994z" fill="url(#rg2504)"/>
-<path opacity=".40206" d="m-61.324 19.636v5.9997c-3.3749 0.01129-8.1588-1.3442-8.1588-3.0002s3.7661-2.9994 8.1588-2.9994z" fill="url(#rg2506)"/>
+<rect x="-61.324" y="19.636" width="31.644" height="6" fill="url(#lg2501)" opacity=".40206"/>
+<path d="m-29.68 19.636v5.9997c3.3749 0.01129 8.1588-1.3442 8.1588-3.0002s-3.7661-2.9994-8.1588-2.9994z" fill="url(#rg2504)" opacity=".40206"/>
+<path d="m-61.324 19.636v5.9997c-3.3749 0.01129-8.1588-1.3442-8.1588-3.0002s3.7661-2.9994 8.1588-2.9994z" fill="url(#rg2506)" opacity=".40206"/>
 </g>
-<rect stroke-linejoin="round" height="33" stroke="url(#lg2441)" stroke-linecap="square" fill="url(#lg2438)" fill-rule="evenodd" rx="1" ry="1" width="45" y="10.5" x="1.5"/>
-<rect opacity=".4" rx=".082552" ry=".083472" height="31" width="43" stroke="url(#lg2435)" stroke-linecap="square" y="11.5" x="2.5" fill="none"/>
-<path opacity=".5" d="m3.2367 15.212 20.763 18.637 21.077-18.762m-26.421 14.262-13.475 13.633 13.475-13.633zm10.719 0.063 13.569 13.319-13.569-13.319z" stroke="url(#lg2449)" fill="none"/>
-<path opacity=".5" d="m3.2367 13.731 20.763 18.637 21.077-18.763m-26.421 14.263-13.475 13.632 13.475-13.632zm10.719 0.062 13.569 13.319-13.569-13.319z" stroke="url(#lg2432)" fill="none"/>
+<rect x="1.5" y="10.5" width="45" height="33" rx="1" ry="1" fill="url(#lg2438)" fill-rule="evenodd" stroke="url(#lg2441)" stroke-linecap="square" stroke-linejoin="round"/>
+<rect x="2.5" y="11.5" width="43" height="31" rx=".082552" ry=".083472" fill="none" opacity=".4" stroke="url(#lg2435)" stroke-linecap="square"/>
+<path d="m3.2367 15.212 20.763 18.637 21.077-18.762m-26.421 14.262-13.475 13.633 13.475-13.633zm10.719 0.063 13.569 13.319-13.569-13.319z" fill="none" opacity=".5" stroke="url(#lg2449)"/>
+<path d="m3.2367 13.731 20.763 18.637 21.077-18.763m-26.421 14.263-13.475 13.632 13.475-13.632zm10.719 0.062 13.569 13.319-13.569-13.319z" fill="none" opacity=".5" stroke="url(#lg2432)"/>
 </g>
 </svg>

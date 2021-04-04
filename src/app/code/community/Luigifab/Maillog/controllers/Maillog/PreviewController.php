@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated D/21/02/2021
+ * Updated S/20/03/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -80,10 +80,15 @@ class Luigifab_Maillog_Maillog_PreviewController extends Mage_Adminhtml_Controll
 			$vars['customerName'] = $vars['customer']->load($vars['customer']->getId())->getName();
 
 		if (is_object($vars['order'])) {
-			$vars['billing'] = $vars['order']->getBillingAddress();
-			$paymentBlock = Mage::helper('payment')->getInfoBlock($vars['order']->getPayment())->setIsSecureMode(true);
-			$paymentBlock->getMethod()->setStore($store);
-			$vars['payment_html'] = $paymentBlock->toHtml();
+			if (is_object($vars['order']->getPayment())) {
+				$vars['billing'] = $vars['order']->getBillingAddress();
+				$paymentBlock = Mage::helper('payment')->getInfoBlock($vars['order']->getPayment())->setIsSecureMode(true);
+				$paymentBlock->getMethod()->setStore($store);
+				$vars['payment_html'] = $paymentBlock->toHtml();
+			}
+			else {
+				$vars['order']->setData('created_at', date('Y-m-d H:i:s'));
+			}
 		}
 
 		$email = Mage::getModel('maillog/email')

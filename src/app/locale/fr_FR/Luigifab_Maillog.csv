@@ -44,6 +44,7 @@
 "Correspondence of attributes","Correspondance des attributs"
 "Customer Id field","Champ id client"
 "In case of a change of email address, the customer identification in the system will be done with the customer id.","En cas de changement d'adresse email, l'identification du client sur le système se fera avec l'id du client."
+"For orders, only: Processing, Complete, Closed.","Pour les commandes, uniquement : En cours de traitement (processing), Terminée (complete), Fermée (closed)."
 "Synchronization with Dolist","Synchronisation avec Dolist"
 "Invalid emails import","Import des emails invalides"
 "<p>This import allows to import invalid emails from your <strong>System</strong> to <strong>OpenMage</strong>.<br />It is carried out punctually by cron job thanks to the newest file in the specified folder below.<br />Whatever the file format is, the module looks for an email address (the rest is ignored).</p>","<p>Cet import permet d'importer les emails invalides depuis votre <strong>Système</strong> vers <strong>OpenMage</strong>.<br />Il est réalisé ponctuellement par tâche cron grâce au fichier le plus récent contenu dans le dossier défini ci-dessous.<br />Quelque soit le format du fichier, le module cherche une adresse email (le reste est ignoré).</p>"

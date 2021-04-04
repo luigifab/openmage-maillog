@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/26/10/2019
- * Updated V/19/02/2021
+ * Updated M/16/03/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -125,8 +125,8 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
  E / {number path="mallog/general/number" precision="2"} / <em>{{number path="maillog/general/number" precision="2"}}</em>
 <b>price</b>
  A / {price 99.99 / <em>{{price 99.99}}</em>
- B / {price 15 nodecimal="true"}   / <em>{{price 15 nodecimal="true"}}</em>
- C / {price 15.4 nodecimal="true"} / <em>{{price 15.4 nodecimal="true"}}</em>
+ B / {price 15000 nodecimal="true"}   / <em>{{price 15000 nodecimal="true"}}</em>
+ C / {price 15000.4 nodecimal="true"} / <em>{{price 15000.4 nodecimal="true"}}</em>
  D / {price path="maillog/general/number"} / <em>{{price path="maillog/general/number"}}</em>
  E / {price path="maillog/general/number" nodecimal="true"} / <em>{{price path="maillog/general/number" nodecimal="true"}}</em>
  F / {price 15.4 currency="cad"} / <em>{{price 15.4 currency="cad"}}</em>

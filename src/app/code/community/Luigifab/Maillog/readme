@@ -148,3 +148,6 @@ License: GPL 2.0+ (https://opensource.org/licenses/gpl-2.0)
 File: /skin/adminhtml/default/default/images/luigifab/maillog/mail-attachment.svg
 Source: https://commons.wikimedia.org/wiki/File:Mail-attachment.svg
 License: This file has been released into the public domain by its author, The Tango Desktop Project.
+
+Files: /skin/adminhtml/default/default/images/luigifab/maillog/logo-*.svg
+License: These logos are the graphic representation of registered trademarks subject to trademark law.

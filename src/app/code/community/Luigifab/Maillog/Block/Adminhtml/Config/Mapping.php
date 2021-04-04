@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated V/12/02/2021
+ * Updated S/20/03/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -99,7 +99,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$search[]  = 'name="'.$element->getName().'"';
 			$replace[] = '';
 			$search[]  = '<td class="scope-label">'.$this->__('[GLOBAL]').'</td>';
-			$replace[] = '<td rowspan="2" class="scope-label" style="vertical-align:middle;">'.
+			$replace[] = '<td rowspan="2" class="scope-label" style="padding-top:20px !important;">'.
 				'<button type="button" onclick="maillog.add(\''.$code.'\');">'.$this->__('Add').'</button></td>';
 		}
 

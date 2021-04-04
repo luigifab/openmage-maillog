@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/18/01/2021
- * Updated D/21/02/2021
+ * Updated S/20/03/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -25,71 +25,81 @@ $email = $this->getData('email');
 [$bgColor, $ttColor] = $this->getData('colors');
 
 ?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<html lang="mul">
 <head>
-<title><?php echo $subject = $email->getSubject() ?></title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="robots" content="noindex,nofollow">
-<link rel="icon" type="image/x-icon" href="<?php echo $this->getSkinUrl('favicon.ico') ?>">
-<?php echo $this->getData('mail_head') ?>
-<style type="text/css">
-body { margin:0 !important; padding:0 2rem 2rem !important; width:auto !important; height:auto !important; overflow-y:scroll !important; }
-body > ul.attachments {
-	display:flex; justify-content:center; margin:0 -2rem 2.4em;
-	list-style:none; font-size:0.7rem; color:<?php echo $ttColor ?>; background-color:<?php echo $bgColor ?>;
-}
-body > ul.attachments li {
-	display:flex; flex-direction:column; justify-content:center;
-	margin:1em 0; line-height:142%;
-}
-body > ul.attachments li:first-child {
-	padding:0 4em 0 58px; min-height:60px;
-	background:url("<?php echo $this->getSkinUrl('images/luigifab/maillog/humanity-mail.svg') ?>") no-repeat left center;
-}
-body > ul.attachments li select { padding:5px; font-size:0.7rem; border:1px solid gray; background:transparent; }
-body > ul.attachments li a { text-decoration:underline; color:<?php echo $ttColor ?>; }
-body > ul.attachments li a[type] {
-	display:flex; flex-direction:column; justify-content:center; padding:0 1.7em 0 50px; min-height:60px;
-	text-decoration:none; cursor:pointer; background-repeat:no-repeat; background-position:left center;
-}
-body > ul.attachments li a[type] {
-	background-image:url("<?php echo $this->getSkinUrl('images/luigifab/maillog/humanity-file.svg') ?>");
-}
-body > ul.attachments li a[type="application/pdf"] {
-	background-image:url("<?php echo $this->getSkinUrl('images/luigifab/maillog/humanity-pdf.svg') ?>");
-}
-body > p.emailold { margin:6em; text-align:center; font-size:13px; color:#E41101; }
-body > pre { margin:1em; white-space:pre-wrap; }
-@media print {
-	body > ul.attachments { font-size:0.6rem; }
-	body > ul.attachments span.print { display:none; }
-	body > ul.attachments li:first-child a { text-decoration:none; }
-}
-</style>
+	<title><?php echo $subject = $email->getSubject() ?></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="robots" content="noindex,nofollow">
+	<link rel="icon" type="image/x-icon" href="<?php echo $this->getSkinUrl('favicon.ico') ?>">
+	<?php echo $this->getData('mail_head') ?>
+	<style type="text/css">
+	body { margin:0 !important; padding:0 2rem 2rem !important; width:auto !important; height:auto !important; overflow-y:scroll !important; }
+	body > ul.attachments {
+		display:flex; justify-content:center; margin:0 -2rem 2.4em;
+		list-style:none; font-size:0.7rem; color:<?php echo $ttColor ?>; background-color:<?php echo $bgColor ?>;
+	}
+	body > ul.attachments li {
+		display:flex; flex-direction:column; justify-content:center;
+		margin:1em 0; line-height:142%;
+	}
+	body > ul.attachments li:first-child {
+		padding:0 4em 0 58px; min-height:60px;
+		background:url("<?php echo $this->getSkinUrl('images/luigifab/maillog/humanity-mail.svg') ?>") no-repeat left center;
+	}
+	body > ul.attachments li select { padding:5px; font-size:0.7rem; border:1px solid gray; background:transparent; }
+	body > ul.attachments li a { text-decoration:underline; color:<?php echo $ttColor ?>; }
+	body > ul.attachments li a[type] {
+		display:flex; flex-direction:column; justify-content:center; padding:0 1.7em 0 50px; min-height:60px;
+		text-decoration:none; cursor:pointer; background-repeat:no-repeat; background-position:left center;
+	}
+	body > ul.attachments li a[type] {
+		background-image:url("<?php echo $this->getSkinUrl('images/luigifab/maillog/humanity-file.svg') ?>");
+	}
+	body > ul.attachments li a[type="application/pdf"] {
+		background-image:url("<?php echo $this->getSkinUrl('images/luigifab/maillog/humanity-pdf.svg') ?>");
+	}
+	body > p.emailold { margin:6em; text-align:center; font-size:13px; color:#E41101; }
+	body > pre { margin:1em; white-space:pre-wrap; }
+	@media print {
+		body > ul.attachments { font-size:0.6rem; }
+		body > ul.attachments span.print { display:none; }
+		body > ul.attachments li:first-child a { text-decoration:none; }
+	}
+	</style>
 </head>
 <body>
 	<?php if (!empty($subject)): ?>
 		<ul class="attachments">
 			<li>
 				<?php if (!empty(Mage::registry('maillog_preview'))):
+
 					$stores  = Mage::getResourceModel('core/store_collection')->addFieldToFilter('is_active', 1)->setOrder('store_id', 'asc');
 					$current = Mage::app()->getStore()->getId();
+
+					$langs = [];
+					$names = glob(BP.'/app/locale/*/template/email/'.preg_replace('#[^\w/.-]#', '', $this->getRequest()->getParam('file')));
+					foreach ($names as $name)
+						$langs[] = mb_substr($name, mb_strpos($name, '/locale/') + 8, 5);
 				?>
-					<select lang="mul" onchange="self.location.href = this.value;">
-						<?php foreach ($stores as $store):
-							$url = preg_replace('#/store/\d+/#', '/store/'.$store->getId().'/', getenv('REQUEST_URI'));
-						?>
-							<?php if ($current == $store->getId()): ?>
-								<option value="<?php echo $url ?>" selected="selected">
-									<?php echo $store->getId() ?> / <?php echo $store->getName() ?> / <?php echo Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store) ?>
-								</option>
-							<?php else: ?>
-								<option value="<?php echo $url ?>">
-									<?php echo $store->getId() ?> / <?php echo $store->getName() ?> / <?php echo Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store) ?>
-								</option>
-							<?php endif ?>
-						<?php endforeach ?>
-					</select>
+					<label>
+						<select lang="mul" onchange="self.location.href = this.value;">
+							<?php foreach ($stores as $id => $store):
+								if (!in_array(Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $id), $langs))
+									continue;
+								$url = preg_replace('#/store/\d+/#', '/store/'.$id.'/', getenv('REQUEST_URI'));
+							?>
+								<?php if ($current == $id): ?>
+									<option value="<?php echo $url ?>" selected="selected">
+										<?php echo $id ?> / <?php echo $store->getData('name') ?> / <?php echo Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store) ?>
+									</option>
+								<?php else: ?>
+									<option value="<?php echo $url ?>">
+										<?php echo $id ?> / <?php echo $store->getData('name') ?> / <?php echo Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store) ?>
+									</option>
+								<?php endif ?>
+							<?php endforeach ?>
+						</select>
+					</label>
 				<?php else: ?>
 					<strong class="subject"><?php echo $this->__('Subject: %s', $subject) ?></strong>
 					<?php if (!in_array($email->getData('sent_at'), ['', '0000-00-00 00:00:00', null])): ?>

@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" version="1.1">
+<svg width="48" height="48" xmlns="http://www.w3.org/2000/svg">
 <!-- Public Domain https://en.wikipedia.org/wiki/File:Mail-attachment.svg -->
 <defs>
-<linearGradient id="lg5789" y2="29.859" gradientUnits="userSpaceOnUse" x2="20.605" y1="5.7753" x1="23.506">
+<linearGradient id="lg5789" x1="23.506" x2="20.605" y1="5.7753" y2="29.859" gradientUnits="userSpaceOnUse">
 <stop stop-color="#d3d7cf" offset="0"/>
 <stop stop-color="#f5f5f5" offset=".5"/>
 <stop stop-color="#bebebe" offset="1"/>
 </linearGradient>
 </defs>
-<path stroke-linejoin="round" d="m21.326 9.3279l-10.877 18.614c-1.9223 3.292-0.7714 7.539 2.559 9.44l2.094 1.197c3.332 1.901 7.63 0.763 9.554-2.529l11.756-20.121c1.923-3.293 1.213-7.2884-1.577-8.8813-2.79-1.5928-6.647-0.2024-8.57 3.0903l-8.155 13.962c-1.924 3.291-2.131 6.771-0.462 7.737 1.669 0.962 4.609-0.943 6.532-4.234l3.962-6.783" stroke="#888a85" stroke-linecap="round" stroke-width="3" fill="none"/>
-<path stroke-linejoin="round" stroke="url(#lg5789)" stroke-linecap="round" d="m21.326 9.2155l-10.877 18.614c-1.9223 3.291-0.7714 7.539 2.559 9.44l2.094 1.197c3.332 1.901 7.63 0.762 9.554-2.529l11.756-20.122c1.923-3.292 1.213-7.2878-1.577-8.8806s-6.647-0.2025-8.57 3.0896l-8.155 13.962c-1.924 3.292-2.131 6.772-0.462 7.737 1.669 0.963 4.609-0.942 6.532-4.234l3.962-6.783" fill="none"/>
+<path d="m21.326 9.3279-10.877 18.614c-1.9223 3.292-0.7714 7.539 2.559 9.44l2.094 1.197c3.332 1.901 7.63 0.763 9.554-2.529l11.756-20.121c1.923-3.293 1.213-7.2884-1.577-8.8813-2.79-1.5928-6.647-0.2024-8.57 3.0903l-8.155 13.962c-1.924 3.291-2.131 6.771-0.462 7.737 1.669 0.962 4.609-0.943 6.532-4.234l3.962-6.783" fill="none" stroke="#888a85" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+<path d="m21.326 9.2155-10.877 18.614c-1.9223 3.291-0.7714 7.539 2.559 9.44l2.094 1.197c3.332 1.901 7.63 0.762 9.554-2.529l11.756-20.122c1.923-3.292 1.213-7.2878-1.577-8.8806s-6.647-0.2025-8.57 3.0896l-8.155 13.962c-1.924 3.292-2.131 6.772-0.462 7.737 1.669 0.963 4.609-0.942 6.532-4.234l3.962-6.783" fill="none" stroke="url(#lg5789)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

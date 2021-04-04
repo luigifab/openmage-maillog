@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated V/12/02/2021
+ * Updated S/20/03/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -183,7 +183,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				->order('log_id desc')
 				->limit(1));
 
-			$object->setData('last_login_date', (mb_strlen($last) > 10) ? $last : $customer->getData('created_at'));
+			$object->setData('last_login_date', (strlen($last) > 10) ? $last : $customer->getData('created_at'));
 
 			// commandes
 			$orders = Mage::getResourceModel('sales/order_collection')
@@ -281,7 +281,9 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		}
 
 		$this->setData('sync_at', date('Y-m-d H:i:s'));
+		//if (empty($this->getData('status')))
 		$this->setData('status', empty($status) ? 'notsync' : $status);
+
 		$this->save();
 	}
 }

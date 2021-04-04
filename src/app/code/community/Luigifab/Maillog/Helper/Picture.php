@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated V/19/02/2021
+ * Updated S/20/03/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -121,7 +121,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		// après la génération des balises html
 		if (!empty($this->_update_configandvalues_after)) {
 			$event = $this->_update_configandvalues_after;
-			return Mage::helper($event[0])->{$event[1]}($html);
+			return Mage::helper($event[0])->{$event[1]}($html, $code);
 		}
 
 		return $html;

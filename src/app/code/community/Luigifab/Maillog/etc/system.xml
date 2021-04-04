@@ -430,8 +430,9 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</mapping_system>
-						<mapping_openmage>
+						<mapping_openmage translate="comment">
 							<label>B) OpenMage</label>
+							<comment>For orders, only: Processing, Complete, Closed.</comment>
 							<frontend_type>select</frontend_type>
 							<frontend_model>maillog/adminhtml_config_mapping</frontend_model>
 							<sort_order>23</sort_order>
@@ -539,8 +540,9 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</mapping_system>
-						<mapping_openmage>
+						<mapping_openmage translate="comment">
 							<label>B) OpenMage</label>
+							<comment>For orders, only: Processing, Complete, Closed.</comment>
 							<frontend_type>select</frontend_type>
 							<frontend_model>maillog/adminhtml_config_mapping</frontend_model>
 							<sort_order>23</sort_order>
