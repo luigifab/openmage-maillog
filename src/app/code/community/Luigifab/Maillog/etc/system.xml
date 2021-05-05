@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/19/02/2021
+ * Updated V/09/04/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -49,7 +49,6 @@
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
-					<expanded>1</expanded>
 					<fields>
 						<enabled translate="label">
 							<label>Enable</label>
@@ -293,7 +292,6 @@
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
-					<expanded>1</expanded>
 					<fields>
 						<enabled translate="label">
 							<label>Enable</label>

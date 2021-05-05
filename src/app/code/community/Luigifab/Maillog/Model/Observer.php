@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated V/12/02/2021
+ * Updated V/16/04/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -32,7 +32,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 		$check = @unserialize(Mage::getStoreConfig('maillog/general/special_config'), ['allowed_classes' => false]);
 		if (!empty($check) && is_array($check)) {
-			foreach ($check as $key => $value) {
+			foreach ($check as $value) {
 				if (is_numeric($value)) {
 					$check = true;
 					break;

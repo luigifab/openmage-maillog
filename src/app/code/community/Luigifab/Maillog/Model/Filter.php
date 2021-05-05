@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/19/03/2021
+ * Updated V/16/04/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -256,7 +256,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 {{\/if}}/six' => 'ifelseDirective'
 		] as $pattern => $directive) {
 			if (preg_match_all($pattern, $value, $constructions, PREG_SET_ORDER)) {
-				foreach ($constructions as $index => $construction) {
+				foreach ($constructions as $construction) {
 					$callback = [$this, $directive];
 					if (is_callable($callback)) {
 						try {
@@ -273,7 +273,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 
 		if (preg_match_all(Varien_Filter_Template::CONSTRUCTION_PATTERN, $value, $constructions, PREG_SET_ORDER)) {
 			$debug = !empty(Mage::registry('maillog_preview'));
-			foreach ($constructions as $index => $construction) {
+			foreach ($constructions as $construction) {
 				$callback = [$this, $construction[1].'Directive'];
 				if (is_callable($callback)) {
 					try {

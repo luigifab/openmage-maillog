@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated S/20/03/2021
+ * Updated S/01/05/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -115,7 +115,8 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		}
 
 		// crée les tags
-		$html = $this->createTag($product, $helper, $sizes, $extra, $attribute, $file);
+		$key  = md5($product->getId().$product->getStoreId().$code.implode('', $extra).$attribute.$file);
+		$html = $this->createTag($product, $helper, $sizes, $extra, $attribute, $file, $key);
 
 		// event after (vendor/singleton::method)
 		// après la génération des balises html
@@ -127,35 +128,53 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		return $html;
 	}
 
-	private function createTag(object $product, object $helper, array $sizes, array $extra, string $attribute, string $file) {
+	private function createTag(object $product, object $helper, array $sizes, array $extra, string $attribute, string $file, string $key) {
 
-		$tags = ['<picture>'];
+		// cache des tags générés
+		if (empty($this->_cacheTags)) {
 
-		if (mb_substr($file, -4) == '.svg') {
-			$size   = end($sizes);
-			$tags[] = '<img src="'.$helper->init($product, $attribute, $file)->resize($size['w'], $size['h']).'" '.implode(' ', $extra).' />';
-		}
-		else {
-			foreach ($sizes as $breakpoint => $size) {
-				$srcs = [
-					(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
-					(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
+			$this->_cacheTags = Mage::app()->useCache('block_html') ? @json_decode(Mage::app()->loadCache('maillog_tags'), true) : null;
+			if (empty($this->_cacheTags) || !is_array($this->_cacheTags)) {
+				$this->_cacheTags = [
+					'date' => date('Y-m-d H:i:s \U\T\C')
 				];
-				// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
-				// 16 parce qu'en javascript getComputedStyle(document.documentElement).fontSize = 16 ($this->_font_size)
-				if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
-					$rem    = empty($rem) ? 0 : $rem;
-					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
-				}
-				else {
-					$rem    = round($breakpoint / $this->_font_size, 1);
-					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
-				}
 			}
-			$tags[] = '<img data-debug="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x" '.implode(' ', $extra).' />';
 		}
 
-		$tags[] = '</picture>';
+		$tags = $this->_cacheTags[$key] ?? null;
+
+		// crée le tag
+		if (empty($tags)) {
+
+			$tags = ['<picture>'];
+
+			if (substr($file, -4) == '.svg') {
+				$size   = (array) end($sizes); // (yes)
+				$tags[] = '<img src="'.$helper->init($product, $attribute, $file)->resize($size['w'], $size['h']).'" '.implode(' ', $extra).' />';
+			}
+			else {
+				foreach ($sizes as $breakpoint => $size) {
+					$srcs = [
+						(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
+						(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
+					];
+					// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
+					// 16 parce qu'en javascript getComputedStyle(document.documentElement).fontSize = 16 ($this->_font_size)
+					if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
+						$rem    = empty($rem) ? 0 : $rem;
+						$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+					}
+					else {
+						$rem    = round($breakpoint / $this->_font_size, 1);
+						$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+					}
+				}
+				$tags[] = '<img data-debug="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x" '.implode(' ', $extra).' />';
+			}
+
+			$tags[] = '</picture>';
+			$this->_cacheTags[$key] = $tags;
+		}
 
 		if ($this->_show_image_size) {
 
@@ -280,5 +299,11 @@ self.addEventListener("resize", maillogdebug);
 		}
 
 		return $this->_pictureConfig;
+	}
+
+	public function __destruct() {
+
+		if (!empty($this->_cacheTags) && Mage::app()->useCache('block_html'))
+			Mage::app()->saveCache(json_encode($this->_cacheTags), 'maillog_tags', [Mage_Core_Model_Config::CACHE_TAG, Mage_Core_Block_Abstract::CACHE_GROUP]);
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/18/01/2021
- * Updated S/20/03/2021
+ * Updated L/26/04/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -77,7 +77,7 @@ $email = $this->getData('email');
 					$current = Mage::app()->getStore()->getId();
 
 					$langs = [];
-					$names = glob(BP.'/app/locale/*/template/email/'.preg_replace('#[^\w/.-]#', '', $this->getRequest()->getParam('file')));
+					$names = glob(BP.'/app/locale/*/template/email/'.preg_replace('#[^\w/-]#', '', $this->getRequest()->getParam('file')).'.html');
 					foreach ($names as $name)
 						$langs[] = mb_substr($name, mb_strpos($name, '/locale/') + 8, 5);
 				?>

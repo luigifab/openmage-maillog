@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/21/02/2021
+ * Updated V/16/04/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -125,9 +125,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		$tidy->parseString($html, Mage::getModuleDir('etc', 'Luigifab_Maillog').'/tidy.conf', 'utf8');
 		$tidy->cleanRepair();
 
-		$html = $tidy;
-		$html = str_replace("\"\n   ", '"', $html); // doctype
-
+		$html = str_replace("\"\n   ", '"', (string) $tidy); // doctype
 
 		return preg_replace([
 			'#css">\s+/\*<!\[CDATA\[\*/#',

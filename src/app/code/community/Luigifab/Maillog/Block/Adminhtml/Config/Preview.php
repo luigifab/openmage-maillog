@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated M/16/03/2021
+ * Updated L/26/04/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -78,7 +78,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 				$html[] = '</td>';
 			}
 			else {
-				$url    = $this->getUrl('*/maillog_preview/index', ['code' => $code, 'file' => urlencode($file), 'store' => $store]);
+				$url    = $this->getUrl('*/maillog_preview/index', ['code' => $code, 'file' => str_replace('.html', '', urlencode($file)), 'store' => $store]);
 				$html[] = '<td class="label" style="width:50%;">';
 				$html[] = '<a href="'.$url.'">'.$this->__($label).'</a>';
 				$html[] = '<br />'.$code;
