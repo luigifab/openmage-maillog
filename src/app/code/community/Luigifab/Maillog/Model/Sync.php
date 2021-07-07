@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated S/20/03/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -104,8 +104,8 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$this->saveAllData($system, $data, $result);
 			}
 		}
-		catch (Throwable $e) {
-			Mage::logException($e);
+		catch (Throwable $t) {
+			Mage::logException($t);
 		}
 
 		return empty($data) ? null : $data;
@@ -146,8 +146,8 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$this->saveAllData($system, $data, $result);
 			}
 		}
-		catch (Throwable $e) {
-			Mage::logException($e);
+		catch (Throwable $t) {
+			Mage::logException($t);
 		}
 
 		return empty($data) ? null : $data;

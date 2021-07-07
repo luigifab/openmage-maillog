@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated V/16/04/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -646,9 +646,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			Mage::unregister('maillog_no_sync');
 		}
-		catch (Throwable $e) {
+		catch (Throwable $t) {
 
-			$error = empty($diff['errors']) ? $e->getMessage() : implode("\n", $diff['errors']);
+			$error = empty($diff['errors']) ? $t->getMessage() : implode("\n", $diff['errors']);
 			$this->writeLog($folder, $source, $error, $cron);
 
 			Mage::unregister('maillog_no_sync');
@@ -683,9 +683,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			Mage::unregister('maillog_no_sync');
 		}
-		catch (Throwable $e) {
+		catch (Throwable $t) {
 
-			$error = empty($diff['errors']) ? $e->getMessage() : implode("\n", $diff['errors']);
+			$error = empty($diff['errors']) ? $t->getMessage() : implode("\n", $diff['errors']);
 			$this->writeLog($folder, $source, $error, $cron);
 
 			Mage::unregister('maillog_no_sync');
@@ -823,8 +823,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 						$diff['invalidated'][] = $email;
 					}
 				}
-				catch (Throwable $e) {
-					$diff['errors'][] = $email.' - '.$e->getMessage();
+				catch (Throwable $t) {
+					$diff['errors'][] = $email.' - '.$t->getMessage();
 				}
 			}
 		}
@@ -859,8 +859,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 							$diff['validated'][] = $email;
 						}
 					}
-					catch (Throwable $e) {
-						$diff['errors'][] = $email.' - '.$e->getMessage();
+					catch (Throwable $t) {
+						$diff['errors'][] = $email.' - '.$t->getMessage();
 					}
 				}
 			}
@@ -902,8 +902,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 						$diff['unsubscribed'][] = $email;
 					}
 				}
-				catch (Throwable $e) {
-					$diff['errors'][] = $email.' - '.$e->getMessage();
+				catch (Throwable $t) {
+					$diff['errors'][] = $email.' - '.$t->getMessage();
 				}
 			}
 		}
@@ -937,8 +937,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 							$diff['subscribed'][] = $email;
 						}
 					}
-					catch (Throwable $e) {
-						$diff['errors'][] = $email.' - '.$e->getMessage();
+					catch (Throwable $t) {
+						$diff['errors'][] = $email.' - '.$t->getMessage();
 					}
 				}
 			}

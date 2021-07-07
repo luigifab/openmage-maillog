@@ -92,6 +92,7 @@
 "Action / Request / Response *","Acción / Pedido / Respuesta *"
 "Synchronized At","Sincronizado el"
 "Running","En proceso"
+" Success","Terminada"
 "Customer data will be synchronized (%s).","Los datos del cliente van a ser sincronizados (%s)."
 "Manual import: %s.","Importación manual: %s."
 "Cron job #<a %s>%d</a> finished at %s.","Tarea cron n°<a %s>%d</a> terminada el %s."

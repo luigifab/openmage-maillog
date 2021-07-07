@@ -1,6 +1,6 @@
 /**
  * Created D/22/03/2015
- * Updated S/20/03/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -61,21 +61,28 @@ body.adminhtml-maillog-sync-index table.data div.details {
 body.adminhtml-maillog-sync-index table.data div.details:last-child { margin-bottom:5px; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& system/config &&& */
-select.maillog option.has { font-weight:700; }
+img.logo.maillog {
+	float:right; display:inline-block; margin:0 0 0 2em; height:35px;
+	image-rendering:optimizeQuality; image-rendering:-moz-crisp-edges;
+}
 
-.comment.maillogcomment { padding-bottom:1em; }
-.comment.maillogcomment p  { margin-bottom:0; line-height:150%; }
-.comment.maillogcomment ul { margin:0.4em 0; }
-.comment.maillogcomment li { margin:0; line-height:1.5em; }
-.comment.maillogcomment li:before { content:"➤\0000A0"; }
-.comment.maillogcomment a { margin:0; }
+div.comment.maillog { padding-bottom:1em; }
+div.comment.maillog p  { margin-bottom:0; line-height:150%; }
+div.comment.maillog ul { margin:0.4em 0; }
+div.comment.maillog li { margin:0; line-height:1.5em; }
+div.comment.maillog li:before { content:"➤\0000A0"; }
+div.comment.maillog a { margin:0; }
+div.comment.maillog + table { clear:both; }
+
+select.maillog option.has { font-weight:700; }
 
 .maillogexamples { display:block; margin:1.5em 0; padding-left:6px; font-size:0.9em; line-height:1.4em; border-left:3px solid #AAA; }
 .maillogexamples pre > span { display:block; column-count:3; -moz-column-count:3; -webkit-column-count:3; }
 
 #lifetimeConfig li:hover { background-color:#DEDEDE; }
 #lifetimeConfig span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
-#lifetimeConfig input { margin-right:5px; width:60px; height:15px; cursor:pointer; }
+#lifetimeConfig input { margin-right:5px; width:60px; height:17px; cursor:pointer; border:0; appearance:none; }
+#lifetimeConfig input::-webkit-color-swatch-wrapper { padding:0; }
 #lifetimeConfig select { margin-right:5px; width:136px; }
 
 #pictureConfig { margin:10px 0 15px; }
@@ -93,18 +100,6 @@ select.maillog option.has { font-weight:700; }
 #pictureConfig .bp { min-width:12em; }
 #pictureConfig .sz { min-width:13em; }
 #pictureConfig .rt { min-width:4em; }
-
-#maillog_sync_emarsys {
-	image-rendering:optimizeQuality; image-rendering:-moz-crisp-edges;
-	background:url("../../../images/luigifab/maillog/logo-emarsys.svg") no-repeat calc(100% - 20px) 15px;
-	background-size: auto 30px;
-}
-
-#maillog_sync_dolist {
-	image-rendering:optimizeQuality; image-rendering:-moz-crisp-edges;
-	background:url("../../../images/luigifab/maillog/logo-dolist.svg") no-repeat calc(100% - 20px) 15px;
-	background-size: auto 30px;
-}
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& statut &&& */
 .maillog-status {

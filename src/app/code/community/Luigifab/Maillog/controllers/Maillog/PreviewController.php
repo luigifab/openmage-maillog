@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated S/20/03/2021
+ * Updated V/21/05/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -42,6 +42,11 @@ class Luigifab_Maillog_Maillog_PreviewController extends Mage_Adminhtml_Controll
 
 		$vars = [
 			'store'      => Mage::app()->getStore($store),
+			'quote'      => Mage::getResourceModel('sales/quote_collection')
+				->addFieldToFilter('is_active', 1)
+				->setOrder('entity_id', 'desc')
+				->setPageSize(1)
+				->getFirstItem(),
 			'order'      => Mage::getResourceModel('sales/order_collection')
 				->setOrder('entity_id', 'desc')
 				->setPageSize(1)
@@ -76,8 +81,10 @@ class Luigifab_Maillog_Maillog_PreviewController extends Mage_Adminhtml_Controll
 				->getFirstItem()
 		];
 
-		if (is_object($vars['customer']))
+		if (is_object($vars['customer'])) {
 			$vars['customerName'] = $vars['customer']->load($vars['customer']->getId())->getName();
+			$vars['customer']->{(random_int(0, 1) == 0) ? 'setIsChangeEmail' : 'setIsChangePassword'}(true);
+		}
 
 		if (is_object($vars['order'])) {
 			if (is_object($vars['order']->getPayment())) {

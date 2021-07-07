@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated M/02/02/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -50,9 +50,9 @@ try {
 		WHERE path LIKE "maillog/unsubscribers/%"');
 	Mage::getConfig()->reinit();
 }
-catch (Throwable $e) {
+catch (Throwable $t) {
 	$lock->unlock();
-	throw $e;
+	throw $t;
 }
 
 $this->endSetup();

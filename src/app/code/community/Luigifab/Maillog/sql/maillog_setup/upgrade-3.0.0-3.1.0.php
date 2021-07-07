@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/28/12/2016
- * Updated M/02/02/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -90,9 +90,9 @@ try {
 
 	Mage::getConfig()->reinit();
 }
-catch (Throwable $e) {
+catch (Throwable $t) {
 	$lock->unlock();
-	throw $e;
+	throw $t;
 }
 
 $this->endSetup();

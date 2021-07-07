@@ -6,6 +6,7 @@
 "Separate keywords by a space.","Oddziel słowa kluczowe spacją."
 "Username","Nazwa użytkownika"
 "INCOMPLETE MODULE INSTALLATION","NIEKOMPLETNA INSTALACJA MODUŁU"
+"Changes in <em>%s</em> are not present. Please read the documentation.","Wystąpił błąd (<em>%s</em>)."
 "There is conflict (<em>%s</em>).","Pojawił się błąd (<em lang=""en"">%s</em>)."
 "Recipient(s)","Odbiorca(y)"
 "Duration","Trwanie"

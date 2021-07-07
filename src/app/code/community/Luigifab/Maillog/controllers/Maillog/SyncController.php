@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated D/14/02/2021
+ * Updated J/20/05/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -74,7 +74,7 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 			$ip = empty($ip) ? getenv('REMOTE_ADDR') : array_pop($ip);
 			$ip = (preg_match('#^::f{4}:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#', $ip) === 1) ? substr($ip, 7) : $ip;
 
-			Mage::log(sprintf('Client %s download %s', $ip, $file), Zend_Log::DEBUG, 'maillog.log');
+			Mage::log(sprintf('Client %s download %s', $ip, $file), Zend_Log::INFO, 'maillog.log');
 			$this->_prepareDownloadResponse(basename($file), file_get_contents($file), mime_content_type($file));
 		}
 	}

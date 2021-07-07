@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/09/04/2021
+ * Updated L/24/05/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -341,6 +341,7 @@
 				</general>
 				<emarsys translate="label">
 					<label>Synchronization with Emarsys</label>
+					<frontend_model>maillog/adminhtml_config_comment</frontend_model>
 					<sort_order>2</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
@@ -451,6 +452,7 @@
 				</emarsys>
 				<dolist translate="label">
 					<label>Synchronization with Dolist</label>
+					<frontend_model>maillog/adminhtml_config_comment</frontend_model>
 					<sort_order>3</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>

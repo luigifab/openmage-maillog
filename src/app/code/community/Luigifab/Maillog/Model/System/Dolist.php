@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/18/01/2018
- * Updated M/02/02/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -337,8 +337,8 @@ class Luigifab_Maillog_Model_System_Dolist implements Luigifab_Maillog_Model_Int
 				]
 			] + $data);
 		}
-		catch (Throwable $e) {
-			return $e->getMessage();
+		catch (Throwable $t) {
+			return $t->getMessage();
 		}
 	}
 }

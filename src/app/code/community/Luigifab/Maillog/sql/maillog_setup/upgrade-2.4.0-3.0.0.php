@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/09/11/2015
- * Updated M/02/02/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -86,9 +86,9 @@ try {
 
 	Mage::log('Update v3.0! Done', Zend_Log::INFO, 'maillog.log');
 }
-catch (Throwable $e) {
+catch (Throwable $t) {
 	$lock->unlock();
-	throw $e;
+	throw $t;
 }
 
 $this->endSetup();

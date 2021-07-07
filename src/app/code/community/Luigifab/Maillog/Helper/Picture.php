@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated S/01/05/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -28,8 +28,8 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// event before (vendor/singleton::method)
 		// avant de commencer la recherche des valeurs
-		if (!empty($this->_update_configandvalues_before)) {
-			$event = $this->_update_configandvalues_before;
+		if (!empty($this->_configUpdateConfigandvaluesBefore)) {
+			$event = $this->_configUpdateConfigandvaluesBefore;
 			$event = Mage::helper($event[0])->{$event[1]}($values, $config);
 			if ($event !== true)
 				return $event;
@@ -107,8 +107,8 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// event ready (vendor/singleton::method)
 		// avant la génération des balises html
-		if (!empty($this->_update_configandvalues_ready)) {
-			$event = $this->_update_configandvalues_ready;
+		if (!empty($this->_configUpdateConfigandvaluesReady)) {
+			$event = $this->_configUpdateConfigandvaluesReady;
 			$event = Mage::helper($event[0])->{$event[1]}($product, $helper, $sizes, $extra, $attribute, $file);
 			if ($event !== true)
 				return $event;
@@ -120,8 +120,8 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// event after (vendor/singleton::method)
 		// après la génération des balises html
-		if (!empty($this->_update_configandvalues_after)) {
-			$event = $this->_update_configandvalues_after;
+		if (!empty($this->_configUpdateConfigandvaluesAfter)) {
+			$event = $this->_configUpdateConfigandvaluesAfter;
 			return Mage::helper($event[0])->{$event[1]}($html, $code);
 		}
 
@@ -159,13 +159,13 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 						(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
 					];
 					// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
-					// 16 parce qu'en javascript getComputedStyle(document.documentElement).fontSize = 16 ($this->_font_size)
+					// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
 					if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
 						$rem    = empty($rem) ? 0 : $rem;
 						$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
 					}
 					else {
-						$rem    = round($breakpoint / $this->_font_size, 1);
+						$rem    = round($breakpoint / $this->_configFontSize, 1);
 						$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
 					}
 				}
@@ -176,7 +176,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 			$this->_cacheTags[$key] = $tags;
 		}
 
-		if ($this->_show_image_size) {
+		if ($this->_configShowImageSize) {
 
 			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; height:14px; line-height:14px; z-index:1; font-size:12px; color:#FFF; background-color:#000;">...</span>');
 
@@ -237,20 +237,20 @@ self.addEventListener("resize", maillogdebug);
 			// config général
 			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_before');
 			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
-				$this->_update_configandvalues_before = (array) explode('::', $event); // (yes)
+				$this->_configUpdateConfigandvaluesBefore = (array) explode('::', $event); // (yes)
 
 			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_ready');
 			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
-				$this->_update_configandvalues_ready = (array) explode('::', $event); // (yes)
+				$this->_configUpdateConfigandvaluesReady = (array) explode('::', $event); // (yes)
 
 			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_after');
 			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
-				$this->_update_configandvalues_after = (array) explode('::', $event); // (yes)
+				$this->_configUpdateConfigandvaluesAfter = (array) explode('::', $event); // (yes)
 
-			$this->_font_size = (float) Mage::getStoreConfig('maillog_directives/general/font_size');
-			$this->_font_size = ($this->_font_size > 0) ? $this->_font_size : 16;
+			$this->_configFontSize = (float) Mage::getStoreConfig('maillog_directives/general/font_size');
+			$this->_configFontSize = ($this->_configFontSize > 0) ? $this->_configFontSize : 16;
 
-			$this->_show_image_size = Mage::getStoreConfigFlag('maillog_directives/general/show_image_size');
+			$this->_configShowImageSize = Mage::getStoreConfigFlag('maillog_directives/general/show_image_size');
 
 			// config des tags (avec mise en cache)
 			$config = Mage::app()->useCache('config') ? @json_decode(Mage::app()->loadCache('maillog_config'), true) : null;

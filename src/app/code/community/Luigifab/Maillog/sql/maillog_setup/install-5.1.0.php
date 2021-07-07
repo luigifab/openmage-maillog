@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/02/02/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -118,9 +118,9 @@ try {
 		->setData('sort_order', $sortOrder)
 		->save();
 }
-catch (Throwable $e) {
+catch (Throwable $t) {
 	$lock->unlock();
-	throw $e;
+	throw $t;
 }
 
 $this->endSetup();

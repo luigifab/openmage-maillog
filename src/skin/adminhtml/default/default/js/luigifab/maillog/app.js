@@ -1,6 +1,6 @@
 /**
  * Created J/03/12/2015
- * Updated D/17/01/2021
+ * Updated D/09/05/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -56,11 +56,10 @@ var maillog = new (function () {
 		else if (elem = document.getElementById('row_maillog_directives_general_special_config')) {
 
 			console.info('maillog.app - hello');
-
 			elem = elem.querySelector('tr.template');
 			this.template = elem.innerHTML;
 			this.nextIdx  = parseInt(elem.getAttribute('data-next'), 10);
-			elem.parentNode.removeChild(elem);
+			elem.remove();
 		}
 	};
 
@@ -129,7 +128,7 @@ var maillog = new (function () {
 	this.removeLifetime = function (elem) {
 
 		if (confirm(Translator.translate('Are you sure?')))
-			elem.parentNode.parentNode.removeChild(elem.parentNode);
+			elem.parentNode.remove();
 	};
 
 	this.addPicture = function (elem) {
@@ -152,7 +151,7 @@ var maillog = new (function () {
 	this.deletePicture = function (elem) {
 
 		if (confirm(Translator.translate('Are you sure?')))
-			elem.parentNode.parentNode.parentNode.removeChild(elem.parentNode.parentNode);
+			elem.parentNode.parentNode.remove();
 	};
 
 	this.addBreak = function (elem, idx) {
@@ -169,7 +168,7 @@ var maillog = new (function () {
 	this.deleteBreak = function (elem) {
 
 		if (confirm(Translator.translate('Are you sure?')))
-			elem.parentNode.parentNode.parentNode.removeChild(elem.parentNode.parentNode);
+			elem.parentNode.parentNode.remove();
 	};
 
 })();

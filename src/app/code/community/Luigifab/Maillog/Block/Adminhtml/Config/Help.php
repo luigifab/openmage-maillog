@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/12/02/2021
+ * Updated L/24/05/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -26,16 +26,14 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 
 		$msg = $this->checkChanges();
 		if ($msg !== true)
-			return sprintf('<p class="box">%s %s <span class="right"><a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p>'.
-				'<p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
+			return sprintf('<p class="box">%s %s <span class="right"><a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
 				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog',
 				$this->__('INCOMPLETE MODULE INSTALLATION'),
 				$this->__('Changes in <em>%s</em> are not present. Please read the documentation.', $msg));
 
 		$msg = $this->checkRewrites();
 		if ($msg !== true)
-			return sprintf('<p class="box">%s %s <span class="right"><a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p>'.
-				'<p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
+			return sprintf('<p class="box">%s %s <span class="right"><a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
 				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog',
 				$this->__('INCOMPLETE MODULE INSTALLATION'),
 				$this->__('There is conflict (<em>%s</em>).', $msg));

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/16/04/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -262,8 +262,8 @@ abstract class Luigifab_Maillog_Model_Filter {
 						try {
 							$value = str_replace($construction[0], $callback($construction), $value);
 						}
-						catch (Throwable $e) {
-							Mage::logException($e);
+						catch (Throwable $t) {
+							Mage::logException($t);
 							$value = str_replace($construction[0], '', $value);
 						}
 					}
@@ -281,8 +281,8 @@ abstract class Luigifab_Maillog_Model_Filter {
 						if (!$debug || !empty($replace) || in_array($construction[1], ['inlinecss', 'block']))
 							$value = str_replace($construction[0], (is_object($replace) || is_array($replace)) ? '' : $replace, $value);
 					}
-					catch (Throwable $e) {
-						Mage::logException($e);
+					catch (Throwable $t) {
+						Mage::logException($t);
 						$value = str_replace($construction[0], '', $value);
 					}
 				}

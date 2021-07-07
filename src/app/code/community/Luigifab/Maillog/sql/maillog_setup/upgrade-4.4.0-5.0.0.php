@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/25/12/2020
- * Updated M/02/02/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -51,9 +51,9 @@ try {
 	if (!$this->getConnection()->tableColumnExists($table, 'model'))
 		$this->run('ALTER TABLE '.$table.' ADD COLUMN model varchar(75) NULL DEFAULT NULL AFTER user');
 }
-catch (Throwable $e) {
+catch (Throwable $t) {
 	$lock->unlock();
-	throw $e;
+	throw $t;
 }
 
 $this->endSetup();

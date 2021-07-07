@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated D/07/02/2021
+ * Updated D/27/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -102,7 +102,7 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 			'options'   => [
 				'pending' => $this->__('Pending'),
 				'running' => $this->__('Running'),
-				'success' => $this->__('Success'),
+				'success' => $this->helper('maillog')->_('Success'),
 				'error'   => $this->helper('maillog')->_('Error'),
 				'notsync' => $this->__('Unsent')
 			],

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/02/02/2021
+ * Updated V/18/06/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -103,8 +103,8 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 				Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d has been successfully deleted.', $id));
 			}
 		}
-		catch (Throwable $e) {
-			Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+		catch (Throwable $t) {
+			Mage::getSingleton('adminhtml/session')->addError($t->getMessage());
 		}
 
 		$this->_redirectBack();
@@ -122,8 +122,8 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Email number %d will be resent.', $id));
 			}
 		}
-		catch (Throwable $e) {
-			Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+		catch (Throwable $t) {
+			Mage::getSingleton('adminhtml/session')->addError($t->getMessage());
 		}
 
 		$this->_redirectBack();

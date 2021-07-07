@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated M/09/02/2021
+ * Updated J/01/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -51,11 +51,11 @@ Mage::app()->addEventArea('crontab');
 Mage::setIsDeveloperMode($dev);
 
 
-$cron = Mage::getModel('cron/schedule');
-$cron->setData('job_code', 'maillog_sendemails_syncdatas');
-$cron->setData('created_at', date('Y-m-d H:i:s'));
-$cron->setData('scheduled_at', date('Y-m-d H:i:s'));
-$cron->setData('executed_at', date('Y-m-d H:i:s'));
+$job = Mage::getModel('cron/schedule');
+$job->setData('job_code', 'maillog_sendemails_syncdatas');
+$job->setData('created_at', date('Y-m-d H:i:s'));
+$job->setData('scheduled_at', date('Y-m-d H:i:s'));
+$job->setData('executed_at', date('Y-m-d H:i:s'));
 
 // envoie les emails
 if ($email) {
@@ -69,9 +69,9 @@ if ($email) {
 			$email->sendNow();
 			$success[] = 'email:'.$email->getId();
 		}
-		catch (Throwable $e) {
+		catch (Throwable $t) {
 			$email->setData('status', 'error')->save();
-			$error[] = 'email:'.$email->getId().' '.$e->getMessage();
+			$error[] = 'email:'.$email->getId().' '.$t->getMessage();
 		}
 	}
 }
@@ -103,9 +103,9 @@ if ($sync) {
 				$done[]    = $info[4];
 			}
 		}
-		catch (Throwable $e) {
+		catch (Throwable $t) {
 			$sync->setData('status', 'error')->save();
-			$error[] = 'sync:'.$sync->getId().' '.$e->getMessage();
+			$error[] = 'sync:'.$sync->getId().' '.$t->getMessage();
 		}
 	}
 }
@@ -116,10 +116,10 @@ if (!empty($success) || !empty($error)) {
 	$textok = trim(str_replace(['    ', ' => Array', "\n\n"], [' ', '', "\n"], preg_replace('#\s+[()]#', '', print_r($success, true))));
 	$textko = trim(str_replace(['    ', ' => Array', "\n\n"], [' ', '', "\n"], preg_replace('#\s+[()]#', '', print_r($error, true))));
 
-	$cron->setData('finished_at', date('Y-m-d H:i:s'));
-	$cron->setData('messages', "success:".$textok."\nerror:".$textko);
-	$cron->setData('status', empty($error) ? 'success' : 'error');
-	$cron->save();
+	$job->setData('finished_at', date('Y-m-d H:i:s'));
+	$job->setData('messages', "success:".$textok."\nerror:".$textko);
+	$job->setData('status', empty($error) ? Mage_Cron_Model_Schedule::STATUS_SUCCESS : Mage_Cron_Model_Schedule::STATUS_ERROR);
+	$job->save();
 }
 
 // fin

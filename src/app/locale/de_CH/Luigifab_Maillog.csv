@@ -72,6 +72,7 @@
 "Recipient(s): %s","Empfänger: %s"
 "Synchronized At","Am synchronisiert"
 "Running","Im Lauf"
+" Success","Beendet"
 "Customer data will be synchronized (%s).","Alle Kundendaten synchronisiert werden (%s)."
 "Manual import: %s.","Handimport: %s."
 "Cron job #<a %s>%d</a> finished at %s.","Kron-Task Nummer <a %s>%d</a> beendet am %s."

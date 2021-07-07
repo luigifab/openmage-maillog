@@ -96,6 +96,7 @@
 "Action / Request / Response *","Action / Requête / Réponse *"
 "Synchronized At","Synchronisé le"
 "Running","En cours"
+" Success","Terminée"
 "%s kB","%s ko"
 "%s MB","%s Mo"
 "%s GB","%s Go"

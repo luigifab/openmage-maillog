@@ -74,6 +74,7 @@
 "Recipient(s): %s","Destinatario(i): %s"
 "Synchronized At","Sincronizzato il"
 "Running","In corso"
+" Success","Terminata"
 "Customer data will be synchronized (%s).","I dati del cliente saranno sincronizzati (%s)."
 "Manual import: %s.","Importo manuale: %s."
 "Cron job #<a %s>%d</a> finished at %s.","Compito cron n°<a %s>%d</a> terminato il %s."

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/21/02/2021
+ * Updated V/02/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -161,7 +161,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			}
 		}
 
-		if ($msg != 'ok-can-send')
+		if (stripos($msg, 'ok-can-send') === false)
 			return $msg;
 
 		// toutes les base_url ne doivent pas contenir
@@ -197,7 +197,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			}
 		}
 
-		if ($msg != 'ok-can-send')
+		if (stripos($msg, 'ok-can-send') === false)
 			return $msg;
 
 		return true;

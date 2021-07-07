@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/26/10/2019
- * Updated M/16/03/2021
+ * Updated L/24/05/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -24,8 +24,12 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 
 	protected function _getHeaderCommentHtml($element) {
 
+		$comment = $element->getComment();
+		if (empty($comment))
+			return '<img src="'.$this->getSkinUrl('images/luigifab/maillog/logo-'.str_replace('maillog_sync_', '', $element->getId()).'.svg').'" alt="" class="maillog logo" />';
+
 		if (mb_stripos($element->getHtmlId(), 'sync') !== false)
-			return implode("\n", ['<div class="comment maillogcomment">', $element->getComment(), '</div>']);
+			return implode("\n", ['<div class="comment maillog">', $comment, '</div>']);
 
 		$vars = ['var1' => [['numb' => -2, 'text' => 'hello'], ['numb' => 0, 'text' => 'hello'], ['numb' => 2, 'text' => 'hello']]];
 		foreach ($vars['var1'] as $i => $n) {
@@ -62,8 +66,8 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 		}
 
 		return implode("\n", [
-			'<div class="comment maillogcomment">',
-				'<p>'.$element->getComment().'</p>',
+			'<div class="comment maillog">',
+				'<p>'.$comment.'</p>',
 				'<ul lang="en">',
 					'<li>{{foreach something}} ... {{forelse}} ... {{/foreach}}</li>',
 					'<li>{{if something gt/gte/gteq/lt/lte/lteq/eq/neq something/empty}} ... {{elseif ...}} ... {{else}} ... {{/if}}</li>',
