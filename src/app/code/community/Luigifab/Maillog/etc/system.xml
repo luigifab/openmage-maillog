@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated L/24/05/2021
+ * Updated V/09/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -607,7 +607,7 @@
 						</cron_expr>
 						<unmark translate="label comment">
 							<label>Validate email addresses not present in the file</label>
-							<comment><![CDATA[If yes, <strong>all</strong> OpenMage customers not present in the file will be marked as having a valid email address.]]></comment>
+							<comment><![CDATA[If yes, <strong>all</strong> customers not present in the file will be marked as having a valid email address.]]></comment>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
 							<sort_order>5</sort_order>
@@ -697,7 +697,7 @@
 						</cron_expr>
 						<subscribe translate="label comment">
 							<label>Subscribe customers not present in the file</label>
-							<comment><![CDATA[If yes, <strong>all</strong> OpenMage customers not present in the file will be subscribed to the newsletter.]]></comment>
+							<comment><![CDATA[If yes, <strong>all</strong> customers not present in the file will be subscribed to the newsletter.]]></comment>
 							<frontend_type>select</frontend_type>
 							<source_model>adminhtml/system_config_source_yesno</source_model>
 							<sort_order>5</sort_order>
@@ -766,7 +766,6 @@
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
-					<expanded>1</expanded>
 					<fields>
 						<picture translate="label">
 							<label>Picture directive</label>
@@ -859,7 +858,6 @@
 					<show_in_default>1</show_in_default>
 					<show_in_website>0</show_in_website>
 					<show_in_store>0</show_in_store>
-					<expanded>1</expanded>
 					<fields>
 						<special_config>
 							<frontend_model>maillog/adminhtml_config_preview</frontend_model>
@@ -882,7 +880,6 @@
 					<show_in_store>1</show_in_store>
 				</help>
 				<subscription>
-					<expanded>1</expanded>
 					<fields>
 						<confirm_title translate="label">
 							<label>Confirmation request email</label>

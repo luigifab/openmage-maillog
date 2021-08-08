@@ -1,6 +1,6 @@
 /**
  * Created J/03/12/2015
- * Updated D/09/05/2021
+ * Updated S/17/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -160,7 +160,7 @@ var maillog = new (function () {
 
 		tpl.innerHTML = this.template.
 			replace(/IIDDXX/g, idx).
-			replace(/KKEEYY/g, ul.querySelectorAll('li').length);
+			replace(/KKEEYY/g, ul.querySelectorAll('li').length.toString());
 
 		ul.appendChild(tpl.querySelector('li.breakpoint'));
 	};

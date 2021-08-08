@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/20/05/2021
+ * Updated J/29/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -50,15 +50,15 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 			if (is_file(Mage::helper('maillog')->getLock()))
 				Mage::getSingleton('adminhtml/session')->addNotice($this->__('All customers data synchronization is in progress.'));
 
-			$last = ''; /* Mage::getResourceModel('maillog/sync_collection')
+			/* $last = Mage::getResourceModel('maillog/sync_collection')
 				->addFieldToFilter('batch', ['notnull' => true])
 				->setOrder('created_at', 'desc')
 				->setPageSize(1)
 				->getFirstItem()
-				->getData('batch'); */
+				->getData('batch');
 
 			if (!empty($last))
-				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Last full synchronization (key %s) finished at %s, %d%% success.', $last, '--', 95));
+				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Last full synchronization (key %s) finished at %s, %d%% success.', $last, '--', 95)); */
 
 			$this->loadLayout()->renderLayout();
 		}
@@ -71,7 +71,7 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 		if (!empty($file)) {
 
 			$ip = empty(getenv('HTTP_X_FORWARDED_FOR')) ? false : explode(',', getenv('HTTP_X_FORWARDED_FOR'));
-			$ip = empty($ip) ? getenv('REMOTE_ADDR') : array_pop($ip);
+			$ip = empty($ip) ? getenv('REMOTE_ADDR') : reset($ip);
 			$ip = (preg_match('#^::f{4}:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#', $ip) === 1) ? substr($ip, 7) : $ip;
 
 			Mage::log(sprintf('Client %s download %s', $ip, $file), Zend_Log::INFO, 'maillog.log');

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated V/18/06/2021
+ * Updated J/29/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -225,20 +225,15 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 		$inline = [];
 
-		if (is_array($data)) {
-			foreach ($data as $key => $value) {
-				if (is_array($value)) {
-					$subdata = $this->transformDataForHistory($value, false);
-					foreach ($subdata as $subvalue)
-						$inline[] = sprintf('[%s]%s', $key, $subvalue);
-				}
-				else {
-					$inline[] = sprintf('[%s] %s%s', $key, $value, "\n");
-				}
+		foreach ($data as $key => $value) {
+			if (is_array($value)) {
+				$subdata = $this->transformDataForHistory($value, false);
+				foreach ($subdata as $subvalue)
+					$inline[] = sprintf('[%s]%s', $key, $subvalue);
 			}
-		}
-		else {
-			$inline[] = empty($data) ? '(no result)' : $data;
+			else {
+				$inline[] = sprintf('[%s] %s%s', $key, $value, "\n");
+			}
 		}
 
 		return $asString ? trim(implode($inline)) : $inline;

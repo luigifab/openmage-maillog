@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated V/19/02/2021
+ * Updated J/05/08/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -243,7 +243,7 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 	</td>
 </tr>
 <?php // debug ?>
-<?php if (!empty(Mage::app()->getRequest()->getParam('test'))): ?>
+<?php if (!empty($this->getRequest()->getParam('test'))): ?>
 	<tr>
 		<td colspan="4">
 			<pre style="padding:0.5em; white-space:pre-wrap; background-color:beige;">

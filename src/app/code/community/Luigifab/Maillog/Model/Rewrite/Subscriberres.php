@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/26/09/2018
- * Updated S/26/12/2020
+ * Updated V/30/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,7 +22,7 @@
 
 class Luigifab_Maillog_Model_Rewrite_Subscriberres extends Mage_Newsletter_Model_Resource_Subscriber {
 
-	public function loadByEmail($subscriberEmail, int $storeId = 0) {
+	public function loadByEmail($email, $storeId = 0) {
 
 		if (Mage::getStoreConfigFlag('customer/account_share/scope')) {
 
@@ -30,11 +30,11 @@ class Luigifab_Maillog_Model_Rewrite_Subscriberres extends Mage_Newsletter_Model
 				$storeId = Mage::app()->getStore()->getId();
 
 			$select = $this->_read->select()->from($this->getMainTable())->where('subscriber_email=:subscriber_email AND store_id=:store_id');
-			$result = $this->_read->fetchRow($select, ['subscriber_email' => $subscriberEmail, 'store_id' => $storeId]);
+			$result = $this->_read->fetchRow($select, ['subscriber_email' => $email, 'store_id' => $storeId]);
 		}
 		else {
 			$select = $this->_read->select()->from($this->getMainTable())->where('subscriber_email=:subscriber_email');
-			$result = $this->_read->fetchRow($select, ['subscriber_email' => $subscriberEmail]);
+			$result = $this->_read->fetchRow($select, ['subscriber_email' => $email]);
 		}
 
 		return $result ?: [];

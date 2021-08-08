@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/18/06/2021
+ * Updated D/18/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -28,7 +28,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 	}
 
 
-	public function foreachDirective($match) {
+	public function foreachDirective(array $match) {
 
 		$items   = $this->_getVariable($match[1], '');
 		$replace = '';
@@ -56,7 +56,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return $replace;
 	}
 
-	public function ifelseDirective($match) {
+	public function ifelseDirective(array $match) {
 
 		array_shift($match); // $match[0] = tout le groupe = osef
 		$replace = '';
@@ -80,7 +80,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return $replace;
 	}
 
-	public function ifconfigDirective($match) {
+	public function ifconfigDirective(array $match) {
 
 		$store = empty($this->_templateVars['store']) ? null : $this->_templateVars['store'];
 		if (Mage::getStoreConfigFlag(trim(str_replace(['path=', '\'', '"'], '', $match[1])), $store))
@@ -89,7 +89,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return empty($match[3]) ? '' : $match[3];
 	}
 
-	public function helperDirective($match) {
+	public function helperDirective(array $match) {
 
 		// helper action='xx/yy::zz'
 		$store = empty($this->_templateVars['store']) ? null : $this->_templateVars['store'];
@@ -103,7 +103,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return empty($action) ? '' : Mage::helper($action[0])->{$action[1]}(...array_values(array_slice($attrs, 1)));
 	}
 
-	public function numberDirective($match) {
+	public function numberDirective(array $match) {
 
 		$store  = empty($this->_templateVars['store']) ? null : $this->_templateVars['store'];
 		$locale = Mage::app()->getStore()->isAdmin() ? Mage::getSingleton('core/translate')->getLocale() :
@@ -128,7 +128,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return is_numeric($number) ? Zend_Locale_Format::toNumber((float) $number, $params) : '';
 	}
 
-	public function priceDirective($match) {
+	public function priceDirective(array $match) {
 
 		$attrs  = $this->extractAttributes($match[2], 'number');
 		$number = $attrs['number'];
@@ -173,7 +173,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return $replace;
 	}
 
-	public function currencyDirective($match) {
+	public function currencyDirective(array $match) {
 
 		$attrs = $this->extractAttributes($match[2], 'code');
 		$store = null;
@@ -195,7 +195,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return empty($currency) ? '' : Mage::getSingleton('core/locale')->getTranslation($currency, 'nametocurrency');
 	}
 
-	public function includefileDirective($match) {
+	public function includefileDirective(array $match) {
 
 		$store  = empty($this->_templateVars['store']) ? null : $this->_templateVars['store'];
 		$locale = Mage::app()->getStore()->isAdmin() ? Mage::getSingleton('core/translate')->getLocale() :
@@ -214,11 +214,11 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return empty($replace) ? '' : $replace;
 	}
 
-	public function pictureDirective($match) {
+	public function pictureDirective(array $match) {
 		return Mage::helper('maillog/picture')->getTag($this->extractAttributes($match[2]));
 	}
 
-	public function dumpDirective($match) {
+	public function dumpDirective(array $match) {
 		$data = empty($match[2]) ? $this->_templateVars : ($this->_templateVars[$match[2]] ?? null);
 		return '<pre>'.trim(is_array($data) ? print_r($this->dumpArray($data), true) : var_export($data, true)).'</pre>';
 	}

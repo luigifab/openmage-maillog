@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/02/07/2021
+ * Updated V/30/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -123,14 +123,17 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		$ignores = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/filters/ignore')));
 		foreach ($ignores as $ignore) {
 			foreach ($emails as $email) {
-				if (mb_stripos($email, $ignore) !== false)
-					return sprintf('STOP! Email address not allowed by keyword: %s', $ignore);
+				if (mb_stripos($email, $ignore) !== false) {
+					$text = sprintf('STOP! Email address (%s) not allowed by keyword: %s', $email, $ignore);
+					Mage::log($text, Zend_Log::NOTICE, 'maillog.log');
+					return $text;
+				}
 			}
 		}
 
 		// toutes les base_url doivent contenir
 		$key = 'maillog/filters/baseurl';
-		$msg = $this->loadMemory($key);
+		$msg = Mage::registry($key);
 
 		if (empty($msg)) {
 
@@ -139,34 +142,36 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 				// vérifie les domaines
 				// si on trouve pas un domaine, c'est qu'il y a un problème
-				$cansend  = true;
+				$canSend  = true;
 				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 				foreach ($storeIds as $storeId) {
 					$baseurl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
 					$baseurl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
 					foreach ($domains as $domain) {
 						if ((mb_stripos($baseurl1, $domain) === false) || (mb_stripos($baseurl2, $domain) === false)) {
-							$cansend = false;
+							$canSend = false;
 							break 2;
 						}
 					}
 				}
 
 				// met en cache le résultat
-				$msg = $this->saveMemory($key, $cansend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), required domain was not found (%s).', $storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
+				Mage::register($key, $msg = $canSend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), required domain was not found (%s).', $storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
 			}
 			else {
 				// met en cache le résultat
-				$msg = $this->saveMemory($key, 'ok-can-send');
+				Mage::register($key, $msg = 'ok-can-send');
 			}
 		}
 
-		if (stripos($msg, 'ok-can-send') === false)
+		if ($msg != 'ok-can-send') {
+			Mage::log($msg, Zend_Log::NOTICE, 'maillog.log');
 			return $msg;
+		}
 
 		// toutes les base_url ne doivent pas contenir
 		$key = 'maillog/filters/notbaseurl';
-		$msg = $this->loadMemory($key);
+		$msg = Mage::registry($key);
 
 		if (empty($msg)) {
 
@@ -175,56 +180,34 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 				// vérifie les domaines
 				// si on trouve un domaine, c'est qu'il y a un problème
-				$cansend  = true;
+				$canSend  = true;
 				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 				foreach ($storeIds as $storeId) {
 					$baseurl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
 					$baseurl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
 					foreach ($domains as $domain) {
 						if ((mb_stripos($baseurl1, $domain) !== false) || (mb_stripos($baseurl2, $domain) !== false)) {
-							$cansend = false;
+							$canSend = false;
 							break 2;
 						}
 					}
 				}
 
 				// met en cache le résultat
-				$msg = $this->saveMemory($key, $cansend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), a forbidden domain was found (%s).', $storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
+				Mage::register($key, $msg = $canSend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), a forbidden domain was found (%s).', $storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
 			}
 			else {
 				// met en cache le résultat
-				$msg = $this->saveMemory($key, 'ok-can-send');
+				Mage::register($key, $msg = 'ok-can-send');
 			}
 		}
 
-		if (stripos($msg, 'ok-can-send') === false)
+		if ($msg != 'ok-can-send') {
+			Mage::log($msg, Zend_Log::NOTICE, 'maillog.log');
 			return $msg;
+		}
 
 		return true;
-	}
-
-	private function loadMemory(string $key) {
-
-		$msg = Mage::registry($key);
-
-		if (empty($msg) && Mage::app()->useCache('config')) {
-			$msg = Mage::app()->loadCache($key);
-			if (!empty($msg)) {
-				$msg = '(from cache) '.$msg;
-				Mage::register($key, $msg);
-			}
-		}
-
-		return $msg;
-	}
-
-	private function saveMemory(string $key, string $msg) {
-
-		Mage::register($key, '(from registry) '.$msg);
-		if (Mage::app()->useCache('config'))
-			Mage::app()->saveCache($msg, $key, [Mage_Core_Model_Config::CACHE_TAG]);
-
-		return $msg;
 	}
 
 
@@ -245,7 +228,6 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			->save();
 
 		//echo $email->setId(9999999)->toHtml(true); exit(0);
-
 		Mage::unregister('maillog_last_emailid');
 		Mage::register('maillog_last_emailid', $email->getId());
 	}

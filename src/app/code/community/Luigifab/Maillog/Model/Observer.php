@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated V/18/06/2021
+ * Updated D/18/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -336,7 +336,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		return [floor($pct1), ($pct2 != 0) ? floor(($pct1 - $pct2) / $pct2 * 100) : ($variation ? 0 : '')];
 	}
 
-	private function getDateRange(string $range, int $coeff = 1) {
+	private function getDateRange(string $range, int $coef = 1) {
 
 		$dateStart = Mage::getSingleton('core/locale')->date()->setHour(0)->setMinute(0)->setSecond(0);
 		$dateEnd   = Mage::getSingleton('core/locale')->date()->setHour(23)->setMinute(59)->setSecond(59);
@@ -346,12 +346,12 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$day = $dateStart->toString(Zend_Date::WEEKDAY_8601) - 1;
 
 		if ($range == 'month') {
-			$dateStart->setDay(3)->subMonth(1 * $coeff)->setDay(1);
-			$dateEnd->setDay(3)->subMonth(1 * $coeff)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
+			$dateStart->setDay(3)->subMonth(1 * $coef)->setDay(1);
+			$dateEnd->setDay(3)->subMonth(1 * $coef)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
 		}
 		else if ($range == 'week') {
-			$dateStart->subDay($day + 7 * $coeff);
-			$dateEnd->subDay($day + 7 * $coeff - 6);
+			$dateStart->subDay($day + 7 * $coef);
+			$dateEnd->subDay($day + 7 * $coef - 6);
 		}
 		else if ($range == 'day') {
 			$dateStart->subDay(1);

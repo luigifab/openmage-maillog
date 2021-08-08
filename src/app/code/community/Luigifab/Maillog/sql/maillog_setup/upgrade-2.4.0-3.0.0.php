@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/09/11/2015
- * Updated V/18/06/2021
+ * Updated J/22/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -45,20 +45,19 @@ try {
 	// suppression de la première pièce jointe qui correspond au contenu de l'email uniquement s'il y a au moins 2 pièces jointes
 	// par lot de 1000 pour éviter un memory_limit
 	$total = Mage::getResourceModel('maillog/email_collection')->addFieldToFilter('mail_parts', ['notnull' => true])->getSize();
-	$p = ceil($total / 1000);
-	$i = 0;
+	$page  = ceil($total / 1000);
 
-	Mage::log('Update v3.0! Starting update of '.$total.' emails in '.$p.' steps of 1000 emails...', Zend_Log::INFO, 'maillog.log');
+	Mage::log('Update v3.0! Starting update of '.$total.' emails in '.$page.' steps of 1000 emails...', Zend_Log::INFO, 'maillog.log');
 
-	while ($p > 0) {
+	while ($page > 0) {
 
 		$emails = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('mail_parts', ['notnull' => true])
 			->setOrder('email_id', 'desc')
 			->setPageSize(1000)
-			->setCurPage($p);
+			->setCurPage($page);
 
-		Mage::log('Update v3.0! Starting update of '.$emails->getSize().' emails (from #'.$emails->getLastItem()->getId().' to #'.$emails->getFirstItem()->getId().') of step '.$p.'...', Zend_Log::INFO, 'maillog.log');
+		Mage::log('Update v3.0! Starting update of '.$emails->getSize().' emails (from #'.$emails->getLastItem()->getId().' to #'.$emails->getFirstItem()->getId().') of step '.$page.'...', Zend_Log::INFO, 'maillog.log');
 
 		foreach ($emails as $email) {
 
@@ -67,21 +66,19 @@ try {
 
 			if ($count >= 2) {
 				array_shift($parts); // supprime le premier
-				Mage::log('Update v3.0! Removing body part from email #'.$email->getId().' (step '.$p.')', Zend_Log::INFO, 'maillog.log');
+				Mage::log('Update v3.0! Removing body part from email #'.$email->getId().' (step '.$page.')', Zend_Log::INFO, 'maillog.log');
 				$email->setData('mail_parts', gzencode(serialize($parts), 9))->save();
-				$i++;
 			}
 			else if ($count >= 1) {
 				continue; // nothing to do
 			}
 			else {
-				Mage::log('Update v3.0! Removing all parts from email #'.$email->getId().' (step '.$p.')', Zend_Log::INFO, 'maillog.log');
+				Mage::log('Update v3.0! Removing all parts from email #'.$email->getId().' (step '.$page.')', Zend_Log::INFO, 'maillog.log');
 				$email->setData('mail_parts', null)->save();
-				$i++;
 			}
 		}
 
-		$p--;
+		$page--;
 	}
 
 	Mage::log('Update v3.0! Done', Zend_Log::INFO, 'maillog.log');

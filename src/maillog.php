@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated J/01/07/2021
+ * Updated S/17/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -41,8 +41,6 @@ if (in_array('--only-email', $argv))
 	$sync = false;
 if (in_array('--only-sync', $argv))
 	$email = false;
-if (!$sync && !$email)
-	$email = $sync = true;
 
 require_once('app/Mage.php');
 

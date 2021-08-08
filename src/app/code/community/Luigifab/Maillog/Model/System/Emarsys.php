@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated D/14/02/2021
+ * Updated S/17/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -258,26 +258,24 @@ class Luigifab_Maillog_Model_System_Emarsys implements Luigifab_Maillog_Model_In
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 18);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 		curl_setopt($ch, CURLOPT_HEADER, true);
 
-		switch ($type) {
-			case 'POST':
-				curl_setopt($ch, CURLOPT_POST, 1);
-				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-				break;
-			case 'PUT':
-				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-				break;
-			case 'DELETE':
-				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-				break;
-			case 'GET':
-				$method = (mb_stripos($method, '?') === false) ? $method.'/'.$data : str_replace('?', '/'.$data.'?', $method);
-				curl_setopt($ch, CURLOPT_HTTPGET, 1);
-				break;
+		if ($type == 'POST') {
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+		}
+		else if ($type == 'PUT') {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+		}
+		else if ($type == 'DELETE') {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+		}
+		else if ($type == 'GET') {
+			curl_setopt($ch, CURLOPT_HTTPGET, true);
+			$method = (mb_stripos($method, '?') === false) ? $method.'/'.$data : str_replace('?', '/'.$data.'?', $method);
 		}
 
 		curl_setopt($ch, CURLOPT_URL, $url.$method);
@@ -289,7 +287,7 @@ class Luigifab_Maillog_Model_System_Emarsys implements Luigifab_Maillog_Model_In
 		]);
 
 		$result = curl_exec($ch);
-		$result = ((curl_errno($ch) !== 0) || ($result === false)) ? trim('CURL_ERROR_'.curl_errno($ch).' '.curl_error($ch)) : $result;
+		$result = (($result === false) || (curl_errno($ch) !== 0)) ? trim('CURL_ERROR '.curl_errno($ch).' '.curl_error($ch)) : $result;
 		curl_close($ch);
 
 		return $result;

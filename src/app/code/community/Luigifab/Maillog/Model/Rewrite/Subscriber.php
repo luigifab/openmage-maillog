@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/27/11/2017
- * Updated D/24/01/2021
+ * Updated V/30/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,8 +22,8 @@
 
 class Luigifab_Maillog_Model_Rewrite_Subscriber extends Mage_Newsletter_Model_Subscriber {
 
-	public function loadByEmail($subscriberEmail, int $storeId = 0) {
-		$this->addData($this->getResource()->loadByEmail($subscriberEmail, $storeId));
+	public function loadByEmail($email, $storeId = 0) {
+		$this->addData($this->getResource()->loadByEmail($email, $storeId));
 		return $this;
 	}
 

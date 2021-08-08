@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/18/01/2018
- * Updated V/18/06/2021
+ * Updated M/27/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -312,9 +312,9 @@ class Luigifab_Maillog_Model_System_Dolist implements Luigifab_Maillog_Model_Int
 			if (!isset($this->auth) || (!empty($this->auth->GetAuthenticationTokenResult->DeprecatedDate) &&
 			    ((strtotime($this->auth->GetAuthenticationTokenResult->DeprecatedDate) + 30) > time()))) {
 
-				$proxy    = $url.'AuthenticationService.svc?wsdl';
+				$wsdl     = $url.'AuthenticationService.svc?wsdl';
 				$location = $url.'AuthenticationService.svc/soap1.1';
-				$client   = new SoapClient($proxy, ['trace' => 1, 'location' => $location]);
+				$client   = new SoapClient($wsdl, ['trace' => 1, 'location' => $location]);
 
 				$this->auth = $client->GetAuthenticationToken([
 					'authenticationRequest' => [
@@ -324,9 +324,9 @@ class Luigifab_Maillog_Model_System_Dolist implements Luigifab_Maillog_Model_Int
 				]);
 			}
 
-			$proxy    = $url.$service.'.svc?wsdl';
+			$wsdl     = $url.$service.'.svc?wsdl';
 			$location = $url.$service.'.svc/soap1.1';
-			$client   = new SoapClient($proxy, ['trace' => 1, 'location' => $location]);
+			$client   = new SoapClient($wsdl, ['trace' => 1, 'location' => $location]);
 
 			ini_restore('default_socket_timeout');
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/07/02/2021
+ * Updated D/18/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -254,7 +254,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return parent::getId();
 	}
 
-	public function getRowClass(object $row) {
+	public function getRowClass($row) {
 		return empty($row->getData('mail_parts')) ? '' : 'parts';
 	}
 

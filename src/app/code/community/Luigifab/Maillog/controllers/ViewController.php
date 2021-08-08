@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated D/21/02/2021
+ * Updated S/31/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -24,6 +24,8 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 	public function indexAction() {
 
+		Mage::register('turpentine_nocache_flag', true, true);
+
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
 			->setPageSize(1)
@@ -37,6 +39,8 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 	}
 
 	public function downloadAction() {
+
+		Mage::register('turpentine_nocache_flag', true, true);
 
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
@@ -80,6 +84,8 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 	}
 
 	public function markAction() {
+
+		Mage::register('turpentine_nocache_flag', true, true);
 
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/19/06/2015
- * Updated V/12/02/2021
+ * Updated J/22/07/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -39,7 +39,6 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Size extends Mage_Adminhtml_Block_
 			->where('table_name = ?', $database->getTableName($name));
 
 		$element->setValue((float) $read->fetchOne($select));
-
 		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $this->helper('maillog')->getNumberToHumanSize($element->getValue()));
 	}
 }

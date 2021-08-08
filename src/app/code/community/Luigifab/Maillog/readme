@@ -71,6 +71,7 @@ Files and directories
 - app/locale/de_AT/Luigifab_Maillog.csv
 - app/locale/de_CH/Luigifab_Maillog.csv
 - app/locale/de_DE/Luigifab_Maillog.csv
+- app/locale/el_GR/Luigifab_Maillog.csv
 - app/locale/es_AR/Luigifab_Maillog.csv
 - app/locale/es_CL/Luigifab_Maillog.csv
 - app/locale/es_CO/Luigifab_Maillog.csv
@@ -83,6 +84,7 @@ Files and directories
 - app/locale/fr_CA/Luigifab_Maillog.csv
 - app/locale/fr_CH/Luigifab_Maillog.csv
 - app/locale/fr_FR/Luigifab_Maillog.csv
+- app/locale/hu_HU/Luigifab_Maillog.csv
 - app/locale/it_CH/Luigifab_Maillog.csv
 - app/locale/it_IT/Luigifab_Maillog.csv
 - app/locale/ja_JP/Luigifab_Maillog.csv
@@ -90,6 +92,7 @@ Files and directories
 - app/locale/pl_PL/Luigifab_Maillog.csv
 - app/locale/pt_BR/Luigifab_Maillog.csv
 - app/locale/pt_PT/Luigifab_Maillog.csv
+- app/locale/ro_RO/Luigifab_Maillog.csv
 - app/locale/ru_RU/Luigifab_Maillog.csv
 - app/locale/sk_SK/Luigifab_Maillog.csv
 - app/locale/tr_TR/Luigifab_Maillog.csv
