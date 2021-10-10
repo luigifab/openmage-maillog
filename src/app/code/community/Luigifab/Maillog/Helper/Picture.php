@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated V/18/06/2021
+ * Updated M/28/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,27 +22,22 @@
 
 class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
-	public function getTag(array $values) {
+	public function getTag(array $params) {
 
-		$config = $this->getPictureConfig();
+		$config = $this->getConfig();
+		$params = $this->before($params, $config);
 
-		// event before (vendor/singleton::method)
-		// avant de commencer la recherche des valeurs
-		if (!empty($this->_configUpdateConfigandvaluesBefore)) {
-			$event = $this->_configUpdateConfigandvaluesBefore;
-			$event = Mage::helper($event[0])->{$event[1]}($values, $config);
-			if ($event !== true)
-				return $event;
-		}
-
+		// code toujours obligatoire avec file ou product ou category
 		// [code, file|product|category, attribute=image, helper=catalog/image]
-		//  code toujours obligatoire avec file ou product ou category
-		$code      = empty($values['code'])      ? null : $values['code'];
-		$file      = empty($values['file'])      ? null : $values['file'];
-		$product   = empty($values['product'])   ? null : $values['product'];
-		$category  = empty($values['category'])  ? null : $values['category'];
-		$attribute = empty($values['attribute']) ? 'image' : $values['attribute'];
-		$helper    = Mage::helper(empty($values['helper']) ? 'catalog/image' : $values['helper']);
+		$code      = empty($params['code'])      ? null : $params['code'];
+		$file      = empty($params['file'])      ? null : $params['file'];
+		$product   = empty($params['product'])   ? null : $params['product'];
+		$category  = empty($params['category'])  ? null : $params['category'];
+		$attribute = empty($params['attribute']) ? 'image' : $params['attribute'];
+
+		// vérifie
+		if (empty($code) || empty($config[$code]))
+			return null;
 
 		// récupére ou charge l'éventuel produit
 		if (!empty($product)) {
@@ -67,9 +62,9 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		}
 		if (is_object($product) && !empty($product->getId())) {
 			if (empty($file))
-				$file = $product->getData($attribute);
-			if (!array_key_exists('alt', $values))
-				$values['alt'] = $this->escapeEntities($product->getData('name'), true);
+				$params['file'] = $product->getData($attribute);
+			if (!array_key_exists('alt', $params))
+				$params['alt']  = $this->escapeEntities($product->getData('name'), true);
 		}
 
 		// récupére ou charge l'éventuelle catégorie
@@ -85,167 +80,24 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		if (is_object($category) && !empty($category->getId())) {
 			$attribute = 'category'; // sinon ça marchera pas
 			if (empty($file))
-				$file = $category->getData('image');
-			if (!array_key_exists('alt', $values))
-				$values['alt'] = $this->escapeEntities($category->getData('name'), true);
+				$params['file'] = $category->getData('image');
+			if (!array_key_exists('alt', $params))
+				$params['alt']  = $this->escapeEntities($category->getData('name'), true);
 		}
 
-		// reconstruit les éventuels attributs
-		$extra = [];
-		foreach ($values as $key => $value) {
-			if (!is_numeric($key) && !in_array($key, ['code', 'file', 'helper', 'attribute', 'product', 'category']))
-				$extra[] = $key.'="'.str_replace('"', '', $value).'"';
-		}
+		// vérifie
+		if (empty($params['file']))
+			return null;
 
 		// action
-		if (empty($code) || empty($file) || empty($config[$code]))
-			return null;
-		if (!is_object($product))
-			$product = Mage::getModel('catalog/product');
-
-		$sizes = $config[$code];
-
-		// event ready (vendor/singleton::method)
-		// avant la génération des balises html
-		if (!empty($this->_configUpdateConfigandvaluesReady)) {
-			$event = $this->_configUpdateConfigandvaluesReady;
-			$event = Mage::helper($event[0])->{$event[1]}($product, $helper, $sizes, $extra, $attribute, $file);
-			if ($event !== true)
-				return $event;
-		}
-
-		// crée les tags
-		$key  = md5($product->getId().$product->getStoreId().$code.implode('', $extra).$attribute.$file);
-		$html = $this->createTag($product, $helper, $sizes, $extra, $attribute, $file, $key);
-
-		// event after (vendor/singleton::method)
-		// après la génération des balises html
-		if (!empty($this->_configUpdateConfigandvaluesAfter)) {
-			$event = $this->_configUpdateConfigandvaluesAfter;
-			return Mage::helper($event[0])->{$event[1]}($html, $code);
-		}
-
-		return $html;
+		$sizes  = $config[$code];
+		$object = $this->getObject($params, $product ?? $category);
+		return $this->after($this->createHtml($params, $sizes, $object, $attribute), $code, $sizes);
 	}
 
-	private function createTag(object $product, object $helper, array $sizes, array $extra, string $attribute, string $file, string $key) {
-
-		// cache des tags générés
-		if (empty($this->_cacheTags)) {
-
-			$this->_cacheTags = Mage::app()->useCache('block_html') ? @json_decode(Mage::app()->loadCache('maillog_tags'), true) : null;
-			if (empty($this->_cacheTags) || !is_array($this->_cacheTags)) {
-				$this->_cacheTags = [
-					'date' => date('Y-m-d H:i:s \U\T\C')
-				];
-			}
-		}
-
-		$tags = $this->_cacheTags[$key] ?? null;
-
-		// crée le tag
-		if (empty($tags)) {
-
-			$tags = ['<picture>'];
-
-			if (substr($file, -4) == '.svg') {
-				$size   = (array) end($sizes); // (yes)
-				$tags[] = '<img src="'.$helper->init($product, $attribute, $file)->resize($size['w'], $size['h']).'" '.implode(' ', $extra).' />';
-			}
-			else {
-				foreach ($sizes as $breakpoint => $size) {
-					$srcs = [
-						(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
-						(string) $helper->init($product, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
-					];
-					// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
-					// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
-					if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
-						$rem    = empty($rem) ? 0 : $rem;
-						$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
-					}
-					else {
-						$rem    = round($breakpoint / $this->_configFontSize, 1);
-						$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
-					}
-				}
-				$tags[] = '<img data-debug="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x" '.implode(' ', $extra).' />';
-			}
-
-			$tags[] = '</picture>';
-			$this->_cacheTags[$key] = $tags;
-		}
-
-		if ($this->_configShowImageSize) {
-
-			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; height:14px; line-height:14px; z-index:1; font-size:12px; color:#FFF; background-color:#000;">...</span>');
-
-			// ajoute un js une seule fois
-			if (Mage::registry('maillog_debug') !== true) {
-
-				// event custom js (vendor/singleton::method)
-				$event = Mage::getStoreConfig('maillog_directives/general/update_maillogdebug_js');
-				if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1) {
-					$event  = (array) explode('::', $event); // (yes)
-					$custom = Mage::helper($event[0])->{$event[1]}();
-				}
-
-				array_unshift($tags, '<script type="text/javascript">'.preg_replace('#\s+#', ' ', trim('
-if (window.NodeList && !NodeList.prototype.forEach) {
-	NodeList.prototype.forEach = function (callback, that, i) {
-		that = that || window;
-		for (i = 0; i < this.length; i++)
-			callback.call(that, this[i], i, this);
-	};
-}
-function maillogdebug() {
-	document.querySelectorAll("span.maillogdebug ~ picture img").forEach(function (elem) {
-		elem.setAttribute("onload", "maillogdebug();");
-		var cur = elem.currentSrc, src = (elem.parentNode.querySelector("source[srcset*=\"" + cur + "\"]")), tmp = elem.getAttribute("src").substr(-4);
-		if (!src && (tmp !== ".svg")) return;
-		elem = elem.parentNode.previousSibling;
-		while ((elem.nodeName !== "BODY") && (elem.nodeName !== "SPAN")) elem = elem.previousSibling;
-		if (tmp !== ".svg") {
-			tmp = src.getAttribute("data-debug");
-			tmp = tmp.slice(tmp.indexOf(" ") + 1).split("/");
-			if (cur.indexOf("/" + tmp[0] + "x") > 0)
-				elem.textContent = tmp[0];
-			else if (cur.indexOf("/" + tmp[1] + "x") > 0)
-				elem.textContent = tmp[1];
-			else
-				elem.textContent = "???";
-		}
-		else {
-			elem.textContent = "SVG";
-		}
-	});
-}
-self.addEventListener("load", maillogdebug);
-self.addEventListener("resize", maillogdebug);
-'.(empty($custom) ? '' : $custom))).'</script>');
-				Mage::register('maillog_debug', true);
-			}
-		}
-
-		return implode("\n", $tags);
-	}
-
-	private function getPictureConfig() {
+	protected function getConfig() {
 
 		if (empty($this->_pictureConfig)) {
-
-			// config général
-			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_before');
-			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
-				$this->_configUpdateConfigandvaluesBefore = (array) explode('::', $event); // (yes)
-
-			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_ready');
-			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
-				$this->_configUpdateConfigandvaluesReady = (array) explode('::', $event); // (yes)
-
-			$event = Mage::getStoreConfig('maillog_directives/general/update_configandvalues_after');
-			if (!empty($event) && preg_match('#\w+(?:/\w+)?::\w+#', $event) === 1)
-				$this->_configUpdateConfigandvaluesAfter = (array) explode('::', $event); // (yes)
 
 			$this->_configFontSize = (float) Mage::getStoreConfig('maillog_directives/general/font_size');
 			$this->_configFontSize = ($this->_configFontSize > 0) ? $this->_configFontSize : 16;
@@ -301,9 +153,141 @@ self.addEventListener("resize", maillogdebug);
 		return $this->_pictureConfig;
 	}
 
+	protected function before(array $params, array $config) {
+		return $params;
+	}
+
+	protected function getObject(array $params, $object) {
+		return is_object($object) ? $object : Mage::getModel('catalog/product');
+	}
+
+	protected function createHtml(array $params, array $sizes, object $object, string $attribute) {
+
+		// cache des tags html générés
+		if (empty($this->_cacheTags)) {
+			$this->_cacheTags = Mage::app()->useCache('block_html') ? @json_decode(Mage::app()->loadCache('maillog_tags'), true) : null;
+			if (empty($this->_cacheTags) || !is_array($this->_cacheTags))
+				$this->_cacheTags = ['date' => date('Y-m-d H:i:s \U\T\C')];
+		}
+
+		$attrs = $this->createHtmlAttributes($params, $sizes);
+		$cache = md5($object->getId().$object->getStoreId().$params['code'].implode('', $attrs).$attribute.$params['file']);
+		$tags  = $this->_cacheTags[$cache] ?? null;
+
+		// crée les tags html
+		if (empty($tags)) {
+			$tags = $this->createHtmlTags($params, $sizes, $attrs, $object, $attribute);
+			$this->_cacheTags[$cache] = $tags;
+		}
+
+		// debug
+		if ($this->_configShowImageSize) {
+
+			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; height:14px; line-height:14px; padding:0 1px; z-index:4; font-size:12px; color:#FFF; background-color:#000;">...</span>');
+
+			// ajoute un js une seule fois
+			if (empty(Mage::registry('maillog_debug'))) {
+				Mage::register('maillog_debug', true, true);
+				array_unshift($tags, '<script type="text/javascript">'.preg_replace('#\s+#', ' ', trim($this->createHtmlScript())).'</script>');
+			}
+		}
+
+		return implode("\n", $tags);
+	}
+
+	protected function createHtmlTags(array $params, array $sizes, array $attrs, object $object, string $attribute) {
+
+		$help = Mage::helper(empty($params['helper']) ? 'catalog/image' : $params['helper']);
+		$file = $params['file'];
+		$tags = ['<picture>'];
+
+		if (substr($file, -4) == '.svg') {
+			$size   = (array) end($sizes); // (yes)
+			$tags[] = '<img src="'.$help->init($object, $attribute, $file)->resize($size['w'], $size['h']).'" '.implode(' ', $attrs).' />';
+		}
+		else {
+			foreach ($sizes as $breakpoint => $size) {
+				$srcs = [
+					(string) $help->init($object, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
+					(string) $help->init($object, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
+				];
+				// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
+				// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
+				if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
+					$rem    = empty($rem) ? 0 : $rem;
+					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+				}
+				else {
+					$rem    = round($breakpoint / $this->_configFontSize, 1);
+					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+				}
+			}
+			$tags[] = '<img data-debug="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x" '.implode(' ', $attrs).' />';
+		}
+
+		$tags[] = '</picture>';
+		return $tags;
+	}
+
+	protected function createHtmlAttributes(array $params, array $sizes) {
+
+		$attrs = [];
+
+		foreach ($params as $key => $param) {
+			if (!is_numeric($key) && !in_array($key, ['code', 'file', 'helper', 'attribute', 'product', 'category']))
+				$attrs[] = $key.'="'.str_replace('"', '', $param).'"';
+		}
+
+		return $attrs;
+	}
+
+	protected function createHtmlScript() {
+
+		return '
+if (window.NodeList && !NodeList.prototype.forEach) {
+	NodeList.prototype.forEach = function (callback, that, i) {
+		that = that || window;
+		for (i = 0; i < this.length; i++)
+			callback.call(that, this[i], i, this);
+	};
+}
+function maillogdebug() {
+	document.querySelectorAll("span.maillogdebug ~ picture img").forEach(function (elem) {
+		elem.setAttribute("onload", "maillogdebug();");
+		var cur = elem.currentSrc.slice(elem.currentSrc.indexOf("/", 9)),
+		    src = elem.parentNode.querySelector("source[srcset*=\"" + cur + "\"]"),
+		    tmp = elem.getAttribute("src").substr(-4);
+		if (!src && (tmp !== ".svg")) return;
+		elem = elem.parentNode.previousSibling;
+		while ((elem.nodeName !== "BODY") && (elem.nodeName !== "SPAN")) elem = elem.previousSibling;
+		if (tmp !== ".svg") {
+			tmp = src.getAttribute("data-debug");
+			tmp = tmp.slice(tmp.indexOf(" ") + 1).split("/");
+			if (cur.indexOf("/" + tmp[0] + "x") > 0)
+				elem.textContent = tmp[0];
+			else if (cur.indexOf("/" + tmp[1] + "x") > 0)
+				elem.textContent = tmp[1];
+			else
+				elem.textContent = "???";
+		}
+		else {
+			elem.textContent = "SVG";
+		}
+	});
+}
+self.addEventListener("load", maillogdebug);
+self.addEventListener("resize", maillogdebug);
+';
+	}
+
+	protected function after(string $html, string $code, array $sizes) {
+		return $html;
+	}
+
 	public function __destruct() {
 
 		if (!empty($this->_cacheTags) && Mage::app()->useCache('block_html'))
-			Mage::app()->saveCache(json_encode($this->_cacheTags), 'maillog_tags', [Mage_Core_Model_Config::CACHE_TAG, Mage_Core_Block_Abstract::CACHE_GROUP]);
+			Mage::app()->saveCache(json_encode($this->_cacheTags), 'maillog_tags',
+				[Mage_Core_Model_Config::CACHE_TAG, Mage_Core_Block_Abstract::CACHE_GROUP]);
 	}
 }

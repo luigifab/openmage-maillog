@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated D/18/07/2021
+ * Updated V/08/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -120,7 +120,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	public function sendEmailReport($cron = null) {
 
 		$oldLocale = Mage::getSingleton('core/translate')->getLocale();
-		$newLocale = Mage::app()->getStore()->isAdmin() ? $oldLocale : Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE);
+		$newLocale = Mage::app()->getStore()->isAdmin() ? $oldLocale : Mage::getStoreConfig('general/locale/code');
 		$locales   = [];
 
 		// recherche des langues (@todo) et des emails
@@ -252,7 +252,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);
 	}
 
-	private function getNumbers(array $where, array $oldWhere, object $collection, bool $variation = true, $status1 = null, $status2 = null) {
+	protected function getNumbers(array $where, array $oldWhere, object $collection, bool $variation = true, $status1 = null, $status2 = null) {
 
 		$nb3 = 0;
 		$nb4 = 0;
@@ -336,7 +336,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		return [floor($pct1), ($pct2 != 0) ? floor(($pct1 - $pct2) / $pct2 * 100) : ($variation ? 0 : '')];
 	}
 
-	private function getDateRange(string $range, int $coef = 1) {
+	protected function getDateRange(string $range, int $coef = 1) {
 
 		$dateStart = Mage::getSingleton('core/locale')->date()->setHour(0)->setMinute(0)->setSecond(0);
 		$dateEnd   = Mage::getSingleton('core/locale')->date()->setHour(23)->setMinute(59)->setSecond(59);
@@ -361,7 +361,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		return ['start' => $dateStart, 'end' => $dateEnd];
 	}
 
-	private function getEmailUrl(string $url, array $params = []) {
+	protected function getEmailUrl(string $url, array $params = []) {
 
 		if (Mage::getStoreConfigFlag(Mage_Core_Model_Store::XML_PATH_USE_REWRITES))
 			return preg_replace('#/[^/]+\.php\d*/#', '/', Mage::helper('adminhtml')->getUrl($url, $params));
@@ -369,7 +369,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			return preg_replace('#/[^/]+\.php(\d*)/#', '/index.php$1/', Mage::helper('adminhtml')->getUrl($url, $params));
 	}
 
-	private function sendReportToRecipients(string $locale, array $emails, array $vars = []) {
+	protected function sendReportToRecipients(string $locale, array $emails, array $vars = []) {
 
 		$vars['config'] = $this->getEmailUrl('adminhtml/system/config');
 		$vars['config'] = mb_substr($vars['config'], 0, mb_strrpos($vars['config'], '/system/config'));
@@ -473,7 +473,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	public function orderInvoiceSync(Varien_Event_Observer $observer) {
 
 		if (Mage::getStoreConfigFlag('maillog_sync/general/enabled') && (Mage::registry('maillog_no_sync') !== true)) {
-			$customer = Mage::getModel('customer/customer')->load($observer->getData('invoice')->getOrder()->getData('customer_id'));
+			$order = $observer->getData('invoice')->getOrder();
+			$customer = new Varien_Object(['id' => $order->getData('customer_id'), 'email' => $order->getData('customer_email')]);
 			if (!empty($customer->getId()))
 				$this->sendSync($customer, 'customer', 'email', 'update');
 		}
@@ -616,7 +617,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 
 		if (is_object($cron))
-			$cron->setMessages(implode("\n", array_slice($msg, 0, -1)));
+			$cron->setData('messages', implode("\n", array_slice($msg, 0, -1)));
 	}
 
 	// CRON maillog_bounces_import
@@ -625,7 +626,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// déplace et compresse le fichier traité et les autres puis génère le log dans le message de la tâche cron et dans le fichier status.dat
 	public function bouncesFileImport($cron = null, $source = null) {
 
-		Mage::register('maillog_no_sync', true);
+		Mage::register('maillog_no_sync', true, true);
 		$diff = ['started_at' => date('Y-m-d H:i:s'), 'errors' => []];
 
 		try {
@@ -662,7 +663,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// déplace et compresse le fichier traité et les autres puis génère le log dans le message de la tâche cron et dans le fichier status.dat
 	public function unsubscribersFileImport($cron = null, $source = null) {
 
-		Mage::register('maillog_no_sync', true);
+		Mage::register('maillog_no_sync', true, true);
 		$diff = ['started_at' => date('Y-m-d H:i:s'), 'errors' => []];
 
 		try {
@@ -697,7 +698,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// 7 exceptions - c'est ici que tout se joue car si tout va bien nous avons un fichier et un dossier qui sont accessibles et modifiables
 	// dossier de base : inexistant, non accessible en lecture, non accessible en écriture, vide
 	// fichier : non accessible en lecture, non accessible en écriture, trop vieux
-	private function todayFile(string $folder, string $type) {
+	protected function todayFile(string $folder, string $type) {
 
 		// vérifications du dossier
 		if (!is_dir($folder))
@@ -741,7 +742,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// mise à jour de la base de données (ne touche pas à ce qui ne change pas - ajoute/supprime/modifie)
 	// déplace et compresse les fichiers (base/done/skip)
 	// enregistre le log final
-	private function dataFromFile(string $folder, string $source, string $config) {
+	protected function dataFromFile(string $folder, string $source, string $config) {
 
 		$type = mb_substr($config, 0, 3);
 
@@ -787,7 +788,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		return $items;
 	}
 
-	private function updateCustomersDatabase(array $newItems, array $oldItems, array &$diff) {
+	protected function updateCustomersDatabase(array $newItems, array $oldItems, array &$diff) {
 
 		$diff['oldItems']    = count($oldItems);
 		$diff['newItems']    = count($newItems);
@@ -867,7 +868,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 	}
 
-	private function updateUnsubscribersDatabase(array $newItems, array $oldItems, array &$diff) {
+	protected function updateUnsubscribersDatabase(array $newItems, array $oldItems, array &$diff) {
 
 		$diff['oldItems']     = count($oldItems);
 		$diff['newItems']     = count($newItems);
@@ -945,7 +946,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 	}
 
-	private function moveFiles(string $folder, string &$source, string $type) {
+	protected function moveFiles(string $folder, string &$source, string $type) {
 
 		$uniq = 1;
 		$date = Mage::getSingleton('core/locale')->date();
@@ -980,7 +981,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		@rmdir($skipdir);
 	}
 
-	private function writeLog(string $folder, string $source, $diff, $cron = null) {
+	protected function writeLog(string $folder, string $source, $diff, $cron = null) {
 
 		$diff = is_string($diff) ? ['started_at' => date('Y-m-d H:i:s'), 'exception' => $diff] : $diff;
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated S/17/07/2021
+ * Updated V/01/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -21,13 +21,12 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Model_System_Emarsys implements Luigifab_Maillog_Model_Interface {
+class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_System {
 
-	// https://help.emarsys.com/hc/fr/articles/115004499373-Overview-of-Contact-Management-Endpoints
-	// https://api.emarsys.net/api-demo/
+	// https://dev.emarsys.com/v2/
+	protected $_code = 'emarsys';
 
-	// liste des locales par rapport à ce qui existe sur Emarsys
-	protected $locales = [
+	protected $_locales = [
 		'ar_DZ' => 40, 'ar_EG' => 40, 'ar_KW' => 40, 'ar_MA' => 40, 'ar_SA' => 40,
 		'bg_BG' => 22, 'cs_CZ' => 15, 'da_DK' => 12, 'de_AT' => 2,  'de_CH' => 2,
 		'de_DE' => 2,  'el_GR' => 45, 'en_AU' => 1,  'en_CA' => 1,  'en_GB' => 1,
@@ -43,8 +42,7 @@ class Luigifab_Maillog_Model_System_Emarsys implements Luigifab_Maillog_Model_In
 		'zh_HK' => 29, 'zh_TW' => 29
 	];
 
-	// liste des pays par rapport à ce qui existe sur Emarsys
-	protected $countries = [
+	protected $_countries = [
 		'AD' => 4,   'AE' => 183, 'AF' => 1,   'AG' => 6,   'AL' => 2,   'AM' => 8,
 		'AN' => 204, 'AO' => 5,   'AR' => 7,   'AT' => 10,  'AU' => 9,   'AZ' => 11,
 		'BA' => 22,  'BB' => 15,  'BD' => 14,  'BE' => 17,  'BF' => 27,  'BG' => 26,
@@ -81,119 +79,109 @@ class Luigifab_Maillog_Model_System_Emarsys implements Luigifab_Maillog_Model_In
 	];
 
 
-	// gestion des champs
-	public function getMapping() {
-		return array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/emarsys/mapping_config')));
-	}
-
 	public function getFields() {
 
-		// https://help.emarsys.com/hc/fr/articles/115004466193-Listing-Available-Fields
-		$result = $this->sendRequest('GET', 'field/translate', substr(Mage::getSingleton('core/locale')->getLocaleCode(), 0, 2));
-		$fields = [];
+		if (empty($this->_fields)) {
 
-		if ($this->checkResponse($result)) {
+			// https://dev.emarsys.com/v2/fields/list-available-fields
+			$result = $this->sendRequest('GET', 'field/translate', substr(Mage::getSingleton('core/locale')->getLocaleCode(), 0, 2));
+			$fields = [];
 
-			$result   = $this->extractResponseData($result);
-			$result   = is_array($result) ? $result : [];
-			$readonly = [0, 27, 28, 29, 30, 32, 33, 34, 36, 47, 48];
+			if ($this->checkResponse($result)) {
 
-			foreach ($result as $field) {
-				$fields[$field['id']] = [
-					'id'       => $field['id'],
-					'name'     => $field['name'],
-					'readonly' => in_array($field['id'], $readonly)
-				];
+				$result   = $this->extractResponseData($result);
+				$result   = is_array($result) ? $result : [];
+				$readonly = [0, 27, 28, 29, 30, 32, 33, 34, 36, 47, 48];
+
+				foreach ($result as $field) {
+					$fields[$field['id']] = [
+						'id'       => $field['id'],
+						'name'     => $field['name'],
+						'readonly' => in_array($field['id'], $readonly)
+					];
+				}
+
+				ksort($fields);
 			}
 
-			ksort($fields);
+			$this->_fields = $fields;
 		}
 
-		return $fields;
+		return $this->_fields;
 	}
 
-	public function mapFields(object $object) {
+	public function mapFields($object, string $group, bool $onlyAttributes = false) {
 
+		$fields = [];
 		if (!is_object($object))
-			return [];
+			return $fields;
 
-		$customer   = get_class(Mage::getModel('customer/customer'));
-		$address    = get_class(Mage::getModel('customer/address'));
-		$subscriber = get_class(Mage::getModel('newsletter/subscriber'));
-		$current    = get_class($object);
+		$isAddress  = $group == 'address';
+		$isCustomer = $group == 'customer';
+		$values     = $this->getMapping();
 
-		$isAddress  = $current == $address;
-		$isCustomer = $current == $customer;
-		$isSubscrib = $current == $subscriber;
+		if ($onlyAttributes)
+			$attributes = array_keys($object->getAttributes());
 
-		$special = Mage::getStoreConfig('maillog_sync/emarsys/mapping_customerid_field'); // en cas de changement d'email
-		$mapping = $this->getMapping();
-		$fields  = [];
+		foreach ($values as $system => $config) {
 
-		foreach ($mapping as $config) {
+			foreach ($config as $code) {
 
-			if ((mb_stripos($config, ':') !== false) && (mb_strlen($config) > 3) && (mb_stripos($config, '#') !== 0)) {
+				if ($isAddress) {
+					if (!empty($object->getData('is_default_billing')))
+						$code = str_replace('address_billing_', '', $code);
+					if (!empty($object->getData('is_default_shipping')))
+						$code = str_replace('address_shipping_', '', $code);
+				}
 
-				$config = explode(':', $config);
-				$system = trim(array_shift($config));
+				if ($onlyAttributes) {
+					if (in_array($code, $attributes))
+						$fields[] = $code;
+					continue;
+				}
 
-				foreach ($config as $key) {
+				$hasData = $object->hasData($code);
 
-					$code    = trim($key);
-					$hasData = $object->hasData($code);
-
-					if ($isAddress) {
-						if (!empty($object->getData('is_default_billing')))
-							$code = str_replace('address_billing_', '', $code);
-						if (!empty($object->getData('is_default_shipping')))
-							$code = str_replace('address_shipping_', '', $code);
+				if ($isAddress && in_array($code, ['street', 'street_1', 'street_2', 'street_3', 'street_4'])) {
+					if ($code == 'street')
+						$fields[$system] = implode(', ', $object->getStreet());
+					else
+						$fields[$system] = $object->getStreet(substr($code, -1));
+				}
+				else if ($isAddress && ($code == 'country_id')) {
+					$value = $object->getData('country_id');
+					if (array_key_exists($value, $this->_countries))
+						$fields[$system] = $this->_countries[$value];
+					else
+						$fields[$system] = '';
+				}
+				else if ($code == 'subscriber_status') {
+					$fields[$system] = ($object->getData('subscriber_status') == Mage_Newsletter_Model_Subscriber::STATUS_SUBSCRIBED) ? 1 : 2;
+				}
+				else if ($isCustomer && ($code == 'email')) {
+					$fields[$system] = $object->getData('email');
+					// avec changement d'email (le champ 3 est l'email sur Emarsys)
+					$special = Mage::getStoreConfig('maillog_sync/'.$this->_code.'/mapping_customerid_field');
+					$fields['key_id'] = (!empty($special) && ($object->getOrigData('email') != $object->getData('email'))) ? $special : 3;
+				}
+				else if ($isCustomer && ($code == 'store_id')) {
+					$value = $object->getStoreId();
+					$check = Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $value);
+					$fields[$system] = (!empty($value) && array_key_exists($check, $this->_locales)) ? $this->_locales[$check] : '';
+				}
+				else if ($isCustomer && ($code == 'dob') && $hasData) {
+					$fields[$system] = date('Y-m-d', strtotime($object->getData('dob')));
+				}
+				else if ($hasData) {
+					if (!empty($fields[$system])) {
+						$fields[$system] .= ' '.$object->getData($code);
 					}
-
-					if ($isAddress && in_array($code, ['street', 'street_1', 'street_2', 'street_3', 'street_4'])) {
-						if ($code == 'street')
-							$fields[$system] = implode(', ', $object->getStreet());
-						else
-							$fields[$system] = $object->getStreet(mb_substr($code, -1));
-					}
-					else if ($isAddress && ($code == 'country_id')) {
-						$value = $object->getData($code);
-						if (array_key_exists($value, $this->countries))
-							$fields[$system] = $this->countries[$value];
-						else
-							$fields[$system] = '';
-					}
-					else if ($isSubscrib && ($code == 'subscriber_status')) {
-						$fields[$system] = ($object->getData($code) == Mage_Newsletter_Model_Subscriber::STATUS_SUBSCRIBED) ? 1 : 2;
-					}
-					else if ($isCustomer && ($code == 'email')) {
+					else {
+						// 2016-02-26T10:31:11+00:00
+						// 2016-02-26 10:32:28
 						$fields[$system] = $object->getData($code);
-						// avec changement d'email (le champs 3 est l'email sur Emarsys)
-						$fields['key_id'] = (!empty($special) && ($object->getOrigData($code) != $object->getData($code))) ?
-							$special : 3;
-					}
-					else if ($isCustomer && ($code == 'store_id')) {
-						$value = $object->getStoreId();
-						$check = Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $value);
-						// spécial
-						if (!empty($value) && array_key_exists($check, $this->locales))
-							$fields[$system] = $this->locales[$check];
-						else
-							$fields[$system] = '';
-					}
-					else if ($isCustomer && ($code == 'dob') && $hasData) {
-						$fields[$system] = date('Y-m-d', strtotime($object->getData($code)));
-					}
-					else if ($hasData) {
-						if (!empty($fields[$system])) {
-							$fields[$system] .= ' '.$object->getData($code);
-						}
-						else {
-							// 2016-02-26T10:31:11+00:00
-							// 2016-02-26 10:32:28
-							$fields[$system] = $object->getData($code);
-							if (preg_match('#^\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}#', $fields[$system]) === 1)
-								$fields[$system] = date('Y-m-d H:i:s', strtotime($fields[$system]));
-						}
+						if (preg_match('#^\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}#', $fields[$system]) === 1)
+							$fields[$system] = date('Y-m-d H:i:s', strtotime($fields[$system]));
 					}
 				}
 			}
@@ -203,54 +191,39 @@ class Luigifab_Maillog_Model_System_Emarsys implements Luigifab_Maillog_Model_In
 	}
 
 
-	// gestion des données
-	public function updateCustomer(array &$data) {
+	public function updateCustomer(array $data) {
 
-		// https://help.emarsys.com/hc/fr/articles/115004492994-Creating-a-New-Contact
-		// https://help.emarsys.com/hc/fr/articles/115004494794-Updating-a-Contact
+		// https://dev.emarsys.com/v2/contacts/update-contacts
 		$method = empty($data['key_id']) ? 'contact/create_if_not_exists=1' : 'contact/create_if_not_exists=1&key_id='.$data['key_id'];
 		return $this->sendRequest('PUT', $method, $data);
 	}
 
-	public function deleteCustomer(array &$data) {
+	public function deleteCustomer(array $data) {
 
-		// https://help.emarsys.com/hc/fr/articles/115004465793-Deleting-a-Contact
+		// https://dev.emarsys.com/v2/contacts/delete-contact
 		return $this->sendRequest('POST', 'contact/delete', $data);
 	}
 
-	public function updateCustomers(array &$data) {
 
-		// https://help.emarsys.com/hc/fr/articles/115004493054-Creating-Multiple-Contacts
-		// https://help.emarsys.com/hc/fr/articles/115004494854-Updating-Multiple-Contacts
-		return $this->sendRequest('PUT', 'contact/create_if_not_exists=1', ['contacts' => $data]);
-	}
+	public function extractResponseData($data, bool $forHistory = false) {
 
-
-	// traitement des requêtes
-	public function checkResponse($data) {
-		return mb_stripos($data, 'HTTP/1.1 200') === 0;
-	}
-
-	public function extractResponseData($data, bool $forHistory = false, bool $multiple = false) {
-
-		if (mb_stripos($data, '{') !== false) {
-			$data = mb_substr($data, mb_stripos($data, '{'));
-			$data = json_decode($data, true);
-			$data = empty($data['data']) ? $data : $data['data'];
+		if (($pos = mb_stripos($data, '{')) !== false) {
+			$json = json_decode(mb_substr($data, $pos), true);
+			$json = empty($json['data']) ? $json : $json['data'];
 		}
 
-		return $data;
+		return empty($json) ? $data : $json;
 	}
 
-	private function sendRequest(string $type, string $method, $data) {
+	protected function sendRequest(string $type, string $method, $data = null) {
 
-		$url = Mage::getStoreConfig('maillog_sync/emarsys/api_url');
+		$url = Mage::getStoreConfig('maillog_sync/'.$this->_code.'/api_url');
 		if (empty($url))
 			return null;
 
 		$timestamp = gmdate('c');
 		$nonce     = md5(random_int(1000000000000000, 9999999999999999));
-		$password  = Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/emarsys/api_password'));
+		$password  = Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/'.$this->_code.'/api_password'));
 		$password  = base64_encode(sha1($nonce.$timestamp.$password));
 
 		$ch = curl_init();
@@ -261,29 +234,42 @@ class Luigifab_Maillog_Model_System_Emarsys implements Luigifab_Maillog_Model_In
 		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 		curl_setopt($ch, CURLOPT_HEADER, true);
 
+		$override = null;
 		if ($type == 'POST') {
 			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+			if (!empty($data))
+				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		}
 		else if ($type == 'PUT') {
+			// https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+			//curl_setopt($ch, CURLOPT_POST, true);
+			//$override = 'X-HTTP-Method-Override: PUT';
+			if (!empty($data))
+				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		}
 		else if ($type == 'DELETE') {
+			// https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+			//curl_setopt($ch, CURLOPT_POST, true);
+			//$override = 'X-HTTP-Method-Override: DELETE';
+			if (!empty($data))
+				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		}
 		else if ($type == 'GET') {
 			curl_setopt($ch, CURLOPT_HTTPGET, true);
-			$method = (mb_stripos($method, '?') === false) ? $method.'/'.$data : str_replace('?', '/'.$data.'?', $method);
+			if (!empty($data))
+				$method .= '/'.$data;
 		}
 
 		curl_setopt($ch, CURLOPT_URL, $url.$method);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, [
+			'Accept: application/json',
+			'Content-Type: application/json; charset="utf-8"',
 			'X-WSSE: UsernameToken '.
-				'Username="'.Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/emarsys/api_username')).'", '.
+				'Username="'.Mage::getStoreConfig('maillog_sync/'.$this->_code.'/api_username').'", '.
 				'PasswordDigest="'.$password.'", Nonce="'.$nonce.'", Created="'.$timestamp.'"',
-			'Content-Type: application/json; charset="utf-8"'
+			$override
 		]);
 
 		$result = curl_exec($ch);

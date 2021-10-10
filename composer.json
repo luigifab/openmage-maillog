@@ -1,7 +1,7 @@
 {
     "type": "magento-module",
     "name": "luigifab/openmage-maillog",
-    "description": "A module to show history of emails sent and to sync customers with Emarsys and Dolist for OpenMage.",
+    "description": "A module to show history of emails sent and to sync customers with Emarsys and Mautic for OpenMage.",
     "keywords": ["openmage", "openmage-module"],
     "homepage": "https://github.com/luigifab/openmage-maillog",
     "license": "GPL-2.0-or-later",
@@ -39,6 +39,12 @@
         "ext-soap": "*",
         "ext-zlib": "*",
         "ext-iconv": "*"
+    },
+    "replace": {
+        "aschroder/smtp_pro": "*",
+        "openmage-module-fostering/aschroder_smtppro": "*",
+        "openmage-module-fostering/smtp_magento": "*",
+        "openmage-module-fostering/ralab_smtp": "*"
     },
     "minimum-stability": "dev",
     "extra": {

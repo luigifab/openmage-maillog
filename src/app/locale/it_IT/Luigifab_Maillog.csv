@@ -3,6 +3,7 @@
 "Sent email report","Rapporto delle email inviate"
 "Send emails","Inviare email"
 "Minify <abbr title=""HyperText Markup Language"">HTML</abbr> code","Minimizzare il codice <abbr title=""Linguaggio a marcatori per ipertesti (HyperText Markup Language)"">HTML</abbr>"
+"Username","Nomeutente"
 "Number of emails per page","Numero di email per pagina"
 "Show the subject column","Mostra la colonna soggetto"
 "Show the size column","Mostra la colonna dimensione"
@@ -30,7 +31,6 @@
 <li>al momento della fatturazione di una comanda.</li>
 </ul>"
 "History lifetime","Durata di vita della cronologia"
-"Username","Nomeutente"
 "Correspondence of attributes","Corrispondenza degli attributi"
 "Customer Id field","Campo id cliente"
 "In case of a change of email address, the customer identification in the system will be done with the customer id.","In caso di cambiamento di indirizzo email, l'identificazione del cliente nel sistema si farà con l'id del cliente."

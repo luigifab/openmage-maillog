@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/27/11/2017
- * Updated V/30/07/2021
+ * Updated M/28/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -39,7 +39,7 @@ class Luigifab_Maillog_Model_Rewrite_Subscriber extends Mage_Newsletter_Model_Su
 		$template = Mage::getModel('core/email_template');
 		$template->setSentSuccess(false);
 		$template->setDesignConfig(['store' => null]);
-		$template->loadDefault($layout, Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $storeId));
+		$template->loadDefault($layout, Mage::getStoreConfig('general/locale/code', $storeId));
 		$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name', $storeId));
 		$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email', $storeId));
 		$template->setSentSuccess($template->send($this->getEmail(), $this->getName(), ['subscriber' => $this]));
@@ -61,7 +61,7 @@ class Luigifab_Maillog_Model_Rewrite_Subscriber extends Mage_Newsletter_Model_Su
 		$template = Mage::getModel('core/email_template');
 		$template->setSentSuccess(false);
 		$template->setDesignConfig(['store' => null]);
-		$template->loadDefault($layout, Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $storeId));
+		$template->loadDefault($layout, Mage::getStoreConfig('general/locale/code', $storeId));
 		$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name', $storeId));
 		$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email', $storeId));
 		$template->setSentSuccess($template->send($this->getEmail(), $this->getName(), ['subscriber' => $this]));
@@ -83,7 +83,7 @@ class Luigifab_Maillog_Model_Rewrite_Subscriber extends Mage_Newsletter_Model_Su
 		$template = Mage::getModel('core/email_template');
 		$template->setSentSuccess(false);
 		$template->setDesignConfig(['store' => null]);
-		$template->loadDefault($layout, Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $storeId));
+		$template->loadDefault($layout, Mage::getStoreConfig('general/locale/code', $storeId));
 		$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name', $storeId));
 		$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email', $storeId));
 		$template->setSentSuccess($template->send($this->getEmail(), $this->getName(), ['subscriber' => $this]));

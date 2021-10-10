@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/08/10/2020
+ * Updated J/30/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -116,7 +116,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		return implode("\n", $html);
 	}
 
-	private function getBackUrl() {
+	protected function getBackUrl() {
 
 		if ($this->getRequest()->getParam('back') == 'order')
 			return $this->getUrl('*/sales_order/view',

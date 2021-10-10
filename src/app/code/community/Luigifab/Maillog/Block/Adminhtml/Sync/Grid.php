@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated D/27/06/2021
+ * Updated M/05/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -134,31 +134,27 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 	public function decorateDetails($value, $row, $column, $isExport) {
 
+		$action = preg_replace('#update:customer:([0-9]+):#', 'update:<a href="'.str_replace('9999', '\\1', $this->getUrl('*/customer/edit', ['id' => 9999])).'">customer:\1</a>', $row->getData('action'));
+
 		if (in_array($row->getData('sync_at'), ['', '0000-00-00 00:00:00', null]))
-			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> -- %s<br />Created at <em>%s UTC</em></div>',
-				$row->getData('user'), $row->getData('action'), $row->getData('model'),
+			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> with <em>%s</em>.<br />Created at <em>%s UTC</em>.</div>',
+				$row->getData('user'), $action, $row->getData('model'),
 				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT));
 		else
-			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> -- %s<br />Created at <em>%s UTC</em> and synced at <em>%s UTC</em> %s</div>',
-				$row->getData('user'), $row->getData('action'), $row->getData('model'),
+			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> with <em>%s</em>.<br />Created at <em>%s UTC</em> and synced at <em>%s UTC</em> %s.</div>',
+				$row->getData('user'), $action, $row->getData('model'),
 				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT),
 				$this->formatDate($row->getData('sync_at'), Zend_Date::DATETIME_SHORT),
-				empty($duration = $this->helper('maillog')->getHumanDuration($row->getData('duration'))) ? '' : '(duration '.$duration.')');
+				empty($duration = $this->helper('maillog')->getHumanDuration($row->getData('duration'))) ? '' : '(duration <em>'.$duration.'</em>)');
 
 		if (!empty($data = $row->getData('request')))
 			$text .= ' <em>== request ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
 
 		if (!empty($data = $row->getData('response'))) {
-			if (mb_stripos($data, 'STOP! ') !== false) {
+			if (mb_stripos($data, 'STOP! ') === 0)
 				$text .= ' <em>== response ==</em> <br />'.nl2br($this->helper('maillog')->escapeEntities($data));
-			}
-			else {
+			else
 				$text .= ' <em>== response ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
-				if (mb_stripos($text, '[memberid] ') !== false) { // dolist
-					$url  = 'https://extranet.dolist.net/Contacts/ViewContact.aspx?m=10&amp;t=2&amp;c=';
-					$text = preg_replace('#(\[memberid] (\d+))#', '<a href="'.$url.'$2">$1</a>', $text);
-				}
-			}
 		}
 
 		return '<div lang="mul">'.$text.'</div>';

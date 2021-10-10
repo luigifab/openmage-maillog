@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated J/29/07/2021
+ * Updated M/05/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,7 +22,8 @@
 
 class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
-	protected $_eventPrefix = 'maillog_sync';
+	protected $_eventPrefix  = 'maillog_sync';
+	protected static $_reviews = [];
 
 	public function _construct() {
 		$this->_init('maillog/sync');
@@ -30,34 +31,39 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 
 	// action
-	public function updateNow() {
+	public function updateNow($entity = null) {
 
 		$now = time();
 		if (empty($this->getId()))
 			Mage::throwException('You must load a sync before trying to sync it.');
 
-		// 0 action : 1 type : 2 id : 3 ancien-email : 4 email
-		// 0 action : 1 type : 2 id : 3              : 4 email
+		// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
+		// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3           : 4 email
 		$info = (array) explode(':', $this->getData('action')); // (yes)
 
 		try {
+			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
+			if (!($system instanceof Luigifab_Maillog_Model_Interface))
+				Mage::throwException('Unknown system: '.get_class($system).'.');
+
 			$this->setData('status', 'running');
 			$this->save();
-
-			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
 
 			// chargement des objets du client
 			if ($info[1] == 'customer') {
 
-				$customer   = Mage::getModel('customer/customer')->load($info[2]);
+				$customer   = is_object($entity) ? $entity : Mage::getModel('customer/customer')->load($info[2]);
 				$billing    = $customer->getDefaultBillingAddress();
 				$shipping   = $customer->getDefaultShippingAddress();
 				$subscriber = Mage::getModel('newsletter/subscriber')->loadByEmail($customer->getData('email'), $customer->getStoreId());
-				$object     = $this->initSpecialObject($customer);
+				$object     = $this->initSpecialObject($customer, $system->getMapping());
 
 				if (!empty($info[3])) {
 					$customer->setOrigData('email', $info[3]);
 					$customer->setData('email', $info[4]);
+				}
+				else if (empty($info[4])) {
+					$this->setData('action', $this->getData('action').$customer->getData('email'));
 				}
 
 				if (is_object($billing) && empty($billing->getData('is_default_billing')))
@@ -67,7 +73,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			}
 			else if ($info[1] == 'subscriber') {
 
-				$subscriber = Mage::getModel('newsletter/subscriber')->load($info[2]);
+				$subscriber = is_object($entity) ? $entity : Mage::getModel('newsletter/subscriber')->load($info[2]);
 
 				$customer = Mage::getModel('customer/customer');
 				$customer->setOrigData('email', $subscriber->getOrigData('subscriber_email'));
@@ -76,10 +82,10 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 				$billing  = null;
 				$shipping = null;
-				$object   = $this->initSpecialObject($customer);
+				$object   = $this->initSpecialObject($customer, $system->getMapping());
 			}
 			else {
-				Mage::throwException('Unknown sync type.');
+				Mage::throwException('Unknown object_type ('.$info[1] .').');
 			}
 
 			// action
@@ -87,11 +93,11 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			// par exemple, si entity_id est trouvé dans $customer, même si entity_id est trouvé dans $billing,
 			// c'est bien l'entity_id de customer qui est utilisé
 			$allow = Mage::getStoreConfigFlag('maillog_sync/'.$code.'/send') ? Mage::helper('maillog')->canSend(...$info) : false;
-			$data  = $system->mapFields($customer);
-			$data += $system->mapFields($billing);
-			$data += $system->mapFields($shipping);
-			$data += $system->mapFields($subscriber);
-			$data += $system->mapFields($object);
+			$data  = $system->mapFields($customer, 'customer');
+			$data += $system->mapFields($billing, 'address');
+			$data += $system->mapFields($shipping, 'address');
+			$data += $system->mapFields($subscriber, 'subscriber');
+			$data += $system->mapFields($object, 'special');
 
 			if ($allow !== true) {
 				$this->setData('duration', time() - $now);
@@ -106,34 +112,43 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
+			$this->saveAllData($system, $data ?? null, $t->getMessage());
 		}
 
 		return empty($data) ? null : $data;
 	}
 
-	public function deleteNow() {
+	public function deleteNow($entity = null) {
 
 		$now = time();
 		if (empty($this->getId()))
 			Mage::throwException('You must load a sync before trying to sync it.');
 
-		// 0 action : 1 type : 2 id : 3 ancien-email : 4 email
-		// 0 action : 1 type : 2 id : 3              : 4 email
+		// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
+		// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3           : 4 email
 		$info = (array) explode(':', $this->getData('action')); // (yes)
 
 		try {
+			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
+			if (!($system instanceof Luigifab_Maillog_Model_Interface))
+				Mage::throwException('Unknown system: '.get_class($system).'.');
+
 			$this->setData('status', 'running');
 			$this->save();
 
-			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
+			// chargement des objets du client
+			if ($info[1] == 'customer') {
+				$customer = is_object($entity) ? $entity : Mage::getModel('customer/customer');
+				$customer->setOrigData('email', $info[4]);
+				$customer->setData('email', $info[4]);
+			}
+			else {
+				Mage::throwException('Unknown object_type ('.$info[1] .').');
+			}
 
-			// simulation du client
-			$customer = Mage::getModel('customer/customer');
-			$customer->setOrigData('email', $info[4]);
-			$customer->setData('email', $info[4]);
-
+			// action
 			$allow = Mage::getStoreConfigFlag('maillog_sync/'.$code.'/send') ? Mage::helper('maillog')->canSend(...$info) : false;
-			$data  = $system->mapFields($customer);
+			$data  = $system->mapFields($customer, 'customer');
 
 			if ($allow !== true) {
 				$this->setData('duration', time() - $now);
@@ -148,6 +163,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
+			$this->saveAllData($system, $data ?? null, $t->getMessage());
 		}
 
 		return empty($data) ? null : $data;
@@ -155,9 +171,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 
 	// gestion des données des objets et de l'historique
-	// si le saveAllData est fait dans une transaction, s'il y a un rollback, tout est perdu
-	// dans ce cas ne pas oublier de refaire un saveAllData
-	private function initSpecialObject(object $customer) {
+	protected function initSpecialObject(object $customer, array $values) {
 
 		$object = new Varien_Object();
 		$object->setData('last_sync_date', date('Y-m-d H:i:s'));
@@ -168,60 +182,257 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			$read = $database->getConnection('core_read');
 
 			// customer_group_code (lecture express depuis la base de données)
-			$name = $read->fetchOne($read->select()
-				->from($database->getTableName('customer_group'), 'customer_group_code')
-				->where('customer_group_id = ?', $customer->getGroupId())
-				->limit(1));
+			if ($this->inArray('group_name', $values)) {
 
-			$object->setData('group_name', $name);
+				$name = $read->fetchOne($read->select()
+					->from($database->getTableName('customer_group'), 'customer_group_code')
+					->where('customer_group_id = ?', $customer->getGroupId())
+					->limit(1));
+
+				$object->setData('group_name', $name);
+			}
 
 			// login_at (lecture express depuis la base de données)
 			// si non disponible, utilise la date d'inscription du client
-			$last = $read->fetchOne($read->select()
-				->from($database->getTableName('log_customer'), 'login_at')
-				->where('customer_id = ?', $id)
-				->order('log_id desc')
-				->limit(1));
+			if ($this->inArray('last_login_date', $values)) {
 
-			$object->setData('last_login_date', (strlen($last) > 10) ? $last : $customer->getData('created_at'));
+				$item = $read->fetchOne($read->select()
+					->from($database->getTableName('log_customer'), 'login_at')
+					->where('customer_id = ?', $id)
+					->order('log_id desc')
+					->limit(1));
+
+				$object->setData('last_login_date', (strlen($item) > 10) ? $item : $customer->getData('created_at'));
+			}
 
 			// commandes
+			// $order->getData('global_currency_code') != $order->getData('base_currency_code')
 			$orders = Mage::getResourceModel('sales/order_collection')
 				->addFieldToFilter('customer_id', $id)
 				->addFieldToFilter('state', ['in' => ['processing', 'complete', 'closed']])
 				->setOrder('created_at', 'desc');
 
-			if (!empty($numberOfOrders = $orders->getSize())) {
+			$numberOfOrders = $orders->getSize();
+			$object->setData('number_of_orders', $numberOfOrders);
+			$object->setData('orders_collection', $orders);
 
-				$last = $orders->getLastItem();
-				$object->setData('first_order_date',        $last->getData('created_at'));
-				$object->setData('first_order_total',       (float) $last->getData('base_grand_total'));
-				$object->setData('first_order_total_notax', (float) $last->getData('base_grand_total') - $last->getData('base_tax_amount'));
+			if ($numberOfOrders > 0) {
 
-				$first = $orders->getFirstItem();
-				$object->setData('last_order_date',        $first->getData('created_at'));
-				$object->setData('last_order_total',       (float) $first->getData('base_grand_total'));
-				$object->setData('last_order_total_notax', (float) $first->getData('base_grand_total') - $first->getData('base_tax_amount'));
+				// première commande
+				$firstOrder = $orders->getLastItem();
+				$object->setData('first_order_id',          $firstOrder->getId());
+				$object->setData('first_order_incrementid', $firstOrder->getData('increment_id'));
+				$object->setData('first_order_date',        $firstOrder->getData('created_at'));
+				$object->setData('first_order_total', ($firstOrder->getData('base_grand_total') * $firstOrder->getData('base_to_global_rate')));
+				$object->setData('first_order_total_notax', (($firstOrder->getData('base_grand_total') - $firstOrder->getData('base_tax_amount')) * $firstOrder->getData('base_to_global_rate')));
 
-				$orders->clear();
-				$orders->getSelect()->columns([
-					'sumincltax' => 'SUM(main_table.base_grand_total)',
-					'sumexcltax' => 'SUM(main_table.base_grand_total) - SUM(main_table.base_tax_amount)'
-				])->group('customer_id');
+				if ($this->inArray('first_order_names_list', $values) ||
+				    $this->inArray('first_order_skus_list', $values) || $this->inArray('first_order_skus_number', $values)) {
 
-				$item = $orders->getFirstItem();
-				$object->setData('average_order_amount',       (float) $item->getData('sumincltax') / $numberOfOrders);
-				$object->setData('average_order_amount_notax', (float) $item->getData('sumexcltax') / $numberOfOrders);
-				$object->setData('total_order_amount',         (float) $item->getData('sumincltax'));
-				$object->setData('total_order_amount_notax',   (float) $item->getData('sumexcltax'));
-				$object->setData('number_of_orders',           $numberOfOrders);
+					$firstSkus = $firstOrder->getItemsCollection()
+						->addFieldToFilter('parent_item_id', ['null' => true])
+						->setOrder('price_incl_tax', 'desc');
+
+					$object->setData('first_order_items_collection', $firstSkus);
+
+					$list = array_unique($firstSkus->getColumnValues('sku'));
+					$object->setData('first_order_skus_list', implode(',', $list));
+					$object->setData('first_order_skus_number', count($list));
+
+					$list = array_unique($firstSkus->getColumnValues('name'));
+					$object->setData('first_order_names_list', implode(',', $list));
+				}
+
+				// dernière commande
+				$lastOrder = $orders->getFirstItem();
+				$object->setData('last_order_id',          $lastOrder->getId());
+				$object->setData('last_order_incrementid', $lastOrder->getData('increment_id'));
+				$object->setData('last_order_date',        $lastOrder->getData('created_at'));
+				$object->setData('last_order_total', ($lastOrder->getData('base_grand_total') * $lastOrder->getData('base_to_global_rate')));
+				$object->setData('last_order_total_notax', (($lastOrder->getData('base_grand_total') - $lastOrder->getData('base_tax_amount')) * $lastOrder->getData('base_to_global_rate')));
+
+				if ($this->inArray('last_order_names_list', $values) ||
+				    $this->inArray('last_order_skus_list', $values) || $this->inArray('last_order_skus_number', $values) ||
+				    $this->inArray('last_order_product_1_sku', $values) || $this->inArray('last_order_product_1_name', $values)) {
+
+					$lastSkus = $lastOrder->getItemsCollection()
+						->addFieldToFilter('parent_item_id', ['null' => true])
+						->setOrder('price_incl_tax', 'desc');
+
+					$object->setData('last_order_items_collection', $lastSkus);
+
+					$list = array_unique($lastSkus->getColumnValues('sku'));
+					$object->setData('last_order_skus_list', implode(',', $list));
+					$object->setData('last_order_skus_number', count($list));
+
+					$list = array_unique($lastSkus->getColumnValues('name'));
+					$object->setData('last_order_names_list', implode(',', $list));
+
+					$idx = 1;
+					$storeId = $lastOrder->getStoreId();
+					foreach ($lastSkus as $sku) {
+
+						$object->setData('last_order_product_'.$idx.'_sku',  $sku->getData('sku'));
+						$object->setData('last_order_product_'.$idx.'_name',  $sku->getData('name'));
+						$object->setData('last_order_product_'.$idx.'_price', (float) $sku->getData('price_incl_tax'));
+						$productId = $sku->getProductId();
+
+						if ($this->inArray('last_order_product_'.$idx.'_rating', $values)) {
+
+							$key = $storeId.$productId;
+							if (!array_key_exists($key, self::$_reviews))
+								self::$_reviews[$key] = Mage::getModel('review/review_summary') // 0/100
+									->setStoreId($storeId)
+									->load($productId)
+									->getRatingSummary();
+
+							$object->setData('last_order_product_'.$idx.'_rating', self::$_reviews[$key]);
+						}
+
+						if ($this->inArray('last_order_product_'.$idx.'_url', $values)) {
+							if (empty($baseurl)) {
+								$baseurl = preg_replace('#/[^/]+\.php\d*/#', '/index.php/', Mage::app()->getStore($storeId)->getBaseUrl());
+								$suffix  = Mage::helper('catalog/product')->getProductUrlSuffix();
+							}
+							if (Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog') && Mage::getStoreConfigFlag('urlnosql/general/enabled')) {
+								$object->setData('last_order_product_'.$idx.'_url', $baseurl.$productId.$suffix);
+							}
+							else {
+								$object->setData('last_order_product_'.$idx.'_url', $baseurl.'catalog/product/view/id/'.$productId.'/');
+							}
+						}
+
+						if ($this->inArray('last_order_product_'.$idx.'_image', $values)) {
+							$image = Mage::getResourceSingleton('catalog/product')->getAttributeRawValue($productId, 'thumbnail', $storeId);
+							$image = (string) Mage::helper('catalog/image')->init(new Varien_Object(), 'thumbnail', $image)->resize(400);
+							$object->setData('last_order_product_'.$idx.'_image', $image);
+						}
+
+						$idx++;
+						if ($idx > 5)
+							break;
+					}
+				}
+
+				// produits commandés
+				if ($this->inArray('all_ordered_names', $values) || $this->inArray('all_ordered_skus', $values)) {
+
+					$allSkus = Mage::getResourceModel('sales/order_item_collection')
+						->addFieldToFilter('order_id', ['in' => $orders->getAllIds()])
+						->addFieldToFilter('parent_item_id', ['null' => true])
+						->setOrder('created_at', 'desc');
+
+					$object->setData('all_ordered_items_collection', $allSkus);
+					$object->setData('all_ordered_names', implode(',', array_slice(array_unique($allSkus->getColumnValues('name')), 0, 250)));
+					$object->setData('all_ordered_skus', implode(',', array_slice(array_unique($allSkus->getColumnValues('sku')), 0, 250)));
+				}
+
+				if ($this->inArray('number_of_products_ordered', $values)) {
+
+					$allSkus = empty($allSkus) ? Mage::getResourceModel('sales/order_item_collection')
+						->addFieldToFilter('order_id', ['in' => $orders->getAllIds()])
+						->addFieldToFilter('parent_item_id', ['null' => true]) : $allSkus;
+
+					$object->setData('number_of_products_ordered', array_sum($allSkus->getColumnValues('qty_ordered')));
+				}
+
+				// mautic
+				$rom = $this->inArray('rating_order_monetary', $values) || $this->inArray('rating_order_recency', $values) || $this->inArray('rating_order_frequency', $values);
+
+				// moyennes
+				$columns = [];
+				if ($rom || $this->inArray('average_order_amount', $values) || $this->inArray('total_order_amount', $values))
+					$columns['sum_incl_tax'] = 'SUM(main_table.base_grand_total * main_table.base_to_global_rate)';
+
+				if ($this->inArray('average_order_amount_notax', $values) || $this->inArray('total_order_amount_notax', $values))
+					$columns['sum_excl_tax'] = 'SUM(main_table.base_grand_total * main_table.base_to_global_rate) - '.
+						'SUM(main_table.base_tax_amount * main_table.base_to_global_rate)';
+
+				if ($this->inArray('average_days_between_orders', $values))
+					$columns['average_days'] = // https://dba.stackexchange.com/a/164826
+						'CASE WHEN COUNT(*) > 1
+							THEN ABS(DATEDIFF(MIN(main_table.created_at), MAX(main_table.created_at)) / (COUNT(*) - 1))
+							ELSE 0
+						END';
+
+				if (!empty($columns)) {
+
+					$orders->clear();
+					$orders->getSelect()->columns($columns)->group('customer_id');
+					$item = $orders->getFirstItem();
+
+					if (isset($item['sum_incl_tax'])) {
+						$object->setData('average_order_amount', (float) ($item->getData('sum_incl_tax') / $numberOfOrders));
+						$object->setData('total_order_amount',   (float) $item->getData('sum_incl_tax'));
+					}
+					if (isset($item['sum_excl_tax'])) {
+						$object->setData('average_order_amount_notax', (float) ($item->getData('sum_excl_tax') / $numberOfOrders));
+						$object->setData('total_order_amount_notax',   (float) $item->getData('sum_excl_tax'));
+					}
+					if (isset($item['average_days'])) {
+						$object->setData('average_days_between_orders', (float) $item->getData('average_days'));
+					}
+				}
+
+				// mautic
+				if ($rom) {
+
+					$config = @unserialize(Mage::getStoreConfig('maillog_sync/mautic/mautic_config'), ['allowed_classes' => false]);
+					$time   = Mage::getModel('core/date')->gmtTimestamp();
+
+					// nombre de jour depuis la dernière commande
+					$recency = ($time - strtotime($lastOrder->getData('created_at'))) / (60 * 60 * 24);
+					if ($recency <= $config['5a'])
+						$object->setData('rating_order_recency', 5);
+					else if ($recency <= $config['4a'])
+						$object->setData('rating_order_recency', 4);
+					else if ($recency <= $config['3a'])
+						$object->setData('rating_order_recency', 3);
+					else if ($recency <= $config['2a'])
+						$object->setData('rating_order_recency', 2);
+					else
+						$object->setData('rating_order_recency', 1);
+
+					$frequency = $object->getData('number_of_orders');
+					if ($frequency > $config['4b'])
+						$object->setData('rating_order_frequency', 5);
+					else if ($frequency > $config['3b'])
+						$object->setData('rating_order_frequency', 4);
+					else if ($frequency > $config['2b'])
+						$object->setData('rating_order_frequency', 3);
+					else if ($frequency > $config['1b'])
+						$object->setData('rating_order_frequency', 2);
+					else
+						$object->setData('rating_order_frequency', 1);
+
+					$monetary = $object->getData('total_order_amount');
+					if ($monetary > $config['4c'])
+						$object->setData('rating_order_monetary', 5);
+					else if ($monetary > $config['3c'])
+						$object->setData('rating_order_monetary', 4);
+					else if ($monetary > $config['2c'])
+						$object->setData('rating_order_monetary', 3);
+					else if ($monetary > $config['1c'])
+						$object->setData('rating_order_monetary', 2);
+					else
+						$object->setData('rating_order_monetary', 1);
+				}
 			}
 		}
 
 		return $object;
 	}
 
-	private function transformDataForHistory(array $data, bool $asString = true) {
+	protected function inArray($needle, array $haystack, bool $strict = false) {
+		// https://stackoverflow.com/a/4128377/2980105
+		foreach ($haystack as $item) {
+			if (($strict ? ($item === $needle) : ($item == $needle)) || (is_array($item) && $this->inArray($needle, $item, $strict)))
+				return true;
+		}
+		return false;
+	}
+
+	protected function transformDataForHistory(array $data, bool $asString = true) {
 
 		$inline = [];
 
@@ -241,44 +452,34 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 	public function saveAllData(object $system, $request = null, $response = null) {
 
-		if (!empty($request) && is_array($request)) {
+		if (!empty($request)) {
 
-			ksort($request);
-
-			$maps  = $system->getMapping();
-			$lines = explode("\n", $this->transformDataForHistory($request));
-
-			foreach ($maps as $map) {
-				$map = explode(':', $map);
-				$tmp = trim(array_shift($map));
-				foreach ($lines as &$line) {
-					// emarsys  [2] Test
-					if (mb_stripos($line, '['.$tmp.']') !== false) {
-						$line .= ((mb_substr($line, -2) == '] ') ? ' --' : '').' ('.implode(' ', $map).')';
-						break;
-					}
-					// dolist   [Fields][x][Name] lastname
-					if (mb_stripos($line, '][Name] '.$tmp) !== false) {
-						$line .= ' ('.implode(' ', $map).')';
-						break;
-					}
+			if (Mage::getIsDeveloperMode()) {
+				if (is_array($request)) {
+					ksort($request);
+					$this->setData('request', $this->transformDataForHistory($request));
 				}
-				unset($line);
+				else {
+					$this->setData('request', $request);
+				}
+			}
+			else {
+				$this->setData('request', null);
 			}
 
-			$this->setData('request', implode("\n", $lines));
+			if (!empty($response)) {
+				$status = $system->checkResponse($response) ? 'success' : 'error';
+				$result = $system->extractResponseData($response, true);
+				$this->setData('response', is_array($result) ? $this->transformDataForHistory($result) : $result);
+			}
 		}
-
-		if (!empty($response)) {
-			$status   = $system->checkResponse($response) ? 'success' : 'error';
-			$response = $system->extractResponseData($response, true);
-			$this->setData('response', is_array($response) ? $this->transformDataForHistory($response) : $response);
+		else if (!empty($response)) {
+			$status = 'error';
+			$this->setData('response', $response);
 		}
 
 		$this->setData('sync_at', date('Y-m-d H:i:s'));
-		//if (empty($this->getData('status')))
 		$this->setData('status', empty($status) ? 'notsync' : $status);
-
 		$this->save();
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/18/07/2021
+ * Updated J/30/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -40,11 +40,12 @@ abstract class Luigifab_Maillog_Model_Filter {
 					foreach ((is_object($item) ? $item->getData() : $item) as $key => &$data)
 						$this->setVariables([$match[1].$i.'_'.$key => &$data]);
 					unset($data);
+					$replace .= str_replace(' '.$match[1].'.', ' '.$match[1].$i.'_', $match[2]);
 				}
 				else {
-					$this->setVariables([$match[1].$i.'_'.$key => &$item]);
+					$this->setVariables([$match[1].$i => &$item]);
+					$replace .= str_replace([' '.$match[1].' ', ' '.$match[1].'}'], [' '.$match[1].$i.' ', ' '.$match[1].$i.'}'], $match[2]);
 				}
-				$replace .= str_replace(' '.$match[1].'.', ' '.$match[1].$i.'_', $match[2]);
 				$i++;
 			}
 			unset($item);
@@ -107,7 +108,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 
 		$store  = empty($this->_templateVars['store']) ? null : $this->_templateVars['store'];
 		$locale = Mage::app()->getStore()->isAdmin() ? Mage::getSingleton('core/translate')->getLocale() :
-			Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store);
+			Mage::getStoreConfig('general/locale/code', $store);
 
 		$attrs = $this->extractAttributes($match[2], 'number');
 		if (array_key_exists('ifconfig', $attrs) && !Mage::getStoreConfigFlag($attrs['ifconfig'], $store))
@@ -199,7 +200,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 
 		$store  = empty($this->_templateVars['store']) ? null : $this->_templateVars['store'];
 		$locale = Mage::app()->getStore()->isAdmin() ? Mage::getSingleton('core/translate')->getLocale() :
-			Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store);
+			Mage::getStoreConfig('general/locale/code', $store);
 
 		$attrs  = $this->extractAttributes($match[1]);
 
@@ -400,7 +401,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 	}
 
 
-	private function extractAttributes($data, $default = null) {
+	protected function extractAttributes($data, $default = null) {
 
 		$attrs = empty($default) ? [] : [$default => null];
 		$parts = array_map('trim', (array) explode(' ', $data)); // (yes)
@@ -421,7 +422,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return $attrs;
 	}
 
-	private function dumpArray(array $vars) {
+	protected function dumpArray(array $vars) {
 
 		$data = [];
 
@@ -441,7 +442,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		return $data;
 	}
 
-	private function dumpObject(array $vars) {
+	protected function dumpObject(array $vars) {
 
 		$data = [];
 

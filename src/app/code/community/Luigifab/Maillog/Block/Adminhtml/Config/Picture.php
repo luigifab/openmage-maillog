@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated V/19/06/2020
+ * Updated V/08/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -53,7 +53,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Picture extends Mage_Adminhtml_Blo
 		$this->setHtmlId('row_'.$element->getHtmlId());
 		$this->setScopeLabel($element->getScopeLabel());
 		$this->setLabel($element->getLabel());
-		$this->setConfig($config);
+		$this->setData('config', $config);
 
 		return $this->toHtml();
 	}

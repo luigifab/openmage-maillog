@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/29/07/2021
+ * Updated M/05/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -43,25 +43,10 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 
 	public function indexAction() {
 
-		if ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax'))) {
+		if ($this->getRequest()->isXmlHttpRequest() || !empty($this->getRequest()->getParam('isAjax')))
 			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_sync_grid')->toHtml());
-		}
-		else {
-			if (is_file(Mage::helper('maillog')->getLock()))
-				Mage::getSingleton('adminhtml/session')->addNotice($this->__('All customers data synchronization is in progress.'));
-
-			/* $last = Mage::getResourceModel('maillog/sync_collection')
-				->addFieldToFilter('batch', ['notnull' => true])
-				->setOrder('created_at', 'desc')
-				->setPageSize(1)
-				->getFirstItem()
-				->getData('batch');
-
-			if (!empty($last))
-				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Last full synchronization (key %s) finished at %s, %d%% success.', $last, '--', 95)); */
-
+		else
 			$this->loadLayout()->renderLayout();
-		}
 	}
 
 	public function downloadAction() {

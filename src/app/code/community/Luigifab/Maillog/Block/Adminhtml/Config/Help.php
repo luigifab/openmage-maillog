@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated L/24/05/2021
+ * Updated J/30/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -42,7 +42,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 			'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog');
 	}
 
-	private function checkRewrites() {
+	protected function checkRewrites() {
 
 		$rewrites = [
 			['model' => 'core/email_queue'],
@@ -64,7 +64,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 		return true;
 	}
 
-	private function checkChanges() {
+	protected function checkChanges() {
 
 		$zend = file_get_contents(BP.'/lib/Zend/Mail/Transport/Sendmail.php');
 		if (mb_strpos($zend, 'return Mage::helper(\'maillog\')->sendMail($this, $this->_mail, $this->_parts);') === false)

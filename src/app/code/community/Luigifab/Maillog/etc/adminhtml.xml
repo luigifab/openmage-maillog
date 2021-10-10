@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/25/12/2020
+ * Updated L/13/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -82,6 +82,10 @@
 										<title>Emails and wysiwyg directives</title>
 										<sort_order>103067</sort_order>
 									</maillog_directives>
+									<maillog_preview translate="title">
+										<title>Emails preview</title>
+										<sort_order>103068</sort_order>
+									</maillog_preview>
 								</children>
 							</config>
 						</children>

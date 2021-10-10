@@ -1,7 +1,7 @@
 <?php
 /**
  * Created L/18/01/2021
- * Updated L/26/04/2021
+ * Updated M/28/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -71,33 +71,53 @@ $email = $this->getData('email');
 	<?php if (!empty($subject)): ?>
 		<ul class="attachments">
 			<li>
-				<?php if (!empty(Mage::registry('maillog_preview'))):
-
-					$stores  = Mage::getResourceModel('core/store_collection')->addFieldToFilter('is_active', 1)->setOrder('store_id', 'asc');
+				<?php if (!empty(Mage::registry('maillog_preview')) && !empty($name = $this->getRequest()->getParam('file'))):
+					$base    = $this->helper('core/url')->getCurrentUrl();
 					$current = Mage::app()->getStore()->getId();
-
-					$langs = [];
-					$names = glob(BP.'/app/locale/*/template/email/'.preg_replace('#[^\w/-]#', '', $this->getRequest()->getParam('file')).'.html');
-					foreach ($names as $name)
-						$langs[] = mb_substr($name, mb_strpos($name, '/locale/') + 8, 5);
+					$stores  = Mage::getResourceModel('core/store_collection')->addFieldToFilter('is_active', 1)->setOrder('store_id', 'asc');
+					$langs   = array_reduce(
+						glob(BP.'/app/locale/*/template/email/'.preg_replace('#[^\w/-]#', '', $name).'.html'),
+						static function ($names, $name) {
+							$name = mb_substr($name, mb_strpos($name, '/locale/') + 8, 5);
+							$names[$name] = $name;
+							return $names;
+						},
+						[]);
 				?>
 					<label>
 						<select lang="mul" onchange="self.location.href = this.value;">
-							<?php foreach ($stores as $id => $store):
-								if (!in_array(Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $id), $langs))
-									continue;
-								$url = preg_replace('#/store/\d+/#', '/store/'.$id.'/', getenv('REQUEST_URI'));
-							?>
-								<?php if ($current == $id): ?>
-									<option value="<?php echo $url ?>" selected="selected">
-										<?php echo $id ?> / <?php echo $store->getData('name') ?> / <?php echo Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store) ?>
-									</option>
-								<?php else: ?>
-									<option value="<?php echo $url ?>">
-										<?php echo $id ?> / <?php echo $store->getData('name') ?> / <?php echo Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store) ?>
-									</option>
-								<?php endif ?>
-							<?php endforeach ?>
+							<optgroup label="Usage by store view">
+								<?php foreach ($stores as $id => $store):
+									$lang = Mage::getStoreConfig('general/locale/code', $id);
+								?>
+									<?php if (in_array($lang, $langs)):
+										$url = preg_replace('#/store/\d+/#', '/store/'.$id.'/', $base);
+										unset($langs[$lang]);
+									?>
+										<?php if ($current == $id): ?>
+											<option value="<?php echo $url ?>" selected="selected">
+												<?php echo $id ?> / <?php echo $store->getData('name') ?> / <?php echo $lang ?>
+											</option>
+										<?php else: ?>
+											<option value="<?php echo $url ?>">
+												<?php echo $id ?> / <?php echo $store->getData('name') ?> / <?php echo $lang ?>
+											</option>
+										<?php endif ?>
+									<?php endif ?>
+								<?php endforeach ?>
+							</optgroup>
+							<?php if (!empty($langs)): ?>
+								<optgroup label="Not used">
+									<?php $current = Mage::getStoreConfig('general/locale/code', $current) ?>
+									<?php foreach ($langs as $lang): ?>
+										<?php if ($current == $lang): ?>
+											<option disabled="disabled" selected="selected"><?php echo $lang ?></option>
+										<?php else: ?>
+											<option disabled="disabled"><?php echo $lang ?></option>
+										<?php endif ?>
+									<?php endforeach ?>
+								</optgroup>
+							<?php endif ?>
 						</select>
 					</label>
 				<?php else: ?>

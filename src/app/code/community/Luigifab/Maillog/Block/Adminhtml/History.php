@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/05/02/2021
+ * Updated S/02/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -32,11 +32,11 @@ class Luigifab_Maillog_Block_Adminhtml_History extends Mage_Adminhtml_Block_Widg
 
 		$this->_removeButton('add');
 
-		$enabled = Mage::getStoreConfigFlag('maillog/general/enabled') && Mage::getStoreConfigFlag('maillog/email/enabled');
-		$this->_addButton('test', [
-			'label'   => $this->__('Send an email now'),
-			'onclick' => $enabled ? "setLocation('".$this->getUrl('*/*/test')."?test=1');" : '',
-			'class'   => $enabled ? 'add' : 'add disabled'
+		$allowed = Mage::getSingleton('admin/session')->isAllowed('system/config');
+		$this->_addButton('config', [
+			'label'   => $this->__('Configuration'),
+			'onclick' => $allowed ? "setLocation('".$this->getUrl('*/system_config/edit', ['section' => 'maillog'])."');" : '',
+			'class'   => $allowed ? 'go' : 'go disabled'
 		]);
 	}
 }

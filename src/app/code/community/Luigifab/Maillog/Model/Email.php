@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/18/06/2021
+ * Updated J/30/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -66,7 +66,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 		// récupération des données du mail
 		// $parts[0]->getContent() = $zend->body si le mail n'a pas de pièce jointe
-		if (is_string($parts)) {
+		if (empty($parts) || is_string($parts)) {
 			$body  = $parts;
 			$parts = [];
 		}
@@ -75,42 +75,47 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			array_shift($parts);
 		}
 
-		if (mb_stripos($body, '<!--@vars') !== false)
-			$body = mb_substr($body, mb_stripos($body, '-->') + 3);
-
-		// recherche et remplace <!-- maillog / maillog --> par rien
-		if ((mb_stripos($body, '<!-- maillog') !== false) && (mb_stripos($body, 'maillog -->') !== false)) {
-			$body = preg_replace('#\s*<!-- maillog\s*#', ' ', $body);
-			$body = preg_replace('#\s*maillog -->\s*#', ' ', $body);
+		if (empty($body)) {
+			$body = '';
 		}
+		else {
+			if (mb_stripos($body, '<!--@vars') !== false)
+				$body = mb_substr($body, mb_stripos($body, '-->') + 3);
 
-		// minifie le code HTML en fonction de la configuration
-		// recherche et remplace #online# #online#storeId# #readimg# par leur valeurs uniquement si c'est un mail au format HTML
-		if ((mb_stripos($body, '</p>') !== false) || (mb_stripos($body, '</td>') !== false) || (mb_stripos($body, '</div>') !== false)) {
+			// recherche et remplace <!-- maillog / maillog --> par rien
+			if ((mb_stripos($body, '<!-- maillog') !== false) && (mb_stripos($body, 'maillog -->') !== false)) {
+				$body = preg_replace('#\s*<!-- maillog\s*#', ' ', $body);
+				$body = preg_replace('#\s*maillog -->\s*#', ' ', $body);
+			}
 
-			if (Mage::getStoreConfigFlag('maillog/general/minify') && extension_loaded('tidy') && class_exists('tidy', false))
-				$body = $this->cleanWithTidy($body);
+			// minifie le code HTML en fonction de la configuration
+			// recherche et remplace #online# #online#storeId# #readimg# par leur valeurs uniquement si c'est un mail au format HTML
+			if ((mb_stripos($body, '</p>') !== false) || (mb_stripos($body, '</td>') !== false) || (mb_stripos($body, '</div>') !== false)) {
 
-			if (mb_stripos($body, '#online#') !== false)
-				$body = preg_replace_callback('/#online#(\d{0,5})/', function ($matches) {
-					return $this->getEmbedUrl('index', empty($matches[1]) ? [] : ['_store' => (int) $matches[1]]);
-				}, $body);
+				if (Mage::getStoreConfigFlag('maillog/general/minify') && extension_loaded('tidy') && class_exists('tidy', false))
+					$body = $this->cleanWithTidy($body);
 
-			if (mb_stripos($body, '#readimg#') !== false)
-				$body = str_replace('#readimg#', '<img src="'.$this->getEmbedUrl('mark').'" width="1" height="1" alt="">', $body);
-		}
+				if (mb_stripos($body, '#online#') !== false)
+					$body = preg_replace_callback('/#online#(\d{0,5})/', function ($matches) {
+						return $this->getEmbedUrl('index', empty($matches[1]) ? [] : ['_store' => (int) $matches[1]]);
+					}, $body);
 
-		// recherche et remplace #uniqid# par sa valeur
-		if (mb_stripos($body, '#uniqid#') !== false)
-			$body = str_replace('#uniqid#', $this->getData('uniqid'), $body);
+				if (mb_stripos($body, '#readimg#') !== false)
+					$body = str_replace('#readimg#', '<img src="'.$this->getEmbedUrl('mark').'" width="1" height="1" alt="">', $body);
+			}
 
-		// recherche et remplace #mailid# par rien
-		if (mb_stripos($body, '#mailid#') !== false) {
-			$mailid = mb_substr($body, mb_stripos($body, '#mailid#'));
-			$mailid = mb_substr($mailid, strlen('#mailid#'));
-			$mailid = mb_substr($mailid, 0, mb_stripos($mailid, '#'));
-			$body = str_replace('#mailid#'.$mailid.'#', '', $body);
-			$this->setData('type', trim($mailid));
+			// recherche et remplace #uniqid# par sa valeur
+			if (mb_stripos($body, '#uniqid#') !== false)
+				$body = str_replace('#uniqid#', $this->getData('uniqid'), $body);
+
+			// recherche et remplace #mailid# par rien
+			if (mb_stripos($body, '#mailid#') !== false) {
+				$mailid = mb_substr($body, mb_stripos($body, '#mailid#'));
+				$mailid = mb_substr($mailid, strlen('#mailid#'));
+				$mailid = mb_substr($mailid, 0, mb_stripos($mailid, '#'));
+				$body = str_replace('#mailid#'.$mailid.'#', '', $body);
+				$this->setData('type', trim($mailid));
+			}
 		}
 
 		$this->setData('mail_body', trim($body));
@@ -119,7 +124,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		return $this;
 	}
 
-	private function cleanWithTidy($html) {
+	protected function cleanWithTidy(string $html) {
 
 		$tidy = new Tidy();
 		$tidy->parseString($html, Mage::getModuleDir('etc', 'Luigifab_Maillog').'/tidy.conf', 'utf8');
@@ -158,7 +163,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		], $html);
 	}
 
-	private function getColors() {
+	protected function getColors() {
 
 		$config = @unserialize(Mage::getStoreConfig('maillog/general/special_config'), ['allowed_classes' => ['Zend_Mime_Part']]);
 		if (!empty($config) && is_array($config)) {
@@ -187,106 +192,166 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		];
 	}
 
-	public function sendNow() {
+	public function isResetPassword() {
+
+		if (stripos($this->getData('mail_body'), '/customer/account/resetpassword/') !== false)
+			return true;
+
+		if (stripos($this->getData('mail_body'), '/admin/index/resetpassword/') !== false)
+			return true;
+
+		return false;
+	}
+
+	public function sendNow(bool $sendAndSave = false) {
 
 		$now = time();
-		if (empty($this->getId()))
+		if (!$sendAndSave && empty($this->getId()))
 			Mage::throwException('You must load an email before trying to send it.');
 
 		try {
 			$this->setData('status', 'sending');
 			$this->save();
 
-			$heads = $this->getData('mail_header');
-			$email = $this->getData('mail_recipients');
-			$allow = Mage::getStoreConfigFlag('maillog/general/send') ? Mage::helper('maillog')->canSend($email) : false;
+			$heads = str_replace(["\n", "\r\n\n"], ["\r\n", "\r\n"], $this->getData('mail_header'));
+			$recpt = $this->getData('mail_recipients');
+			$allow = Mage::getStoreConfigFlag('maillog/general/send') ? Mage::helper('maillog')->canSend($recpt) : false;
 
 			// modifie les entêtes
 			$heads .= "\r\n".'X-Maillog: '.$this->getData('uniqid');
+
 			$encoding = Mage::getStoreConfig('maillog/general/encoding');
 			if ($encoding != 'quoted-printable')
 				$heads = str_replace('Content-Transfer-Encoding: quoted-printable', 'Content-Transfer-Encoding: '.$encoding, $heads);
 
-			//$subject = $this->getData('encoded_mail_subject');
+			$subject = $this->getData('encoded_mail_subject');
 			//if ((mb_substr($subject, 0, 2) != '=?') || (mb_substr($subject, 0, 2) != '?=')) {
 			//	//if ($encoding == 'quoted-printable')
 			//		//$subject = '=?utf-8?Q?'.quoted_printable_encode($subject).'?=';
 			//	$subject = '=?utf-8?B?'.base64_encode($subject).'?=';
 			//}
 
-			// préparation des données
-			if (empty($this->getData('mail_parts'))) {
-				if ($encoding == 'quoted-printable')
-					$body = quoted_printable_encode($this->getData('mail_body'));
-				else if ($encoding == 'base64')
-					$body = rtrim(chunk_split(base64_encode($this->getData('mail_body'))));
-			}
-			else {
-				preg_match('#boundary="([^"]+)"#', $heads, $bound);
-				$bound = $bound[1];
+			// contenu de l'email
+			$content = $this->getData('mail_body');
+			$parts   = $this->getEmailParts();
 
-				$parts = $this->getEmailParts();
-				$body  = $this->getData('mail_body');
-				$type  = ((mb_stripos($body, '</p>') !== false) || (mb_stripos($body, '</td>') !== false) || (mb_stripos($body, '</div>') !== false)) ? 'text/html' : 'text/plain';
+			if (!empty($parts)) {
+
+				preg_match('#boundary="([^"]+)"#', $heads, $bound);
 
 				$body  = 'This is a message in Mime Format.  If you see this, your mail reader does not support this format.'."\r\n\r\n";
-				$body .= '--'.$bound."\r\n";
-				$body .= 'Content-Type: '.$type.'; charset=utf-8'."\r\n";
+				$body .= '--'.$bound[1]."\r\n";
+				$body .= 'Content-Type: '.(((mb_stripos($content, '</p>') !== false) || (mb_stripos($content, '</td>') !== false) || (mb_stripos($content, '</div>') !== false)) ? 'text/html' : 'text/plain').'; charset=utf-8'."\r\n";
 				$body .= 'Content-Transfer-Encoding: '.$encoding."\r\n";
 				$body .= 'Content-Disposition: inline'."\r\n\r\n";
 
-				if ($encoding == 'quoted-printable')
-					$body .= quoted_printable_encode($this->getData('mail_body'));
-				else if ($encoding == 'base64')
-					$body .= rtrim(chunk_split(base64_encode($this->getData('mail_body'))));
+				if ($encoding == 'base64')
+					$body .= rtrim(chunk_split(base64_encode($content)));
+				else //if ($encoding == 'quoted-printable')
+					$body .= quoted_printable_encode($content);
 
 				foreach ($parts as $part) {
 					$body .= "\r\n\r\n";
-					$body .= '--'.$bound."\r\n";
+					$body .= '--'.$bound[1]."\r\n";
 					$body .= 'Content-Type: '.$part->type."\r\n";
 					$body .= 'Content-Transfer-Encoding: '.$part->encoding."\r\n";
 					$body .= 'Content-Disposition: '.$part->disposition.'; filename="'.$part->filename.'"'."\r\n\r\n";
 					$body .= rtrim(chunk_split(str_replace("\n", '', $part->getContent())));
 				}
 
-				$body .= "\r\n\r\n".'--'.$bound."\r\n";
+				$body .= "\r\n\r\n".'--'.$bound[1]."\r\n";
+			}
+			else if ($encoding == 'base64') {
+				$body = rtrim(chunk_split(base64_encode($content)));
+			}
+			else { //if ($encoding == 'quoted-printable')
+				$body = quoted_printable_encode($content);
 			}
 
 			$this->setData('size',
 				mb_strlen($this->getData('encoded_mail_recipients')) + // utilise les destinataires originaux
-				mb_strlen($this->getData('encoded_mail_subject')) +    // utilise le sujet original
+				mb_strlen($subject) +                                  // utilise le sujet original
 				mb_strlen($body) +                                     // utilise la nouvelle version encodée du contenu
 				mb_strlen($heads) +                                    // utilise les entêtes originaux (où presque)
 				mb_strlen($this->getData('mail_parameters'))           // utilise les paramètres originaux
 			);
 
-			// action (sauf si l'email est vide)
-			$empty = empty($this->getData('mail_body')) || empty($this->getData('encoded_mail_subject'));
-			if ($empty || ($allow !== true) || Mage::getSingleton('maillog/source_bounce')->isBounce($email)) {
+			// action
+			if (empty($subject) || ($allow !== true) || empty($content) || Mage::getSingleton('maillog/source_bounce')->isBounce($recpt)) {
 				$this->setData('status', $allow ? 'bounce' : 'notsent');
 				$this->setData('duration', time() - $now);
 				$this->save();
 			}
 			else {
-				$result = mail(
-					$this->getData('encoded_mail_recipients'), // version originale
-					$this->getData('encoded_mail_subject'),    // version originale
-					$body,
-					$heads,                                    // version originale (où presque)
-					$this->getData('mail_parameters')          // version originale
-				);
+				// SMTP personnalisé avec CURL ou MAIL standard
+				if (Mage::getStoreConfigFlag('maillog/general/smtp_enabled')) {
+
+					$heads = 'To: '.$recpt."\r\n".$heads;
+
+					// recherche l'email de l'expéditeur et des destinataires
+					$from = $this->getData('mail_sender');
+					$from = trim(empty($pos = strpos($from, '<')) ? $from : substr($from, $pos + 1, -1));
+					$recpts = [];
+					foreach (explode(',', $recpt) as $info) {
+						$recpts[] = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
+					}
+
+					// une trouvaille fantastique
+					// https://gist.github.com/hdogan/8649cd9c25c75d0ab27e140d5eef5ce2
+					$fp = fopen('php://memory', 'rb+');
+					fwrite($fp, $heads."\r\n".'Subject: '.$subject."\r\n\r\n".$body);
+					rewind($fp);
+
+					$ch = curl_init();
+					curl_setopt($ch, CURLOPT_URL, Mage::getStoreConfig('maillog/general/smtp_url'));
+					if (!empty($user = Mage::getStoreConfig('maillog/general/smtp_username')))
+						curl_setopt($ch, CURLOPT_USERNAME, $user);
+					if (!empty($pass = Mage::getStoreConfig('maillog/general/smtp_password')))
+						curl_setopt($ch, CURLOPT_PASSWORD, Mage::helper('core')->decrypt($pass));
+					curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+					curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+					curl_setopt($ch, CURLOPT_TIMEOUT, 50);
+					curl_setopt($ch, CURLOPT_MAIL_FROM, $from);
+					curl_setopt($ch, CURLOPT_MAIL_RCPT, $recpts);
+					curl_setopt($ch, CURLOPT_UPLOAD, true);
+					curl_setopt($ch, CURLOPT_INFILE, $fp);
+					curl_setopt($ch, CURLOPT_READFUNCTION, static function ($ch, $fp, $length) { return fread($fp, $length); });
+
+					$result = curl_exec($ch);
+					$result = (($result === false) || (curl_errno($ch) !== 0)) ?
+						trim('CURL_ERROR '.curl_errno($ch).' '.curl_error($ch)) : (empty($result) ? true : $result);
+					curl_close($ch);
+					fclose($fp);
+
+					//$this->delete(); var_dump($result); exit;
+				}
+				else {
+					$result = mail(
+						$this->getData('encoded_mail_recipients'), // version originale
+						$subject,                                  // version originale
+						$body,
+						$heads,                                    // version originale (où presque)
+						$this->getData('mail_parameters')          // version originale
+					);
+				}
 
 				if (in_array($this->getData('sent_at'), ['', '0000-00-00 00:00:00', null]))
 					$this->setData('sent_at', date('Y-m-d H:i:s'));
+				if (!is_bool($result))
+					Mage::throwException($result);
 
 				$this->setData('status', ($result === true) ? 'sent' : 'error');
-				$this->setData('duration', time() - $now);
-				$this->save();
 			}
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
+			$this->setData('status', 'error');
 		}
+
+		$this->setData('duration', time() - $now);
+		$this->save();
 	}
 
 

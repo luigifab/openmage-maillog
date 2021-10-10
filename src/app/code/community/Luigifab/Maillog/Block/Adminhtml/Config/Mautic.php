@@ -1,7 +1,7 @@
 <?php
 /**
- * Created V/19/06/2015
- * Updated J/30/09/2021
+ * Created M/28/09/2021
+ * Updated V/08/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -20,15 +20,38 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Block_Adminhtml_Config_Email extends Mage_Adminhtml_Block_System_Config_Form_Field {
+class Luigifab_Maillog_Block_Adminhtml_Config_Mautic extends Mage_Adminhtml_Block_System_Config_Form_Field {
+
+	protected $_template = 'luigifab/maillog/mautic.phtml';
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
-		$element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
-		return parent::render($element);
-	}
 
-	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		$element->setValue(Mage::getResourceModel('maillog/email_collection')->getSize());
-		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), Zend_Locale_Format::toNumber($element->getValue()));
+		$config = @unserialize(Mage::getStoreConfig('maillog_sync/mautic/mautic_config'), ['allowed_classes' => false]);
+
+		if (empty($config) || !is_array($config)) {
+			$config = [
+				'5a' => 60,
+				'5b' => 20,
+				'5c' => 1000,
+				'4a' => 180,
+				'4b' => 20,
+				'4c' => 1000,
+				'3a' => 385,
+				'3b' => 8,
+				'3c' => 500,
+				'2a' => 730,
+				'2b' => 4,
+				'2c' => 150,
+				'1a' => 730,
+				'1b' => 1,
+				'1c' => 50,
+			];
+		}
+
+		$this->setHtmlId('row_'.$element->getHtmlId());
+		$this->setScopeLabel($element->getScopeLabel());
+		$this->setData('config', $config);
+
+		return $this->toHtml();
 	}
 }

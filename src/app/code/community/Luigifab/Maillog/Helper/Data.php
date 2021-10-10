@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/30/07/2021
+ * Updated V/08/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -42,7 +42,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		if (!is_object($system)) {
 			if (empty($klass))
 				$klass = (string) Mage::getConfig()->getNode('global/models/maillog/adaptators/'.$code);
-			$system = Mage::getSingleton($klass);
+			$system = empty($klass) ? new Varien_Object() : Mage::getSingleton($klass);
 			Mage::register('maillog_'.$code, $system);
 		}
 
@@ -210,7 +210,6 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		return true;
 	}
 
-
 	public function sendMail(object $zend, object $mail, $parts) {
 
 		$heads = $mail->getHeaders();
@@ -221,13 +220,17 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			->setData('mail_parameters', $zend->parameters)
 			->setData('encoded_mail_recipients', $zend->recipients)
 			->setData('encoded_mail_subject', $mail->getSubject())
-			->setMailSender(empty($heads['From'][0]) ? '' : $heads['From'][0])
+			->setMailSender(empty($heads['From'][0]) ? Mage::getStoreConfig('trans_email/ident_general/email') : $heads['From'][0])
 			->setMailRecipients($zend->recipients)
 			->setMailSubject($mail->getSubject())
-			->setMailContent($parts)
-			->save();
+			->setMailContent($parts);
 
 		//echo $email->setId(9999999)->toHtml(true); exit(0);
+		if ($email->isResetPassword())
+			$email->sendNow(true);
+		else
+			$email->save();
+
 		Mage::unregister('maillog_last_emailid');
 		Mage::register('maillog_last_emailid', $email->getId());
 	}
@@ -241,10 +244,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			$email = $object->getData('email');
 		if (empty($email))
 			$email = $object->getData('subscriber_email');
-		if (empty($email))
-			return;
 
-		if ((Mage::registry('maillog_no_sync') !== true) && (Mage::registry('maillog_sync_'.$email) !== true)) {
+		if (!empty($email) && (Mage::registry('maillog_no_sync') !== true) && (Mage::registry('maillog_sync_'.$email) !== true)) {
 
 			Mage::register('maillog_sync_'.$email, true, true);
 
@@ -343,13 +344,10 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 	}
 
 	public function demoHelper($param = null) {
-		return empty($param) ? 'this is demoHelper' : 'this is demoHelper with param='.$param;
+		return empty($param) ? 'This is Luigifab_Maillog_Helper_Data::demoHelper()' :
+			'This is Luigifab_Maillog_Helper_Data::demoHelper($param='.$param.')';
 	}
 
-
-	public function getLock() {
-		return Mage::getBaseDir('var').'/maillog.lock';
-	}
 
 	public function getImportStatus(string $key, $id = null) {
 
@@ -420,8 +418,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 			if (!empty($job->getId())) {
 				if ((time() - strtotime($job->getData('executed_at'))) > 3600) {
-					$job->setStatus('error');
-					$job->setMessages('Process killed?');
+					$job->setData('status', 'error');
+					$job->setData('messages', 'Process killed?');
 					$job->save();
 				}
 				else {
@@ -442,7 +440,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 	public function getCronStatus() {
 
 		$job = Mage::getResourceModel('cron/schedule_collection')
-			->addFieldToFilter('job_code', 'maillog_sendemails_syncdatas')
+			->addFieldToFilter('job_code', ['like' => 'maillog_cron%'])
 			->addFieldToFilter('status', 'success')
 			->setOrder('finished_at', 'desc')
 			->setPageSize(1)

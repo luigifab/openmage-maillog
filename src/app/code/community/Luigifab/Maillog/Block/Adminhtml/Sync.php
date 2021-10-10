@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/08/10/2020
+ * Updated S/02/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -32,11 +32,11 @@ class Luigifab_Maillog_Block_Adminhtml_Sync extends Mage_Adminhtml_Block_Widget_
 
 		$this->_removeButton('add');
 
-		$enabled = false;
-		$this->_addButton('syncall', [
-			'label'   => $this->__('Synchronize all customers'),
-			'onclick' => $enabled ? "maillog.confirm('".addslashes($this->__('Are you sure?'))."', '".addslashes($this->__('Be careful, all customers will be synchronized.'))."', '".$this->getUrl('*/*/syncall')."')" : '',
-			'class'   => $enabled ? 'add' : 'add disabled'
+		$allowed = Mage::getSingleton('admin/session')->isAllowed('system/config');
+		$this->_addButton('config', [
+			'label'   => $this->__('Configuration'),
+			'onclick' => $allowed ? "setLocation('".$this->getUrl('*/system_config/edit', ['section' => 'maillog_sync'])."');" : '',
+			'class'   => $allowed ? 'go' : 'go disabled'
 		]);
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/18/06/2021
+ * Updated S/02/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -65,17 +65,6 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 			$this->getResponse()->setBody($this->getLayout()->createBlock('maillog/adminhtml_history_grid')->toHtml());
 		else
 			$this->loadLayout()->renderLayout();
-	}
-
-	public function testAction() {
-
-		if (Mage::getStoreConfigFlag('maillog/email/enabled')) {
-			Mage::getSingleton('maillog/observer')->sendEmailReport();
-			$this->_redirect('*/*/view', ['id' => Mage::registry('maillog_last_emailid')]);
-		}
-		else {
-			$this->_redirect('*/*/index');
-		}
 	}
 
 	public function viewAction() {

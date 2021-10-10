@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated S/20/03/2021
+ * Updated J/30/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -24,20 +24,18 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
-		$customerAttributes = Mage::getModel('customer/entity_attribute_collection');
-		$addressAttributes  = Mage::getModel('customer/entity_address_attribute_collection');
-
 		$code = (array) explode('_', $element->getHtmlId()); // (yes)
 		$code = $code[2];
 
 		$options = ['customerid' => [], 'system' => [], 'core' => []];
 		$system  = $this->helper('maillog')->getSystem($code);
-		$values  = '|'.implode('|', $system->getMapping()).'|';
+		$values  = $system->getMapping();
 		$fields  = $system->getFields();
 
-		$search  = [
+		$search = [
 			'A) System',
 			'<textarea',
+			'class=" textarea"',
 			' selected="selected"',
 			'<select',
 			'>selected:',
@@ -48,18 +46,19 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		$replace = [
 			'A) '.ucfirst($code),
-			'<textarea lang="mul" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="maillog.mark();"',
+			'<textarea lang="mul" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="maillog.mark(\''.$code.'\');"',
+			'class="textarea maillogsync"',
 			'',
 			'<select lang="mul"',
 			'selected="selected" class="has">',
 			'class="has">',
 			'disabled="disabled">',
-			'class="select maillog"'
+			'class="select maillogsync"'
 		];
 
 		// pour le champ id client
 		// avec un petit hack pour ne pas perdre la configuration lorsque le système est HS
-		if (mb_stripos($element->getHtmlId(), 'mapping_customerid_field') !== false) {
+		if (stripos($element->getHtmlId(), 'mapping_customerid_field') !== false) {
 
 			$options['customerid'][] = ['value' => '', 'label' => '--'];
 
@@ -81,14 +80,14 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		// pour le champ a) système
 		// liste vide lorsque le système est HS
-		if (mb_stripos($element->getHtmlId(), 'mapping_system') !== false) {
+		if (stripos($element->getHtmlId(), 'mapping_system') !== false) {
 
 			$options['system'][] = ['value' => '', 'label' => '--'];
 
 			foreach ($fields as $field) {
 				if (!empty($field['readonly']))
 					$options['system'][] = ['value' => $field['id'], 'label' => $this->getOptionLabel($field, 'disabled:')];
-				else if (mb_stripos($values, '|'.$field['id'].':') !== false)
+				else if (array_key_exists($field['id'], $values))
 					$options['system'][] = ['value' => $field['id'], 'label' => $this->getOptionLabel($field, 'has:')];
 				else
 					$options['system'][] = ['value' => $field['id'], 'label' => $this->getOptionLabel($field)];
@@ -105,14 +104,18 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		// pour le champ b) openmage
 		// liste jamais vide puisque ce sont les attributs clients
-		if (mb_stripos($element->getHtmlId(), 'mapping_openmage') !== false) {
+		if (stripos($element->getHtmlId(), 'mapping_openmage') !== false) {
 
 			$options['core'][] = ['value' => '', 'label' => '--'];
 			$options['core'][] = ['value' => 'entity_id'];
 
+			$customerAttributes = Mage::getModel('customer/entity_attribute_collection')->setOrder('attribute_code', 'asc');
+			$addressAttributes  = Mage::getModel('customer/entity_address_attribute_collection')->setOrder('attribute_code', 'asc');
+
 			foreach ($customerAttributes as $attribute) {
 				$options['core'][] = ['value' => $attribute->getData('attribute_code')];
 			}
+
 			foreach ($addressAttributes as $attribute) {
 				$options['core'][] = ['value' => 'address_billing_'.$attribute->getData('attribute_code')];
 				if ($attribute->getData('attribute_code') == 'street') {
@@ -122,6 +125,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 					$options['core'][] = ['value' => 'address_billing_street_4'];
 				}
 			}
+
 			foreach ($addressAttributes as $attribute) {
 				$options['core'][] = ['value' => 'address_shipping_'.$attribute->getData('attribute_code')];
 				if ($attribute->getData('attribute_code') == 'street') {
@@ -135,25 +139,55 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$options['core'][] = ['value' => 'group_name'];
 			$options['core'][] = ['value' => 'last_sync_date'];
 			$options['core'][] = ['value' => 'last_login_date'];
+			$options['core'][] = ['value' => 'first_order_id'];
+			$options['core'][] = ['value' => 'first_order_incrementid'];
 			$options['core'][] = ['value' => 'first_order_date'];
 			$options['core'][] = ['value' => 'first_order_total'];
 			$options['core'][] = ['value' => 'first_order_total_notax'];
+			$options['core'][] = ['value' => 'first_order_names_list'];
+			$options['core'][] = ['value' => 'first_order_skus_list'];
+			$options['core'][] = ['value' => 'first_order_skus_number'];
+			$options['core'][] = ['value' => 'last_order_id'];
+			$options['core'][] = ['value' => 'last_order_incrementid'];
 			$options['core'][] = ['value' => 'last_order_date'];
 			$options['core'][] = ['value' => 'last_order_total'];
 			$options['core'][] = ['value' => 'last_order_total_notax'];
+			$options['core'][] = ['value' => 'last_order_names_list'];
+			$options['core'][] = ['value' => 'last_order_skus_list'];
+			$options['core'][] = ['value' => 'last_order_skus_number'];
+
+			foreach (range(1, 5) as $idx) {
+				$options['core'][] = ['value' => 'last_order_product_'.$idx.'_sku'];
+				$options['core'][] = ['value' => 'last_order_product_'.$idx.'_name'];
+				$options['core'][] = ['value' => 'last_order_product_'.$idx.'_price'];
+				$options['core'][] = ['value' => 'last_order_product_'.$idx.'_rating'];
+				$options['core'][] = ['value' => 'last_order_product_'.$idx.'_image'];
+				$options['core'][] = ['value' => 'last_order_product_'.$idx.'_url'];
+			}
+
+			$options['core'][] = ['value' => 'average_days_between_orders'];
 			$options['core'][] = ['value' => 'average_order_amount'];
 			$options['core'][] = ['value' => 'average_order_amount_notax'];
 			$options['core'][] = ['value' => 'total_order_amount'];
 			$options['core'][] = ['value' => 'total_order_amount_notax'];
+			$options['core'][] = ['value' => 'all_ordered_skus'];
+			$options['core'][] = ['value' => 'all_ordered_names'];
+			$options['core'][] = ['value' => 'number_of_products_ordered'];
 			$options['core'][] = ['value' => 'number_of_orders'];
 			$options['core'][] = ['value' => 'subscriber_status'];
 
+			if ($code == 'mautic') {
+				$options['core'][] = ['value' => 'rating_order_monetary'];
+				$options['core'][] = ['value' => 'rating_order_frequency'];
+				$options['core'][] = ['value' => 'rating_order_recency'];
+			}
+
 			foreach ($options['core'] as $i => $option) {
 				if (!empty($option['value'])) {
-					if ((mb_stripos($values, ':'.$option['value'].'|') !== false) || (mb_stripos($values, ':'.$option['value'].':') !== false))
+					if ($this->inArray($option['value'], $values))
 						$options['core'][$i]['label'] = $this->getOptionLabel(['id' => $option['value']], 'has:');
 					else
-						$options['core'][$i]['label'] = $option['value'];
+						$options['core'][$i]['label'] = $this->getOptionLabel(['id' => $option['value']]);
 				}
 			}
 
@@ -169,7 +203,16 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 		return str_replace($search, $replace, parent::render($element));
 	}
 
-	private function getOptionLabel(array $field, $prefix = '') {
+	protected function inArray($needle, array $haystack, bool $strict = false) {
+		// https://stackoverflow.com/a/4128377/2980105
+		foreach ($haystack as $item) {
+			if (($strict ? ($item === $needle) : ($item == $needle)) || (is_array($item) && $this->inArray($needle, $item, $strict)))
+				return true;
+		}
+		return false;
+	}
+
+	protected function getOptionLabel(array $field, $prefix = '') {
 		return empty($field['name']) ? $prefix.$field['id'] : $prefix.$field['name'].' ('.$field['id'].')';
 	}
 }

@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Created D/23/09/2018
-# Updated S/14/09/2019
+# Updated M/05/10/2021
 #
 # Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
 # Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -24,26 +24,31 @@ SCRIPT=maillog.php
 LOGFILE=maillog.log
 LOGDIR="var/log/"
 PHPBIN=`which php`
+
 DEV=""
 ONLYSYNC=""
 ONLYEMAIL=""
+MULTI=""
 
 if [ ! -d "$BASEDIR$LOGDIR" ] ; then
 	mkdir -p "$BASEDIR$LOGDIR"
 fi
 
-if ! ps auxwww | grep "$BASEDIR$SCRIPT" | grep -v grep 1>/dev/null 2>/dev/null ; then
-	for ARG in $*
-	do
-		if [[ $ARG == "--dev" ]] ; then
-			DEV="--dev"
-		elif [[ $ARG == "--only-sync" ]] ; then
-			ONLYSYNC="--only-sync"
-		elif [[ $ARG == "--only-email" ]] ; then
-			ONLYEMAIL="--only-email"
-		else
-			echo "unknown argument: $ARG" >> $BASEDIR$LOGDIR$LOGFILE
-		fi
-	done
-	$PHPBIN $BASEDIR$SCRIPT $DEV $ONLYSYNC $ONLYEMAIL >> $BASEDIR$LOGDIR$LOGFILE 2>&1 &
+for ARG in $*
+do
+	if [[ $ARG == "--dev" ]] ; then
+		DEV=" --dev"
+	elif [[ $ARG == "--only-sync" ]] ; then
+		ONLYSYNC=" --only-sync"
+	elif [[ $ARG == "--only-email" ]] ; then
+		ONLYEMAIL=" --only-email"
+	elif [[ $ARG == "--multi" ]] ; then
+		MULTI=" --multi"
+	else
+		echo "unknown argument: $ARG" >> $BASEDIR$LOGDIR$LOGFILE
+	fi
+done
+
+if ! ps auxwww | grep "$BASEDIR$SCRIPT$DEV$ONLYSYNC$ONLYEMAIL" | grep -v grep 1>/dev/null 2>/dev/null ; then
+	$PHPBIN $BASEDIR$SCRIPT$DEV$ONLYSYNC$ONLYEMAIL$MULTI >> $BASEDIR$LOGDIR$LOGFILE 2>&1 &
 fi

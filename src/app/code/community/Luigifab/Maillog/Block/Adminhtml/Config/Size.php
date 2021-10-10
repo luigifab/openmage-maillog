@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/19/06/2015
- * Updated J/22/07/2021
+ * Updated M/28/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -31,7 +31,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Size extends Mage_Adminhtml_Block_
 
 		$database = Mage::getSingleton('core/resource');
 		$read = $database->getConnection('core_read');
-		$name = (mb_stripos($element->getHtmlId(), 'sync') === false) ? 'maillog/email' : 'maillog/sync';
+		$name = (stripos($element->getHtmlId(), 'sync') === false) ? 'maillog/email' : 'maillog/sync';
 
 		$select = $read->select()
 			->from('information_schema.TABLES', '(data_length + index_length) AS size_bytes')

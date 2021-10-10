@@ -1,6 +1,6 @@
 <?php
 /**
- * Created V/19/06/2015
+ * Created M/21/01/2020
  * Updated J/30/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
@@ -20,15 +20,29 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Block_Adminhtml_Config_Email extends Mage_Adminhtml_Block_System_Config_Form_Field {
+abstract class Luigifab_Maillog_Model_System implements Luigifab_Maillog_Model_Interface {
 
-	public function render(Varien_Data_Form_Element_Abstract $element) {
-		$element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
-		return parent::render($element);
+	protected $_fields = [];
+
+	public function getMapping() {
+
+		$values = [];
+		$lines  = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/'.$this->_code.'/mapping_config')));
+
+		foreach ($lines as $line) {
+			if ((strpos($line, ':') !== false) && (strlen($line) > 3) && ($line[0] != '#')) {
+				$line = array_map('trim', explode(':', $line));
+				$code = trim(array_shift($line));
+				$values[$code] = $line;
+			}
+		}
+
+		return $values;
 	}
 
-	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		$element->setValue(Mage::getResourceModel('maillog/email_collection')->getSize());
-		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), Zend_Locale_Format::toNumber($element->getValue()));
+	public function checkResponse($data) {
+
+		return (mb_stripos($data, 'HTTP/1.0 2') === 0) || (mb_stripos($data, 'HTTP/1.1 2') === 0) ||
+			(mb_stripos($data, 'HTTP/2 2') === 0) || (mb_stripos($data, 'HTTP/3 2') === 0);
 	}
 }

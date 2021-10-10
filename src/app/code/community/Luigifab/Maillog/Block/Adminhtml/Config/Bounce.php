@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/14/11/2015
- * Updated M/20/08/2019
+ * Updated J/30/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -30,6 +30,6 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Bounce extends Mage_Adminhtml_Bloc
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
 		$ids = ['in' => Mage::getSingleton('maillog/source_bounce')->getBounceIds()];
 		$element->setValue(Mage::getResourceModel('customer/customer_collection')->addAttributeToFilter('is_bounce', $ids)->getSize());
-		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $element->getValue());
+		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), Zend_Locale_Format::toNumber($element->getValue()));
 	}
 }

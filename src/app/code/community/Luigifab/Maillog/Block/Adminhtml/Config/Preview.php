@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated L/26/04/2021
+ * Updated S/18/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -28,11 +28,15 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 		$codes = [];
 		$nodes = Mage::getModel('core/config')->loadBase()->loadModules()->loadDb();
 		$nodes = $nodes->getXpath('/config/global/template/email/*');
+		$text  = stripos($element->getHtmlId(), '_html') === false;
 
 		foreach ($nodes as $node) {
-			$code = $node->getName();
-			if (!in_array($code, ['design_email_header', 'design_email_footer', 'checkout_payment_failed_template']))
-				$codes[$code] = [(string) $node->label, (string) $node->file];
+			$type = strtolower((string) $node->type);
+			if ((!$text && ($type == 'html')) || ($text && ($type == 'text'))) {
+				$code = $node->getName();
+				if (!in_array($code, ['design_email_header', 'design_email_footer', 'checkout_payment_failed_template']))
+					$codes[$code] = [(string) $node->label, (string) $node->file];
+			}
 		}
 
 		ksort($codes);

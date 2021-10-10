@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated V/21/05/2021
+ * Updated M/28/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -29,7 +29,7 @@ class Luigifab_Maillog_Maillog_PreviewController extends Mage_Adminhtml_Controll
 	public function indexAction() {
 
 		$store  = (int) $this->getRequest()->getParam('store', 0);
-		$locale = Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $store);
+		$locale = Mage::getStoreConfig('general/locale/code', $store);
 
 		Mage::getSingleton('core/app_emulation')->startEnvironmentEmulation($store);
 		Mage::getDesign()->setTheme(Mage::getStoreConfig('design/theme/default', $store));

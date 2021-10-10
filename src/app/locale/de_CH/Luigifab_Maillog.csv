@@ -4,6 +4,7 @@
 "Send emails","E-Mails versenden"
 "Emails encoding","E-Mails Encoding"
 "Minify <abbr title=""HyperText Markup Language"">HTML</abbr> code","Kode verkleinern <abbr title=""Hypertext-Auszeichnungssprache (HyperText Markup Language)"">HTML</abbr>"
+"Username","Benutzername"
 "Number of emails per page","E-Mails pro Seite"
 "Show the subject column","Die Betreffspalte anzeigen"
 "Show the size column","Die Grössenspalte anzeigen"
@@ -31,7 +32,6 @@
 <li>bei der Rechnungstellung einer Bestellung.</li>
 </ul>"
 "History lifetime","Lebensdauer des History Speichers"
-"Username","Benutzername"
 "Correspondence of attributes","Übereinstimmung der Attribute"
 "Customer Id field","Kunden-ID-Feld"
 "In case of a change of email address, the customer identification in the system will be done with the customer id.","Bei E-Mail-Adresseänderung Kundenidentifikation auf dem System mit den Kunden-ID erfolgen."

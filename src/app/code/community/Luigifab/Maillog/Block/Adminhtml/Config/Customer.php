@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/14/11/2015
- * Updated S/25/08/2018
+ * Updated J/30/09/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -29,6 +29,6 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Customer extends Mage_Adminhtml_Bl
 
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
 		$element->setValue(Mage::getResourceModel('customer/customer_collection')->getSize());
-		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $element->getValue());
+		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), Zend_Locale_Format::toNumber($element->getValue()));
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/18/06/2021
+ * Updated S/02/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -100,7 +100,7 @@ try {
 
 	$this->removeAttribute('customer', 'is_bounce');
 	$this->addAttribute('customer', 'is_bounce', [
-		'label'    => 'Invalid email (hard bounce)', //$this->__('Invalid email (hard bounce)') pour le translate.php
+		'label'    => 'Invalid email (hard bounce)', //$this->__('Invalid email (hard bounce)') translate.php
 		'type'     => 'int',
 		'input'    => 'select',
 		'source'   => 'maillog/source_bounce',

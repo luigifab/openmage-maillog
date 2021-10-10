@@ -1,6 +1,6 @@
 /**
  * Created D/22/03/2015
- * Updated V/18/06/2021
+ * Updated M/05/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -54,8 +54,8 @@ body.adminhtml-maillog-history-view div.content iframe {
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/sync/index &&& */
 body.adminhtml-maillog-sync-index table.data div.details {
-	margin-top:-1px; column-count:3; -moz-column-count:3; -webkit-column-count:3;
-	font-size:10px; line-height:13px;
+	margin-top:-1px; column-count:2; -moz-column-count:2; -webkit-column-count:2;
+	font-size:10px; line-height:13px; word-wrap:anywhere;
 }
 
 body.adminhtml-maillog-sync-index table.data div.details:last-child { margin-bottom:5px; }
@@ -74,7 +74,13 @@ div.comment.maillog li:before { content:"➤\0000A0"; }
 div.comment.maillog a { margin:0; }
 div.comment.maillog + table { clear:both; }
 
-select.maillog option.has { font-weight:700; }
+select.maillogsync option.has { font-weight:700; }
+textarea.maillogsync { margin-left:-206px; width:480px !important; }
+
+.mauticrating th { padding:2px; font-weight:400; vertical-align:middle; text-align:center; white-space:nowrap; }
+.mauticrating td { padding:2px 5px; vertical-align:middle; text-align:right; white-space:nowrap; }
+.mauticrating label { display:inline-block !important; width:auto !important; padding-right:0 !important; }
+.mauticrating input { width:70px; }
 
 .maillogexamples { display:block; margin:1.5em 0; padding-left:6px; font-size:0.9em; line-height:1.4em; border-left:3px solid #AAA; }
 .maillogexamples pre > span { display:block; column-count:3; -moz-column-count:3; -webkit-column-count:3; }

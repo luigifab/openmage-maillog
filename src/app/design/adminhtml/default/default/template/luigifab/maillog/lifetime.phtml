@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated V/12/02/2021
+ * Updated V/08/10/2021
  *
  * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -21,8 +21,8 @@
  */
 
 $help   = $this->helper('maillog');
-$config = $this->getConfig();
-$types  = $this->getTypes();
+$config = $this->getData('config');
+$types  = $this->getData('types');
 
 $titleFirst   = $help->escapeEntities($this->__('Emails content and attachments'), true);
 $titleSecond  = $help->escapeEntities($this->__('All emails data'), true);
@@ -49,8 +49,8 @@ $ttColor = $model->getDefaultTxtColor();
 				<li>
 					<span>
 						<?php echo in_array($type, ['without', 'all']) ? $this->__('<b>'.$type.'</b>') : $type ?>
-						<?php //echo $this->__('<b>without</b>') pour le translate.php ?>
-						<?php //echo $this->__('<b>all</b>')     pour le translate.php ?>
+						<?php //$this->__('<b>without</b>') translate.php ?>
+						<?php //$this->__('<b>all</b>')     translate.php ?>
 					</span>
 
 					<?php $key = str_replace(' ', '_', $type).'_data' ?>
@@ -109,10 +109,10 @@ $ttColor = $model->getDefaultTxtColor();
 
 					<?php $key = str_replace(' ', '_', $type) ?>
 					<input type="color" name="groups[general][fields][special_config][value][<?php echo $key ?>_back_color]"
-						value="<?php echo mb_strtolower(empty($config[$key.'_back_color']) ? $bgColor : $config[$key.'_back_color']) ?>"
+						value="<?php echo strtolower(empty($config[$key.'_back_color']) ? $bgColor : $config[$key.'_back_color']) ?>"
 						title="<?php echo $titleBgColor ?>" />
 					<input type="color" name="groups[general][fields][special_config][value][<?php echo $key ?>_text_color]"
-						value="<?php echo mb_strtolower(empty($config[$key.'_text_color']) ? $ttColor : $config[$key.'_text_color']) ?>"
+						value="<?php echo strtolower(empty($config[$key.'_text_color']) ? $ttColor : $config[$key.'_text_color']) ?>"
 						title="<?php echo $titleTtColor ?>" />
 
 					<button type="button" class="slink" onclick="maillog.resetLifetime(this, '<?php echo $bgColor ?>');">
