@@ -1,5 +1,4 @@
 "Transactional emails","Ügyleti emailek"
-"Username","Felhasználónév"
 "File format","Fájlformátum"
 "INCOMPLETE MODULE INSTALLATION","SIKERTELEN MODUL TELEPÍTÉS"
 "There is conflict (<em>%s</em>).","Probléma merült fel (<em>%s</em>)."
@@ -22,6 +21,7 @@
 "Transactional emails - %s","Ügyleti emailek - %s"
 "Background color","Háttérszín"
 "Text color","Szövegszín"
+"%d month","%d hónap"
 " %d months","%d hónap"
 "%d months","%d hónap"
 " %d years","%d év"

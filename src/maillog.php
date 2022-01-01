@@ -1,12 +1,12 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated M/05/10/2021
+ * Updated J/25/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -61,7 +61,7 @@ $stop = Mage::getBaseDir('var').'/maillog.stop';
 
 
 if ($isDev) {
-	Mage::log('dev:'.($isDev ? 'true' : 'false').
+	Mage::log('dev:true'.
 		' email:'.($isEmail ? 'true' : 'false').
 		' sync:'.($isSync ? 'true' : 'false').
 		' multi:'.($isMulti ? 'true' : 'false').
@@ -97,12 +97,12 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 	// passe en single thread si nécessaire
 	if ($isFull) {
 
-		$runNumbSyncs = ceil(Mage::getResourceModel('customer/customer_collection')->getSize() / 5000);
-		if ($runNumbSyncs > 1) {
-
-			while ($runNumbSyncs > 0) {
-				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --all-customers'.($isDev ? ' --dev ' : ' ').$runNumbSyncs;
-				$runNumbSyncs--;
+		// syncs
+		$nbRunOfSyncs = ceil(Mage::getResourceModel('customer/customer_collection')->getSize() / 5000);
+		if ($nbRunOfSyncs > 1) {
+			while ($nbRunOfSyncs > 0) {
+				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --all-customers'.($isDev ? ' --dev ' : ' ').$nbRunOfSyncs;
+				$nbRunOfSyncs--;
 			}
 		}
 
@@ -110,30 +110,32 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 		$isSync  = false;
 	}
 	else {
-		$runNumbEmails = $isEmail ? ceil(Mage::getResourceModel('maillog/email_collection')
+		// emails
+		$nbRunOfEmails = $isEmail ? ceil(Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('status', 'pending')
 			->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 SECOND)')])
 			->getSize() / 500) : 0;
 
-		$runNumbSyncs = $isSync ? ceil(Mage::getResourceModel('maillog/sync_collection')
+		if ($nbRunOfEmails > 1) {
+			while ($nbRunOfEmails > 0) {
+				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-email'.($isDev ? ' --dev ' : ' ').$nbRunOfEmails;
+				$nbRunOfEmails--;
+			}
+			$isEmail = false;
+		}
+
+		// syncs
+		$nbRunOfSyncs = $isSync ? ceil(Mage::getResourceModel('maillog/sync_collection')
 			->addFieldToFilter('status', 'pending')
 			->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 20 SECOND)')])
 			->getSize() / 500) : 0;
 
-		// prépare les commmandes
-		if (($runNumbEmails > 1) || ($runNumbSyncs > 1)) {
-
-			while ($runNumbEmails > 0) {
-				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-email'.($isDev ? ' --dev ' : ' ').$runNumbEmails;
-				$runNumbEmails--;
+		if ($nbRunOfSyncs > 1) {
+			while ($nbRunOfSyncs > 0) {
+				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-sync'.($isDev ? ' --dev ' : ' ').$nbRunOfSyncs;
+				$nbRunOfSyncs--;
 			}
-			while ($runNumbSyncs > 0) {
-				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-sync'.($isDev ? ' --dev ' : ' ').$runNumbSyncs;
-				$runNumbSyncs--;
-			}
-
-			$isEmail = false;
-			$isSync  = false;
+			$isSync = false;
 		}
 	}
 
@@ -147,6 +149,7 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 				break;
 
 			$pids[] = exec($cmd = array_shift($cmds).' >/dev/null 2>&1 & echo $!');
+			//echo $cmd,"\n";
 			while (count($pids) >= $core) {
 				sleep(10);
 				foreach ($pids as $key => $pid) {
@@ -180,14 +183,14 @@ if (!$isMulti && !$isFull && $isEmail) {
 	if (Mage::getIsDeveloperMode())
 		Mage::log('run email ('.(($runNumb > 0) ? 'multi threads, nb#'.$runNumb : 'single thread').')', Zend_Log::INFO, 'maillog.log');
 
-	$job = Mage::getModel('cron/schedule');
-	$job->setData('job_code', ($runNumb > 0) ? 'maillog_cron_email_'.$runNumb : 'maillog_cron_email');
-	$job->setData('created_at', date('Y-m-d H:i:s'));
-	$job->setData('scheduled_at', date('Y-m-d H:i:s'));
-	$job->setData('executed_at', date('Y-m-d H:i:s'));
-	$job->setData('status', 'running');
+	$cron = Mage::getModel('cron/schedule');
+	$cron->setData('job_code', ($runNumb > 0) ? 'maillog_cron_email_'.$runNumb : 'maillog_cron_email');
+	$cron->setData('created_at', date('Y-m-d H:i:s'));
+	$cron->setData('scheduled_at', date('Y-m-d H:i:s'));
+	$cron->setData('executed_at', date('Y-m-d H:i:s'));
+	$cron->setData('status', 'running');
 
-	$results = sendEmails($job, $runNumb);
+	$results = sendEmails($cron, $runNumb);
 
 	if (is_file($stop)) {
 		$msg = ($runNumb > 0) ? 'Interrupted by '.$stop.' file (thread nb#'.$runNumb.').' : 'Interrupted by '.$stop.' file.';
@@ -196,7 +199,7 @@ if (!$isMulti && !$isFull && $isEmail) {
 			Mage::log($msg, Zend_Log::INFO, 'maillog.log');
 	}
 
-	saveCron($job, $results, true);
+	saveCron($cron, $results, true);
 }
 
 if (!$isMulti && !$isFull && $isSync) {
@@ -204,14 +207,14 @@ if (!$isMulti && !$isFull && $isSync) {
 	if (Mage::getIsDeveloperMode())
 		Mage::log('run sync ('.(($runNumb > 0) ? 'multi threads, nb#'.$runNumb : 'single thread').')', Zend_Log::INFO, 'maillog.log');
 
-	$job = Mage::getModel('cron/schedule');
-	$job->setData('job_code', ($runNumb > 0) ? 'maillog_cron_sync_'.$runNumb : 'maillog_cron_sync');
-	$job->setData('created_at', date('Y-m-d H:i:s'));
-	$job->setData('scheduled_at', date('Y-m-d H:i:s'));
-	$job->setData('executed_at', date('Y-m-d H:i:s'));
-	$job->setData('status', 'running');
+	$cron = Mage::getModel('cron/schedule');
+	$cron->setData('job_code', ($runNumb > 0) ? 'maillog_cron_sync_'.$runNumb : 'maillog_cron_sync');
+	$cron->setData('created_at', date('Y-m-d H:i:s'));
+	$cron->setData('scheduled_at', date('Y-m-d H:i:s'));
+	$cron->setData('executed_at', date('Y-m-d H:i:s'));
+	$cron->setData('status', 'running');
 
-	$results = sendSyncs($job, $runNumb);
+	$results = sendSyncs($cron, $runNumb);
 
 	if (is_file($stop)) {
 		$msg = ($runNumb > 0) ? 'Interrupted by '.$stop.' file (thread nb#'.$runNumb.').' : 'Interrupted by '.$stop.' file.';
@@ -220,7 +223,7 @@ if (!$isMulti && !$isFull && $isSync) {
 			Mage::log($msg, Zend_Log::INFO, 'maillog.log');
 	}
 
-	saveCron($job, $results, true);
+	saveCron($cron, $results, true);
 }
 
 if (!$isMulti && $isFull) {
@@ -230,14 +233,14 @@ if (!$isMulti && $isFull) {
 
 	ini_set('memory_limit', '1G');
 
-	$job = Mage::getModel('cron/schedule');
-	$job->setData('job_code', ($runNumb > 0) ? 'maillog_cron_fullsync_'.$runNumb : 'maillog_cron_fullsync');
-	$job->setData('created_at', date('Y-m-d H:i:s'));
-	$job->setData('scheduled_at', date('Y-m-d H:i:s'));
-	$job->setData('executed_at', date('Y-m-d H:i:s'));
-	$job->setData('status', 'running');
+	$cron = Mage::getModel('cron/schedule');
+	$cron->setData('job_code', ($runNumb > 0) ? 'maillog_cron_fullsync_'.$runNumb : 'maillog_cron_fullsync');
+	$cron->setData('created_at', date('Y-m-d H:i:s'));
+	$cron->setData('scheduled_at', date('Y-m-d H:i:s'));
+	$cron->setData('executed_at', date('Y-m-d H:i:s'));
+	$cron->setData('status', 'running');
 
-	$results = fullSync($job, $runNumb);
+	$results = fullSync($cron, $runNumb);
 
 	if (is_file($stop)) {
 		$msg = ($runNumb > 0) ? 'Interrupted by '.$stop.' file (thread nb#'.$runNumb.').' : 'Interrupted by '.$stop.' file.';
@@ -246,18 +249,17 @@ if (!$isMulti && $isFull) {
 			Mage::log($msg, Zend_Log::INFO, 'maillog.log');
 	}
 
-	saveCron($job, $results, true);
+	saveCron($cron, $results, true, true);
 }
 
 
 // action
-function sendEmails(object $job, int $page) {
+function sendEmails(object $cron, int $page) {
 
 	$results = ['success' => [], 'error' => []];
-
-	$count  = 0;
-	$stop   = Mage::getBaseDir('var').'/maillog.stop';
-	$emails = Mage::getResourceModel('maillog/email_collection')
+	$count   = 0;
+	$stop    = Mage::getBaseDir('var').'/maillog.stop';
+	$emails  = Mage::getResourceModel('maillog/email_collection')
 		->addFieldToFilter('status', 'pending')
 		->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 SECOND)')])
 		->setOrder('email_id', 'asc');
@@ -281,24 +283,21 @@ function sendEmails(object $job, int $page) {
 				Mage::logException($t);
 		}
 
-		if ((++$count % 100) == 0) {
-			saveCron($job, $results, false);
-		}
-		else if ($count == 1) {
-			$job->save();
-		}
+		if ((++$count % 100) == 0)
+			saveCron($cron, $results, false);
+		else if ($count == 1)
+			$cron->save();
 	}
 
 	return $results;
 }
 
-function sendSyncs(object $job, int $page) {
+function sendSyncs(object $cron, int $page) {
 
 	$results = ['success' => [], 'error' => []];
-
-	$count = 0;
-	$stop  = Mage::getBaseDir('var').'/maillog.stop';
-	$syncs = Mage::getResourceModel('maillog/sync_collection')
+	$count   = 0;
+	$stop    = Mage::getBaseDir('var').'/maillog.stop';
+	$syncs   = Mage::getResourceModel('maillog/sync_collection')
 		->addFieldToFilter('status', 'pending')
 		->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 20 SECOND)')])
 		->setOrder('created_at', 'asc');
@@ -330,29 +329,28 @@ function sendSyncs(object $job, int $page) {
 				Mage::logException($t);
 		}
 
-		if ((++$count % 100) == 0) {
-			saveCron($job, $results, false);
-		}
-		else if ($count == 1) {
-			$job->save();
-		}
+		if ((++$count % 100) == 0)
+			saveCron($cron, $results, false);
+		else if ($count == 1)
+			$cron->save();
 	}
 
 	return $results;
 }
 
-function fullSync(object $job, int $page) {
+function fullSync(object $cron, int $page) {
 
-	$results  = ['success' => [], 'error' => []];
-	$systems  = array_keys(Mage::helper('maillog')->getSystems());
-	$customer = Mage::getModel('customer/customer');
+	Mage::register('maillog_full_sync', true, true);
 
-	$attributes = [];
+	$systems    = array_keys(Mage::helper('maillog')->getSystem());
+	$customer   = Mage::getModel('customer/customer');
+	$attributes = ['default_shipping', 'default_billing'];
 	foreach ($systems as $system)
 		$attributes = array_merge($attributes, Mage::helper('maillog')->getSystem($system)->mapFields($customer, 'customer', true));
 
-	$count = 0;
-	$stop  = Mage::getBaseDir('var').'/maillog.stop';
+	$results   = ['success' => [], 'error' => []];
+	$count     = 0;
+	$stop      = Mage::getBaseDir('var').'/maillog.stop';
 	$customers = Mage::getResourceModel('customer/customer_collection')
 		->addAttributeToSelect($attributes)
 		->setOrder('entity_id', 'asc');
@@ -370,7 +368,7 @@ function fullSync(object $job, int $page) {
 			try {
 				$sync = Mage::getModel('maillog/sync');
 				$sync->setData('created_at', date('Y-m-d H:i:s'));
-				$sync->setData('action', 'update:customer:'.$customer->getId().'::');
+				$sync->setData('action', 'update:customer:'.$customer->getId().'::'.$customer->getData('email'));
 				$sync->setData('model', $system);
 				$sync->setData('user', 'allsync');
 				$sync->setData('status', 'running');
@@ -387,31 +385,38 @@ function fullSync(object $job, int $page) {
 			}
 		}
 
-		if ((++$count % 100) == 0) {
-			saveCron($job, $results, false);
-		}
-		else if ($count == 1) {
-			$job->save();
-		}
+		if ((++$count % 100) == 0)
+			saveCron($cron, $results, false);
+		else if ($count == 1)
+			$cron->save();
 	}
 
 	return $results;
 }
 
-function saveCron(object $job, array $results, bool $end) {
+function saveCron(object $cron, array $results, bool $end, bool $full = false) {
 
 	if (!empty($results['success']) || !empty($results['error'])) {
 
-		$textok = trim(str_replace(['    ', ' => Array', "\n\n"], [' ', '', "\n"], preg_replace('#\s+[()]#', '', print_r($results['success'], true))));
-		$textko = trim(str_replace(['    ', ' => Array', "\n\n"], [' ', '', "\n"], preg_replace('#\s+[()]#', '', print_r($results['error'], true))));
+		$textok = trim(str_replace(['    ', ' => Array', "\n\n"], [' ', '', "\n"], preg_replace('#\s+[()]#', '',
+			print_r($results['success'], true))));
+		$textko = trim(str_replace(['    ', ' => Array', "\n\n"], [' ', '', "\n"], preg_replace('#\s+[()]#', '',
+			print_r($results['error'], true))));
 
 		if ($end) {
-			$job->setData('finished_at', date('Y-m-d H:i:s'));
-			$job->setData('status', empty($results['error']) ? Mage_Cron_Model_Schedule::STATUS_SUCCESS : Mage_Cron_Model_Schedule::STATUS_ERROR);
+			$cron->setData('finished_at', date('Y-m-d H:i:s'));
+			$cron->setData('status', empty($results['error']) ? 'success' : 'error');
 		}
 
-		$job->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n".'success: '.$textok."\n".'error: '.$textko);
-		$job->save();
+		$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n".
+			'success: '.$textok."\n".'error: '.$textko);
+		$cron->save();
+	}
+	else if ($end && $full) {
+		$cron->setData('finished_at', date('Y-m-d H:i:s'));
+		$cron->setData('status', 'error');
+		$cron->setData('messages', 'nothing to do');
+		$cron->save();
 	}
 }
 

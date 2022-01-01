@@ -1,12 +1,12 @@
 <?php
 /**
  * Created M/01/05/2018
- * Updated V/18/06/2021
+ * Updated V/12/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -70,9 +70,7 @@ try {
 			OR path LIKE "maillog/content/%"
 			OR path LIKE "maillog%background"
 			OR path LIKE "maillog/general/lifetime%"
-			OR path LIKE "maillog/email/template"
-			OR path LIKE "modules/email/template"
-			OR path LIKE "cronlog/email/template";
+			OR path LIKE "maillog/email/template";
 	');
 }
 catch (Throwable $t) {

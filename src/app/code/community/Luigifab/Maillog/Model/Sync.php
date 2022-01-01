@@ -1,12 +1,12 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated M/05/10/2021
+ * Updated M/23/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -66,6 +66,8 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 					$this->setData('action', $this->getData('action').$customer->getData('email'));
 				}
 
+				if (is_object($subscriber) && !empty($subscriber->getId()))
+					$customer->setData('subscriber_object', $subscriber);
 				if (is_object($billing) && empty($billing->getData('is_default_billing')))
 					$billing->setData('is_default_billing', 1);
 				if (is_object($shipping) && empty($shipping->getData('is_default_shipping')))
@@ -79,6 +81,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$customer->setOrigData('email', $subscriber->getOrigData('subscriber_email'));
 				$customer->setData('email', $subscriber->getData('subscriber_email'));
 				$customer->setData('store_id', $subscriber->getStoreId());
+				$customer->setData('subscriber_object', $subscriber);
 
 				$billing  = null;
 				$shipping = null;
@@ -136,8 +139,13 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			$this->setData('status', 'running');
 			$this->save();
 
-			// chargement des objets du client
+			// simule un client
 			if ($info[1] == 'customer') {
+				$customer = is_object($entity) ? $entity : Mage::getModel('customer/customer');
+				$customer->setOrigData('email', $info[4]);
+				$customer->setData('email', $info[4]);
+			}
+			else if ($info[1] == 'subscriber') {
 				$customer = is_object($entity) ? $entity : Mage::getModel('customer/customer');
 				$customer->setOrigData('email', $info[4]);
 				$customer->setData('email', $info[4]);
@@ -171,20 +179,21 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 
 	// gestion des données des objets et de l'historique
-	protected function initSpecialObject(object $customer, array $values) {
+	protected function initSpecialObject(object $customer, array $values, $object = null) {
 
-		$object = new Varien_Object();
-		$object->setData('last_sync_date', date('Y-m-d H:i:s'));
+		$object = is_object($object) ? $object : new Varien_Object();
+		if (empty(Mage::registry('maillog_full_sync')))
+			$object->setData('last_sync_date', date('Y-m-d H:i:s'));
 
 		if (!empty($id = $customer->getId())) {
 
 			$database = Mage::getSingleton('core/resource');
-			$read = $database->getConnection('core_read');
+			$reader   = $database->getConnection('core_read');
 
 			// customer_group_code (lecture express depuis la base de données)
 			if ($this->inArray('group_name', $values)) {
 
-				$name = $read->fetchOne($read->select()
+				$name = $reader->fetchOne($reader->select()
 					->from($database->getTableName('customer_group'), 'customer_group_code')
 					->where('customer_group_id = ?', $customer->getGroupId())
 					->limit(1));
@@ -196,7 +205,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			// si non disponible, utilise la date d'inscription du client
 			if ($this->inArray('last_login_date', $values)) {
 
-				$item = $read->fetchOne($read->select()
+				$item = $reader->fetchOne($reader->select()
 					->from($database->getTableName('log_customer'), 'login_at')
 					->where('customer_id = ?', $id)
 					->order('log_id desc')
@@ -207,14 +216,17 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 			// commandes
 			// $order->getData('global_currency_code') != $order->getData('base_currency_code')
-			$orders = Mage::getResourceModel('sales/order_collection')
-				->addFieldToFilter('customer_id', $id)
-				->addFieldToFilter('state', ['in' => ['processing', 'complete', 'closed']])
-				->setOrder('created_at', 'desc');
+			$orders = $object->getData('orders_collection');
+			if (!is_object($orders)) {
+				$orders = Mage::getResourceModel('sales/order_collection')
+					->addFieldToFilter('customer_id', $id)
+					->addFieldToFilter('state', ['in' => ['processing', 'complete', 'closed']])
+					->setOrder('created_at', 'desc');
+				$object->setData('orders_collection', $orders);
+			}
 
 			$numberOfOrders = $orders->getSize();
 			$object->setData('number_of_orders', $numberOfOrders);
-			$object->setData('orders_collection', $orders);
 
 			if ($numberOfOrders > 0) {
 
@@ -223,6 +235,8 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$object->setData('first_order_id',          $firstOrder->getId());
 				$object->setData('first_order_incrementid', $firstOrder->getData('increment_id'));
 				$object->setData('first_order_date',        $firstOrder->getData('created_at'));
+				$object->setData('first_order_status',      $firstOrder->getData('status'));
+				$object->setData('first_order_payment',     $firstOrder->getPayment()->getData('method'));
 				$object->setData('first_order_total', ($firstOrder->getData('base_grand_total') * $firstOrder->getData('base_to_global_rate')));
 				$object->setData('first_order_total_notax', (($firstOrder->getData('base_grand_total') - $firstOrder->getData('base_tax_amount')) * $firstOrder->getData('base_to_global_rate')));
 
@@ -248,6 +262,8 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$object->setData('last_order_id',          $lastOrder->getId());
 				$object->setData('last_order_incrementid', $lastOrder->getData('increment_id'));
 				$object->setData('last_order_date',        $lastOrder->getData('created_at'));
+				$object->setData('last_order_status',      $lastOrder->getData('status'));
+				$object->setData('last_order_payment',     $lastOrder->getPayment()->getData('method'));
 				$object->setData('last_order_total', ($lastOrder->getData('base_grand_total') * $lastOrder->getData('base_to_global_rate')));
 				$object->setData('last_order_total_notax', (($lastOrder->getData('base_grand_total') - $lastOrder->getData('base_tax_amount')) * $lastOrder->getData('base_to_global_rate')));
 
@@ -294,7 +310,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 								$baseurl = preg_replace('#/[^/]+\.php\d*/#', '/index.php/', Mage::app()->getStore($storeId)->getBaseUrl());
 								$suffix  = Mage::helper('catalog/product')->getProductUrlSuffix();
 							}
-							if (Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog') && Mage::getStoreConfigFlag('urlnosql/general/enabled')) {
+							if (Mage::getStoreConfigFlag('urlnosql/general/enabled') && Mage::helper('core')->isModuleEnabled('Luigifab_Urlnosql')) {
 								$object->setData('last_order_product_'.$idx.'_url', $baseurl.$productId.$suffix);
 							}
 							else {
@@ -317,21 +333,25 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				// produits commandés
 				if ($this->inArray('all_ordered_names', $values) || $this->inArray('all_ordered_skus', $values)) {
 
-					$allSkus = Mage::getResourceModel('sales/order_item_collection')
-						->addFieldToFilter('order_id', ['in' => $orders->getAllIds()])
-						->addFieldToFilter('parent_item_id', ['null' => true])
-						->setOrder('created_at', 'desc');
+					$allSkus = $object->getData('all_ordered_items_collection');
+					if (!is_object($allSkus)) {
+						$allSkus = Mage::getResourceModel('sales/order_item_collection')
+							->addFieldToFilter('order_id', ['in' => $orders->getAllIds()])
+							->addFieldToFilter('parent_item_id', ['null' => true])
+							->setOrder('created_at', 'desc');
+						$object->setData('all_ordered_items_collection', $allSkus);
+					}
 
-					$object->setData('all_ordered_items_collection', $allSkus);
 					$object->setData('all_ordered_names', implode(',', array_slice(array_unique($allSkus->getColumnValues('name')), 0, 250)));
 					$object->setData('all_ordered_skus', implode(',', array_slice(array_unique($allSkus->getColumnValues('sku')), 0, 250)));
 				}
 
 				if ($this->inArray('number_of_products_ordered', $values)) {
 
-					$allSkus = empty($allSkus) ? Mage::getResourceModel('sales/order_item_collection')
+					$allSkus = empty($allSkus) ? $object->getData('all_ordered_items_collection') : $allSkus;
+					$allSkus = is_object($allSkus) ? $allSkus : Mage::getResourceModel('sales/order_item_collection')
 						->addFieldToFilter('order_id', ['in' => $orders->getAllIds()])
-						->addFieldToFilter('parent_item_id', ['null' => true]) : $allSkus;
+						->addFieldToFilter('parent_item_id', ['null' => true]);
 
 					$object->setData('number_of_products_ordered', array_sum($allSkus->getColumnValues('qty_ordered')));
 				}
@@ -417,6 +437,15 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 					else
 						$object->setData('rating_order_monetary', 1);
 				}
+			}
+
+			// commentaires
+			if ($this->inArray('number_of_reviews', $values)) {
+				$object->setData('number_of_reviews', Mage::getResourceModel('review/review_collection')
+					->addCustomerFilter($customer->getId())
+					//->addStoreFilter($customer->getStoreId())
+					->addStatusFilter(Mage_Review_Model_Review::STATUS_APPROVED)
+					->getSize());
 			}
 		}
 

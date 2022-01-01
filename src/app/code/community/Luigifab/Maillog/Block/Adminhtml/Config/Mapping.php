@@ -1,12 +1,12 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated J/30/09/2021
+ * Updated J/04/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -142,6 +142,8 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$options['core'][] = ['value' => 'first_order_id'];
 			$options['core'][] = ['value' => 'first_order_incrementid'];
 			$options['core'][] = ['value' => 'first_order_date'];
+			$options['core'][] = ['value' => 'first_order_status'];
+			$options['core'][] = ['value' => 'first_order_payment'];
 			$options['core'][] = ['value' => 'first_order_total'];
 			$options['core'][] = ['value' => 'first_order_total_notax'];
 			$options['core'][] = ['value' => 'first_order_names_list'];
@@ -150,6 +152,8 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$options['core'][] = ['value' => 'last_order_id'];
 			$options['core'][] = ['value' => 'last_order_incrementid'];
 			$options['core'][] = ['value' => 'last_order_date'];
+			$options['core'][] = ['value' => 'last_order_status'];
+			$options['core'][] = ['value' => 'last_order_payment'];
 			$options['core'][] = ['value' => 'last_order_total'];
 			$options['core'][] = ['value' => 'last_order_total_notax'];
 			$options['core'][] = ['value' => 'last_order_names_list'];
@@ -175,6 +179,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$options['core'][] = ['value' => 'number_of_products_ordered'];
 			$options['core'][] = ['value' => 'number_of_orders'];
 			$options['core'][] = ['value' => 'subscriber_status'];
+			$options['core'][] = ['value' => 'number_of_reviews'];
 
 			if ($code == 'mautic') {
 				$options['core'][] = ['value' => 'rating_order_monetary'];

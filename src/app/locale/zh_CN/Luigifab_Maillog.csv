@@ -1,5 +1,4 @@
 "Transactional emails","交易邮件"
-"Username","用户名"
 "File format","文件格式"
 "Duration","时长"
 "Created At: %s","创建于：%s"
@@ -20,6 +19,7 @@
 "Transactional emails - %s","交易邮件 - %s"
 "Background color","背景颜色"
 "Text color","文字颜色"
+"%d month","%d个月"
 " %d months","%d个月"
 "%d months","%d个月"
 " %d years","%d年"

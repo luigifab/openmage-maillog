@@ -1,12 +1,12 @@
 <?php
 /**
  * Created V/19/06/2015
- * Updated M/28/09/2021
+ * Updated M/26/10/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -30,15 +30,15 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Size extends Mage_Adminhtml_Block_
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
 
 		$database = Mage::getSingleton('core/resource');
-		$read = $database->getConnection('core_read');
-		$name = (stripos($element->getHtmlId(), 'sync') === false) ? 'maillog/email' : 'maillog/sync';
+		$reader   = $database->getConnection('core_read');
+		$table    = $database->getTableName((stripos($element->getHtmlId(), 'sync') === false) ? 'maillog/email' : 'maillog/sync');
 
-		$select = $read->select()
+		$select = $reader->select()
 			->from('information_schema.TABLES', '(data_length + index_length) AS size_bytes')
 			->where('table_schema = DATABASE()')
-			->where('table_name = ?', $database->getTableName($name));
+			->where('table_name = ?', $table);
 
-		$element->setValue((float) $read->fetchOne($select));
+		$element->setValue((float) $reader->fetchOne($select));
 		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $this->helper('maillog')->getNumberToHumanSize($element->getValue()));
 	}
 }

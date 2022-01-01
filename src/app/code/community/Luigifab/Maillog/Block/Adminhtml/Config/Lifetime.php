@@ -1,12 +1,12 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated V/08/10/2021
+ * Updated V/22/10/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -29,16 +29,16 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Lifetime extends Mage_Adminhtml_Bl
 		$config = @unserialize(Mage::getStoreConfig('maillog/general/special_config'), ['allowed_classes' => false]);
 		$types  = $this->helper('maillog')->getAllTypes();
 
-		array_push($types, 'without', 'all');
-
 		if (!empty($config) && is_array($config)) {
 			// ajoute les types configurés ayant disparus
 			foreach ($config as $key => $value) {
 				$type = mb_substr($key, 0, mb_strpos($key, '_'));
-				if (!in_array($type, $types))
+				if (!in_array($type, $types) && !in_array($type, ['without', 'all']))
 					$types[] = $type;
 			}
 		}
+
+		array_push($types, 'without', 'all');
 
 		$this->setHtmlId('row_'.$element->getHtmlId());
 		$this->setScopeLabel($element->getScopeLabel());

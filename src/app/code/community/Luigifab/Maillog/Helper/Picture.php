@@ -1,12 +1,12 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated M/28/09/2021
+ * Updated J/16/12/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -206,11 +206,14 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 			$tags[] = '<img src="'.$help->init($object, $attribute, $file)->resize($size['w'], $size['h']).'" '.implode(' ', $attrs).' />';
 		}
 		else {
+			$total = count($sizes);
 			foreach ($sizes as $breakpoint => $size) {
 				$srcs = [
 					(string) $help->init($object, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
 					(string) $help->init($object, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
 				];
+				// n'ajoute pas une seule balise source
+				if ($total == 1) break;
 				// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
 				// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
 				if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
@@ -253,7 +256,13 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 }
 function maillogdebug() {
 	document.querySelectorAll("span.maillogdebug ~ picture img").forEach(function (elem) {
-		elem.setAttribute("onload", "maillogdebug();");
+		if (elem.hasAttribute("onload")) {
+			if (elem.getAttribute("onload").indexOf("maillogdebug") < 0)
+				elem.setAttribute("onload", "maillogdebug(); " + elem.getAttribute("onload"));
+		}
+		else {
+			elem.setAttribute("onload", "maillogdebug();");
+		}
 		var cur = elem.currentSrc.slice(elem.currentSrc.indexOf("/", 9)),
 		    src = elem.parentNode.querySelector("source[srcset*=\"" + cur + "\"]"),
 		    tmp = elem.getAttribute("src").substr(-4);

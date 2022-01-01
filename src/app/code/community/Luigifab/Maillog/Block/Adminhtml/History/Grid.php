@@ -1,12 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/18/07/2021
+ * Updated M/23/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -64,11 +64,15 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 		// embed tab
 		if (is_object($order = Mage::registry('current_order'))) {
-			$collection->addFieldToFilter('mail_recipients', ['like' => '%'.$order->getData('customer_email').'%']);
-			//$collection->addFieldToFilter('mail_subject',  ['like' => '%'.$order->getData('increment_id').'%']);
+			//$collection->addFieldToFilter('mail_recipients', ['like' => '%'.$order->getData('customer_email').'%']);
+			$collection->addFieldToFilterWithMatch('mail_recipients', $order->getData('customer_email'));
+			// non car on veut pouvoir enlever ce filtre depuis le back-office
+			//$collection->addFieldToFilter('mail_subject', ['like' => '%'.$order->getData('increment_id').'%']);
+			//$collection->addFieldToFilterWithMatch('mail_subject', $order->getData('increment_id'));
 		}
 		else if (is_object($customer = Mage::registry('current_customer'))) {
-			$collection->addFieldToFilter('mail_recipients', ['like' => '%'.$customer->getData('email').'%']);
+			//$collection->addFieldToFilter('mail_recipients', ['like' => '%'.$customer->getData('email').'%']);
+			$collection->addFieldToFilterWithMatch('mail_recipients', $customer->getData('email'));
 		}
 
 		$this->setCollection($collection);
@@ -79,8 +83,10 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 		if (in_array($column->getId(), ['mail_recipients', 'mail_subject'])) {
 			$words = explode(' ', $column->getFilter()->getValue());
-			foreach ($words as $word)
-				$this->getCollection()->addFieldToFilter($column->getId(), ['like' => '%'.$word.'%']);
+			foreach ($words as $word) {
+				//$this->getCollection()->addFieldToFilter($column->getId(), ['like' => '%'.$word.'%']);
+				$this->getCollection()->addFieldToFilterWithMatch($column->getId(), $word);
+			}
 		}
 		else {
 			parent::_addColumnFilterToCollection($column);

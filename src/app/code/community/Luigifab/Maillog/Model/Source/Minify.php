@@ -1,12 +1,12 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated S/14/11/2020
+ * Updated J/16/12/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -32,7 +32,8 @@ class Luigifab_Maillog_Model_Source_Minify {
 
 			$this->_options = [
 				['value' => 0, 'label' => Mage::helper('adminhtml')->__('No')],
-				['value' => 1, 'label' => $help->__('Yes with PHP-TIDY (%s)', $tidy)]
+				['value' => 1, 'label' => $help->__('Yes with PHP-TIDY (%s)', $tidy)],
+				['value' => 2, 'label' => $help->__('Yes but remove only white spaces')],
 			];
 		}
 

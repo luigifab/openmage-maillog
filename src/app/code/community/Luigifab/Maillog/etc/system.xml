@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated M/28/09/2021
+ * Updated V/12/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -122,7 +122,7 @@
 							<show_in_store>0</show_in_store>
 						</smtp_url>
 						<smtp_username translate="label">
-							<label>Username</label>
+							<label>User Name</label>
 							<frontend_type>text</frontend_type>
 							<sort_order>13</sort_order>
 							<show_in_default>1</show_in_default>
@@ -427,7 +427,7 @@
 							<show_in_store>0</show_in_store>
 						</api_url>
 						<api_username translate="label">
-							<label>Username</label>
+							<label>User Name</label>
 							<frontend_type>text</frontend_type>
 							<sort_order>12</sort_order>
 							<show_in_default>1</show_in_default>
@@ -536,7 +536,7 @@
 							<show_in_store>0</show_in_store>
 						</api_url>
 						<api_username translate="label">
-							<label>Username</label>
+							<label>User Name</label>
 							<frontend_type>text</frontend_type>
 							<sort_order>12</sort_order>
 							<show_in_default>1</show_in_default>

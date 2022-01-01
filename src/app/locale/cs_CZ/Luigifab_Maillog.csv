@@ -1,5 +1,4 @@
 "Transactional emails","Transakční emaily"
-"Username","Uživatelské jméno"
 "Send an email now","Poslat email"
 "File format","Formát souboru"
 "Recipient(s)","Příjemce(i)"
@@ -23,6 +22,7 @@
 "Transactional emails - %s","Transakční emaily - %s"
 "Background color","Barva pozadí"
 "Text color","Barva textu"
+"%d month","%d měsíc"
 " %d months","%d měsíce"
 "%d months","%d měsíců"
 " %d years","%d roky"

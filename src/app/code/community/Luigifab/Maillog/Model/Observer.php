@@ -1,12 +1,12 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated V/08/10/2021
+ * Updated J/09/12/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -41,7 +41,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 
 		if (($check === true) || !empty(Mage::getStoreConfig('maillog_sync/general/lifetime'))) {
-			$config->setData('value', '30 2 * * '.Mage::getStoreConfig('general/locale/firstday'));
+			$config->setData('value', '30 2 * * *');
 			$config->setData('path', 'crontab/jobs/maillog_clean_old_data/schedule/cron_expr');
 			$config->save();
 		}
@@ -202,11 +202,12 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			foreach (['week_' => true, 'month_' => false] as $key => $isWeek) {
 
-				for ($i = 1; $i <= 14; $i++) {
+				// n'affiche plus la semaine et le mois en cours
+				for ($i = 2; $i <= 14; $i++) {
 
 					$variation = ($i > 1) && ($i < 14);
 					$dates     = $this->getDateRange($isWeek ? 'week' : 'month', $i - 1);
-					$oldDates  = $this->getDateRange($isWeek ? 'week' : 'month', $i - 0);
+					$oldDates  = $this->getDateRange($isWeek ? 'week' : 'month', $i);
 					$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339),
 						'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
 					$oldWhere  = ['from' => $oldDates['start']->toString(Zend_Date::RFC_3339),
@@ -346,8 +347,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$day = $dateStart->toString(Zend_Date::WEEKDAY_8601) - 1;
 
 		if ($range == 'month') {
-			$dateStart->setDay(3)->subMonth(1 * $coef)->setDay(1);
-			$dateEnd->setDay(3)->subMonth(1 * $coef)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
+			$dateStart->setDay(3)->subMonth($coef)->setDay(1);
+			$dateEnd->setDay(3)->subMonth($coef)->setDay($dateEnd->toString(Zend_Date::MONTH_DAYS));
 		}
 		else if ($range == 'week') {
 			$dateStart->subDay($day + 7 * $coef);
@@ -525,15 +526,15 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$val = Mage::getStoreConfig('maillog_sync/general/lifetime');
 		if (!empty($val) && is_numeric($val)) {
 
-			$syncs = Mage::getResourceModel('maillog/sync_collection');
-			$syncs->addFieldToFilter('status', ['eq' => 'success']);
-			$syncs->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$val.' MINUTE)')]);
+			$syncs = Mage::getResourceModel('maillog/sync_collection')
+				->addFieldToFilter('status', ['eq' => 'success'])
+				->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$val.' MINUTE)')]);
 			$cnt += $syncs->getSize();
 			$syncs->deleteAll();
 
-			$syncs = Mage::getResourceModel('maillog/sync_collection');
-			$syncs->addFieldToFilter('status', ['neq' => 'success']);
-			$syncs->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.(3 * $val).' MINUTE)')]);
+			$syncs = Mage::getResourceModel('maillog/sync_collection')
+				->addFieldToFilter('status', ['neq' => 'success'])
+				->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.(3 * $val).' MINUTE)')]);
 			$cnt += $syncs->getSize();
 			$syncs->deleteAll();
 
@@ -547,16 +548,16 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			foreach ($config as $key => $months) {
 
-				if (is_numeric($months) && ($months >= 2)) {
+				if (is_numeric($months) && ($months >= 1)) {
 
 					$cut    = mb_stripos($key, '_');
 					$type   = mb_substr($key, 0, $cut);
 					$action = mb_substr($key, $cut + 1);
 
-					$emails = Mage::getResourceModel('maillog/email_collection');
-					$emails->addFieldToFilter('deleted', ['neq' => 1]);
-					$emails->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr(
-						'DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$months.' MONTH)')]);
+					$emails = Mage::getResourceModel('maillog/email_collection')
+						->addFieldToFilter('deleted', ['neq' => 1])
+						->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$months.' MONTH)')]);
+					$emails->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['email_id']); // optimisation maximale
 
 					// tous les emails
 					if ($key == 'all_data') {
@@ -564,7 +565,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 						$msg[] = 'Remove content and attachments for '.$type.' emails after '.$months.' months';
 					}
 					else if ($key == 'all_all') {
-						$msg[] = 'Remove all data for '.$type.' emails after '.$months.' months';
+						$msg[] = 'Remove ALL data for '.$type.' emails after '.$months.' months';
 					}
 					// les emails sans type
 					else if ($key == 'without_data') {
@@ -574,7 +575,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					}
 					else if ($key == 'without_all') {
 						$emails->addFieldToFilter('type', '--');
-						$msg[] = 'Remove all data for '.$type.' emails after '.$months.' months';
+						$msg[] = 'Remove ALL data for '.$type.' emails after '.$months.' months';
 					}
 					// les emails avec un type
 					else if ($action == 'data') {
@@ -584,18 +585,15 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					}
 					else if ($action == 'all') {
 						$emails->addFieldToFilter('type', $type);
-						$msg[] = 'Remove all data for '.$type.' emails after '.$months.' months';
+						$msg[] = 'Remove ALL data for '.$type.' emails after '.$months.' months';
 					}
 
 					// action
 					// supprime en partie l'email ou tout l'email
-					$ids = $emails->getAllIds();
-					$ids = (count($ids) > 100) ? implode(', ', array_slice($ids, 0, 100)).'...' : implode(', ', $ids);
-
-					$msg[] = empty($cnt = $emails->getSize()) ? ' → no items to remove' : ' → '.$cnt.' item(s) removed ('.$ids.')';
+					$msg[] = empty($cnt = $emails->getSize()) ? ' → no items to remove' : ' → '.$cnt.' item(s) removed';
 					$msg[] = '';
 
-					if (!empty($cnt)) {
+					if ($cnt > 0) {
 						if ($action == 'all') {
 							$emails->deleteAll();
 						}

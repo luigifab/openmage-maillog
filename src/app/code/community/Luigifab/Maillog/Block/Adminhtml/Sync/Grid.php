@@ -1,12 +1,12 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/05/10/2021
+ * Updated J/18/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -134,7 +134,7 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 	public function decorateDetails($value, $row, $column, $isExport) {
 
-		$action = preg_replace('#update:customer:([0-9]+):#', 'update:<a href="'.str_replace('9999', '\\1', $this->getUrl('*/customer/edit', ['id' => 9999])).'">customer:\1</a>', $row->getData('action'));
+		$action = preg_replace('#update:customer:(\d+):#', 'update:<a href="'.str_replace('999999', '\\1', $this->getUrl('*/customer/edit', ['id' => 999999])).'">customer:\1</a>:', $row->getData('action'));
 
 		if (in_array($row->getData('sync_at'), ['', '0000-00-00 00:00:00', null]))
 			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> with <em>%s</em>.<br />Created at <em>%s UTC</em>.</div>',

@@ -1,12 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/30/09/2021
+ * Updated J/16/12/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -92,8 +92,11 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			// recherche et remplace #online# #online#storeId# #readimg# par leur valeurs uniquement si c'est un mail au format HTML
 			if ((mb_stripos($body, '</p>') !== false) || (mb_stripos($body, '</td>') !== false) || (mb_stripos($body, '</div>') !== false)) {
 
-				if (Mage::getStoreConfigFlag('maillog/general/minify') && extension_loaded('tidy') && class_exists('tidy', false))
+				$minify = Mage::getStoreConfig('maillog/general/minify');
+				if (($minify == 1) && extension_loaded('tidy') && class_exists('tidy', false))
 					$body = $this->cleanWithTidy($body);
+				else if ($minify == 2)
+					$body = preg_replace(["#(?:\n+[\t ]*)+#", "#[\t ]+#"], ["\n", ' '], $body);
 
 				if (mb_stripos($body, '#online#') !== false)
 					$body = preg_replace_callback('/#online#(\d{0,5})/', function ($matches) {
@@ -194,10 +197,10 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 	public function isResetPassword() {
 
-		if (stripos($this->getData('mail_body'), '/customer/account/resetpassword/') !== false)
+		if (mb_stripos($this->getData('mail_body'), '/customer/account/resetpassword/') !== false)
 			return true;
 
-		if (stripos($this->getData('mail_body'), '/admin/index/resetpassword/') !== false)
+		if (mb_stripos($this->getData('mail_body'), '/index/resetpassword/') !== false)
 			return true;
 
 		return false;

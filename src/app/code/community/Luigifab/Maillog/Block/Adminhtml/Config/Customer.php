@@ -1,12 +1,12 @@
 <?php
 /**
  * Created S/14/11/2015
- * Updated J/30/09/2021
+ * Updated J/04/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -29,6 +29,6 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Customer extends Mage_Adminhtml_Bl
 
 	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
 		$element->setValue(Mage::getResourceModel('customer/customer_collection')->getSize());
-		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), Zend_Locale_Format::toNumber($element->getValue()));
+		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $this->helper('maillog')->getNumber($element->getValue()));
 	}
 }

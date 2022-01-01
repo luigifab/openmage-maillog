@@ -1,5 +1,4 @@
 "Transactional emails","Transactionele Emails"
-"Username","Gebruikersnaam"
 "File format","Bestandsformaat"
 "Recipient(s)","Ontvanger(s)"
 "Duration","Duur"
@@ -19,6 +18,7 @@
 "Transactional emails - %s","Transactionele Emails - %s"
 "Background color","Achtergrond kleur"
 "Text color","Tekstkleur"
+"%d month","%d maand"
 " %d months","%d maanden"
 "%d months","%d maanden"
 " %d years","%d jaar"

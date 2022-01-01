@@ -1,12 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/02/10/2021
+ * Updated M/23/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -74,7 +74,9 @@ try {
 			mail_parts              longblob         NULL DEFAULT NULL,
 			deleted                 tinyint(1) unsigned NOT NULL DEFAULT 0,
 			PRIMARY KEY (email_id),
-			KEY uniqid (uniqid)
+			KEY uniqid (uniqid),
+			FULLTEXT mail_recipients (mail_recipients),
+			FULLTEXT mail_subject (mail_subject)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 		CREATE TABLE '.$this->getTable('maillog/sync').' (

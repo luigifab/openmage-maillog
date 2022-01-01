@@ -1,7 +1,7 @@
 <?php
 /**
- * Created S/14/11/2015
- * Updated J/04/11/2021
+ * Created M/23/11/2021
+ * Updated M/23/11/2021
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -20,16 +20,27 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Block_Adminhtml_Config_Bounce extends Mage_Adminhtml_Block_System_Config_Form_Field {
+// de manière à empécher de lancer cette procédure plusieurs fois
+$lock = Mage::getModel('index/process')->setId('maillog_setup');
+if ($lock->isLocked())
+	Mage::throwException('Please wait, upgrade is already in progress...');
 
-	public function render(Varien_Data_Form_Element_Abstract $element) {
-		$element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
-		return parent::render($element);
-	}
+$lock->lockAndBlock();
+$this->startSetup();
 
-	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		$ids = ['in' => Mage::getSingleton('maillog/source_bounce')->getBounceIds()];
-		$element->setValue(Mage::getResourceModel('customer/customer_collection')->addAttributeToFilter('is_bounce', $ids)->getSize());
-		return sprintf('<span id="%s">%s</span>', $element->getHtmlId(), $this->helper('maillog')->getNumber($element->getValue()));
-	}
+// de manière à continuer quoi qu'il arrive
+ignore_user_abort(true);
+set_time_limit(0);
+
+try {
+	$this->run('ALTER TABLE '.$this->getTable('maillog/email').'
+		ADD FULLTEXT mail_recipients (mail_recipients),
+		ADD FULLTEXT mail_subject (mail_subject);');
 }
+catch (Throwable $t) {
+	$lock->unlock();
+	throw $t;
+}
+
+$this->endSetup();
+$lock->unlock();

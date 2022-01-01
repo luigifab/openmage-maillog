@@ -1,5 +1,4 @@
 "Transactional emails","Транзакционные письма"
-"Username","Логин"
 "File format","Формат файла"
 "Duration","Длительность"
 "Created At: %s","Дата создания: %s"
@@ -23,6 +22,7 @@
 "Transactional emails - %s","Транзакционные письма - %s"
 "Background color","Цвет фона"
 "Text color","Цвет шрифта"
+"%d month","%d месяц"
 " %d months","%d месяцев"
 "%d months","%d месяцев"
 " %d years","%d лет"

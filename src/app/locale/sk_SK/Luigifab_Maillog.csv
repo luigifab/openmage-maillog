@@ -1,5 +1,4 @@
 "Transactional emails","Transakčné e-maily"
-"Username","Užívateľské meno"
 "File format","Formát súboru"
 "Recipient(s)","Prijímatel(ia)"
 "Duration","Trvanie"
@@ -22,6 +21,7 @@
 "Transactional emails - %s","Transakčné e-maily - %s"
 "Background color","Farba pozadia"
 "Text color","Farba textu"
+"%d month","%d mesiac"
 " %d months","%d mesiace"
 "%d months","%d mesiacov"
 " %d years","%d roky"

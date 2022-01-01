@@ -1,11 +1,11 @@
 /**
  * Created J/03/12/2015
- * Updated J/23/09/2021
+ * Updated L/18/10/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -100,7 +100,7 @@ var maillog = new (function () {
 
 	this.decode = function (data) {
 		// utf-8 avec Webkit (https://stackoverflow.com/q/3626183)
-		return decodeURIComponent(escape(self.atob(data)));
+		return decodeURIComponent(escape(atob(data)));
 	};
 
 	this.iframe = function (elem) {

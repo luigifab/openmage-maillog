@@ -1,5 +1,4 @@
 "Transactional emails","取り引きメール"
-"Username","ユーザー名"
 "File format","ファイル形式"
 "Duration","長さ"
 "Created At: %s","作成日：%s"
@@ -23,6 +22,7 @@
 "Transactional emails - %s","取り引きメール - %s"
 "Background color","背景色"
 "Text color","テキストの色"
+"%d month","%dヶ月"
 " %d months","%dヶ月"
 "%d months","%dヶ月"
 " %d years","%d年"

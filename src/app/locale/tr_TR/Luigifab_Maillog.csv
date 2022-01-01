@@ -1,5 +1,4 @@
 "Transactional emails","E-mail Şablonları"
-"Username","Kullanıcı"
 "File format","Dosya Biçimi"
 "Recipient(s)","Alıcı(lar)"
 "Duration","Süre"
@@ -22,6 +21,7 @@
 "Transactional emails - %s","E-mail Şablonları - %s"
 "Background color","Artalan rengi"
 "Text color","Metin rengi"
+"%d month","%d ay"
 " %d months","%d ay"
 "%d months","%d ay"
 " %d years","%d yıl"

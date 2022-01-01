@@ -1,12 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/02/10/2021
+ * Updated S/09/10/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -26,7 +26,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 		$result = parent::_validateSecretKey();
 
-		if (!$result && ($this->getFullActionName() == 'adminhtml_maillog_history_view') && Mage::getSingleton('admin/session')->isLoggedIn()) {
+		if (!$result && ($this->getFullActionName() == 'adminhtml_maillog_history_view')) {
 			$this->getRequest()->setParam(Mage_Adminhtml_Model_Url::SECRET_KEY_PARAM_NAME, Mage::getSingleton('adminhtml/url')->getSecretKey());
 			$result = parent::_validateSecretKey();
 		}

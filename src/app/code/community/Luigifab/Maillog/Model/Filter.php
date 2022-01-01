@@ -1,12 +1,12 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/30/09/2021
+ * Updated J/04/11/2021
  *
- * Copyright 2015-2021 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2021 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://www.luigifab.fr/openmage/maillog
  *
  * This program is free software, you can redistribute it or modify
@@ -126,7 +126,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		else if (array_key_exists('precision', $attrs))
 			$params['precision'] = (int) $attrs['precision'];
 
-		return is_numeric($number) ? Zend_Locale_Format::toNumber((float) $number, $params) : '';
+		return is_numeric($number) ? Mage::helper('maillog')->getNumber((float) $number, $params) : '';
 	}
 
 	public function priceDirective(array $match) {
