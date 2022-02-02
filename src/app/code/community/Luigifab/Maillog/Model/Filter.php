@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/04/11/2021
+ * Updated M/28/12/2021
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -404,20 +404,21 @@ abstract class Luigifab_Maillog_Model_Filter {
 	protected function extractAttributes($data, $default = null) {
 
 		$attrs = empty($default) ? [] : [$default => null];
-		$parts = array_map('trim', (array) explode(' ', $data)); // (yes)
+		if (empty($data))
+			return $attrs;
 
+		// https://stackoverflow.com/a/1083799/2980105
+		preg_match_all('#(\w+)\s*=\s*(?:"(.*?)"|\'(.*?)\')\s*#', $data, $parts, PREG_SET_ORDER);
 		foreach ($parts as $part) {
-			if (mb_stripos($part, '=') !== false) {
-				$part = (array) explode('=', $part); // (yes)
-				if (mb_stripos($part[1], '$') === false)
-					$attrs[$part[0]] = trim($part[1], '\'"');
-				else
-					$attrs[$part[0]] = $this->_getVariable(trim($part[1], '$'), trim($part[1], '$'));
-			}
-			else if (!empty($default)) {
-				$attrs[$default] = $this->_getVariable($part, $part);
-			}
+			$data = trim(str_replace($part[0], '', $data));
+			if (mb_stripos($part[1], '$') === false)
+				$attrs[$part[1]] = $part[2];
+			else
+				$attrs[$part[1]] = $this->_getVariable($part[2] = trim($part[2], '$'), $part[2]);
 		}
+
+		if (!empty($default) && !isset($attrs[$default]))
+			$attrs[$default] = $this->_getVariable($data, $data);
 
 		return $attrs;
 	}

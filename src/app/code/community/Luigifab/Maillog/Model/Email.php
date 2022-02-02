@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/16/12/2021
+ * Updated J/27/01/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -53,7 +53,10 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 	}
 
 	public function setMailRecipients($data, bool $decode = true) {
-		return $this->setData('mail_recipients', $decode ? iconv_mime_decode($data, 0, 'utf-8') : $data);
+
+		// <xyz@maìl.com> = boom
+		// avec ICONV_MIME_DECODE_CONTINUE_ON_ERROR ça donne <xyz@mal.com>, autant avoir false
+		return $this->setData('mail_recipients', $decode ? @iconv_mime_decode($data, 0, 'utf-8') : $data);
 	}
 
 	public function setMailSubject($data, bool $decode = true) {
@@ -93,7 +96,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			if ((mb_stripos($body, '</p>') !== false) || (mb_stripos($body, '</td>') !== false) || (mb_stripos($body, '</div>') !== false)) {
 
 				$minify = Mage::getStoreConfig('maillog/general/minify');
-				if (($minify == 1) && extension_loaded('tidy') && class_exists('tidy', false))
+				if (($minify == 1) && class_exists('tidy', false) && extension_loaded('tidy'))
 					$body = $this->cleanWithTidy($body);
 				else if ($minify == 2)
 					$body = preg_replace(["#(?:\n+[\t ]*)+#", "#[\t ]+#"], ["\n", ' '], $body);
@@ -218,7 +221,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 			$heads = str_replace(["\n", "\r\n\n"], ["\r\n", "\r\n"], $this->getData('mail_header'));
 			$recpt = $this->getData('mail_recipients');
-			$allow = Mage::getStoreConfigFlag('maillog/general/send') ? Mage::helper('maillog')->canSend($recpt) : false;
+			$allow = (!empty($recpt) && Mage::getStoreConfigFlag('maillog/general/send')) ? Mage::helper('maillog')->canSend($recpt) : false;
 
 			// modifie les entêtes
 			$heads .= "\r\n".'X-Maillog: '.$this->getData('uniqid');

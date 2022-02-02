@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated J/16/12/2021
+ * Updated J/20/01/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -263,8 +263,10 @@ function maillogdebug() {
 		else {
 			elem.setAttribute("onload", "maillogdebug();");
 		}
+		if (!elem.currentSrc) return;
 		var cur = elem.currentSrc.slice(elem.currentSrc.indexOf("/", 9)),
-		    src = elem.parentNode.querySelector("source[srcset*=\"" + cur + "\"]"),
+		    src = elem.parentNode.querySelector("source[srcset*=\"" + cur + "\"], img"),
+		    nbs = elem.parentNode.querySelectorAll("source").length,
 		    tmp = elem.getAttribute("src").substr(-4);
 		if (!src && (tmp !== ".svg")) return;
 		elem = elem.parentNode.previousSibling;
@@ -273,11 +275,11 @@ function maillogdebug() {
 			tmp = src.getAttribute("data-debug");
 			tmp = tmp.slice(tmp.indexOf(" ") + 1).split("/");
 			if (cur.indexOf("/" + tmp[0] + "x") > 0)
-				elem.textContent = tmp[0];
+				elem.textContent = tmp[0] + " (" + nbs + "s)";
 			else if (cur.indexOf("/" + tmp[1] + "x") > 0)
-				elem.textContent = tmp[1];
+				elem.textContent = tmp[1] + " (" + nbs + "s)";
 			else
-				elem.textContent = "???";
+				elem.textContent = "??? (" + nbs + "s)";
 		}
 		else {
 			elem.textContent = "SVG";

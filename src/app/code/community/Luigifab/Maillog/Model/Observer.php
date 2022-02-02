@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated J/09/12/2021
+ * Updated D/26/12/2021
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -251,6 +251,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 
 		Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);
+
+		if (is_object($cron))
+			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n".print_r($locales, true));
 	}
 
 	protected function getNumbers(array $where, array $oldWhere, object $collection, bool $variation = true, $status1 = null, $status2 = null) {
@@ -615,7 +618,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		}
 
 		if (is_object($cron))
-			$cron->setData('messages', implode("\n", array_slice($msg, 0, -1)));
+			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n\n".trim(implode("\n", $msg)));
+
+		return $msg;
 	}
 
 	// CRON maillog_bounces_import
@@ -653,6 +658,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			Mage::unregister('maillog_no_sync');
 			Mage::throwException($error);
 		}
+
+		return $diff;
 	}
 
 	// CRON maillog_unsubscribers_import
@@ -690,6 +697,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			Mage::unregister('maillog_no_sync');
 			Mage::throwException($error);
 		}
+
+		return $diff;
 	}
 
 
@@ -986,7 +995,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		// pour le message du cron
 		if (is_object($cron)) {
 			$text = str_replace(['    ', ' => Array', "\n\n"], [' ', '', "\n"], preg_replace('#\s+[()]#', '', print_r($diff, true)));
-			$cron->setData('messages', $text);
+			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n".$text);
 			$diff['cron'] = $cron->getId();
 		}
 

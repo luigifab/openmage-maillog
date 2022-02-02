@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/25/11/2021
+ * Updated J/30/12/2021
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -40,8 +40,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		return str_replace($object->date($date)->toString(Zend_Date::TIMEZONE), '', $object->date($date)->toString($format));
 	}
 
-	public function getHumanEmailAddress(string $email) {
-		return $this->escapeEntities(str_replace(['<', '>', ',', '"'], ['(', ')', ', ', ''], $email));
+	public function getHumanEmailAddress($email) {
+		return empty($email) ? '' : $this->escapeEntities(str_replace(['<', '>', ',', '"'], ['(', ')', ', ', ''], $email));
 	}
 
 	public function getHumanDuration($start, $end = null) {

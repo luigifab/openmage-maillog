@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated J/04/11/2021
+ * Updated M/28/12/2021
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -249,19 +249,19 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 			<pre style="padding:0.5em; white-space:pre-wrap; background-color:beige;">
 <b>[ product file ]</b>
 <?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
-	Mage::getModel('varien/filter_template')->filter('{{picture code="test" file="/6/0/605003.jpg"}}')
+	Mage::getModel('varien/filter_template')->filter('{{picture code="test" alt="Multiple word\'s" file="/6/0/605003.jpg"}}')
 )) ?>
 
 
 <b>[ category file ]</b>
 <?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
-	Mage::getModel('varien/filter_template')->filter('{{picture code="test" attribute="category" file="605003.jpg"}}')
+	Mage::getModel('varien/filter_template')->filter('{{picture code="test" alt="Multiple word\'s" attribute="category" file="605003.jpg"}}')
 )) ?>
 
 
 <b>[ wysiwyg file ]</b>
 <?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(
-	Mage::getModel('varien/filter_template')->filter('{{picture code="test" attribute="wysiwyg" file="wysiwyg/abc/605003.jpg"}}')
+	Mage::getModel('varien/filter_template')->filter('{{picture code="test" alt="Multiple word\'s" attribute="wysiwyg" file="wysiwyg/abc/605003.jpg"}}')
 )) ?>
 
 

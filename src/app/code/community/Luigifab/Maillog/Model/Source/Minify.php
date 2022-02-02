@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated J/16/12/2021
+ * Updated J/27/01/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -27,7 +27,7 @@ class Luigifab_Maillog_Model_Source_Minify {
 		if (empty($this->_options)) {
 
 			$help = Mage::helper('maillog');
-			$tidy = (extension_loaded('tidy') && class_exists('tidy', false)) ?
+			$tidy = (class_exists('tidy', false) && extension_loaded('tidy')) ?
 				date('Ymd', strtotime(tidy_get_release())) : $help->__('not available');
 
 			$this->_options = [
