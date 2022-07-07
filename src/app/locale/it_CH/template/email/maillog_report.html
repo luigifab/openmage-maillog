@@ -66,25 +66,11 @@
 					</th>
 					<td style="font-size:12px;">|<br>|</td>
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-						{{if items.week_variation_email gt 5}}
-							<strong>{{number items.week_total_email}}</strong>
-							<br><small style="color:#3CB861;">↗ +{{number items.week_variation_email}} %</small>
-						{{elseif items.week_variation_email lt -5}}
-							<strong>{{number items.week_total_email}}</strong>
-							<br><small style="color:#E41101;">↘ {{number items.week_variation_email}} %</small>
-						{{else}}
-							<strong>{{number items.week_total_email}}</strong>
-						{{/if}}
+						<strong>{{number items.week_total_email}}</strong>
 					</td>
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
 						{{if items.week_total_email eq 0}}
 
-						{{elseif items.week_variation_sent gt 5}}
-							<strong>{{number items.week_percent_sent}} %</strong>
-							<br><small style="color:#3CB861;">↗ +{{number items.week_variation_sent}} %</small>
-						{{elseif items.week_variation_sent lt -5}}
-							<strong>{{number items.week_percent_sent}} %</strong>
-							<br><small style="color:#E41101;">↘ {{number items.week_variation_sent}} %</small>
 						{{else}}
 							<strong>{{number items.week_percent_sent}} %</strong>
 						{{/if}}
@@ -92,12 +78,6 @@
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
 						{{if items.week_total_email eq 0}}
 
-						{{elseif items.week_variation_read gt 5}}
-							<strong>{{number items.week_percent_read}} %</strong>
-							<br><small style="color:#3CB861;">↗ +{{number items.week_variation_read}} %</small>
-						{{elseif items.week_variation_read lt -5}}
-							<strong>{{number items.week_percent_read}} %</strong>
-							<br><small style="color:#E41101;">↘ {{number items.week_variation_read}} %</small>
 						{{else}}
 							<strong>{{number items.week_percent_read}} %</strong>
 						{{/if}}
@@ -105,25 +85,11 @@
 					{{depend sync}}
 						<td style="font-size:12px;">|<br>|</td>
 						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-							{{if items.week_variation_sync gt 5}}
-								<strong>{{number items.week_total_sync}}</strong>
-								<br><small style="color:#3CB861;">↗ +{{number items.week_variation_sync}} %</small>
-							{{elseif items.week_variation_sync lt -5}}
-								<strong>{{number items.week_total_sync}}</strong>
-								<br><small style="color:#E41101;">↘ {{number items.week_variation_sync}} %</small>
-							{{else}}
-								<strong>{{number items.week_total_sync}}</strong>
-							{{/if}}
+							<strong>{{number items.week_total_sync}}</strong>
 						</td>
 						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
 							{{if items.week_total_sync eq 0}}
 
-							{{elseif items.week_variation_success gt 5}}
-								<strong>{{number items.week_percent_success}} %</strong>
-								<br><small style="color:#3CB861;">↗ +{{number items.week_variation_success}} %</small>
-							{{elseif items.week_variation_success lt -5}}
-								<strong>{{number items.week_percent_success}} %</strong>
-								<br><small style="color:#E41101;">↘ {{number items.week_variation_success}} %</small>
 							{{else}}
 								<strong>{{number items.week_percent_success}} %</strong>
 							{{/if}}
@@ -135,25 +101,11 @@
 					</th>
 					<td style="font-size:12px;">|<br>|</td>
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-						{{if items.month_variation_email gt 5}}
-							<strong>{{number items.month_total_email}}</strong>
-							<br><small style="color:#3CB861;">↗ +{{number items.month_variation_email}} %</small>
-						{{elseif items.month_variation_email lt -5}}
-							<strong>{{number items.month_total_email}}</strong>
-							<br><small style="color:#E41101;">↘ {{number items.month_variation_email}} %</small>
-						{{else}}
-							<strong>{{number items.month_total_email}}</strong>
-						{{/if}}
+						<strong>{{number items.month_total_email}}</strong>
 					</td>
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
 						{{if items.month_total_email eq 0}}
 
-						{{elseif items.month_variation_sent gt 5}}
-							<strong>{{number items.month_percent_sent}} %</strong>
-							<br><small style="color:#3CB861;">↗ +{{number items.month_variation_sent}} %</small>
-						{{elseif items.month_variation_sent lt -5}}
-							<strong>{{number items.month_percent_sent}} %</strong>
-							<br><small style="color:#E41101;">↘ {{number items.month_variation_sent}} %</small>
 						{{else}}
 							<strong>{{number items.month_percent_sent}} %</strong>
 						{{/if}}
@@ -161,12 +113,6 @@
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
 						{{if items.month_total_email eq 0}}
 
-						{{elseif items.month_variation_read gt 5}}
-							<strong>{{number items.month_percent_read}} %</strong>
-							<br><small style="color:#3CB861;">↗ +{{number items.month_variation_read}} %</small>
-						{{elseif items.month_variation_read lt -5}}
-							<strong>{{number items.month_percent_read}} %</strong>
-							<br><small style="color:#E41101;">↘ {{number items.month_variation_read}} %</small>
 						{{else}}
 							<strong>{{number items.month_percent_read}} %</strong>
 						{{/if}}
@@ -174,25 +120,11 @@
 					{{depend sync}}
 						<td style="font-size:12px;">|<br>|</td>
 						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-							{{if items.month_variation_sync gt 5}}
-								<strong>{{number items.month_total_sync}}</strong>
-								<br><small style="color:#3CB861;">↗ +{{number items.month_variation_sync}} %</small>
-							{{elseif items.month_variation_sync lt -5}}
-								<strong>{{number items.month_total_sync}}</strong>
-								<br><small style="color:#E41101;">↘ {{number items.month_variation_sync}} %</small>
-							{{else}}
-								<strong>{{number items.month_total_sync}}</strong>
-							{{/if}}
+							<strong>{{number items.month_total_sync}}</strong>
 						</td>
 						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
 							{{if items.month_total_sync eq 0}}
 
-							{{elseif items.month_variation_success gt 5}}
-								<strong>{{number items.month_percent_success}} %</strong>
-								<br><small style="color:#3CB861;">↗ +{{number items.month_variation_success}} %</small>
-							{{elseif items.month_variation_success lt -5}}
-								<strong>{{number items.month_percent_success}} %</strong>
-								<br><small style="color:#E41101;">↘ {{number items.month_variation_success}} %</small>
 							{{else}}
 								<strong>{{number items.month_percent_success}} %</strong>
 							{{/if}}

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/09/03/2019
- * Updated V/18/06/2021
+ * Updated S/19/02/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -33,10 +33,12 @@ ignore_user_abort(true);
 set_time_limit(0);
 
 try {
+	// ménage
 	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/ignore"');
 	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/baseurl"');
 	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/notbaseurl"');
 
+	// modifie des colonnes
 	$this->run('ALTER TABLE '.$this->getTable('maillog/email').'
 		MODIFY COLUMN mail_subject varchar(255) CHARACTER SET utf8mb4 NULL DEFAULT NULL');
 

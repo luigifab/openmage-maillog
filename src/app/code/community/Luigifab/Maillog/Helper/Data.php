@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/30/12/2021
+ * Updated V/24/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -172,10 +172,10 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$canSend  = true;
 				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 				foreach ($storeIds as $storeId) {
-					$baseurl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
-					$baseurl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
+					$baseUrl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
+					$baseUrl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
 					foreach ($domains as $domain) {
-						if ((mb_stripos($baseurl1, $domain) === false) || (mb_stripos($baseurl2, $domain) === false)) {
+						if ((mb_stripos($baseUrl1, $domain) === false) || (mb_stripos($baseUrl2, $domain) === false)) {
 							$canSend = false;
 							break 2;
 						}
@@ -183,7 +183,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				}
 
 				// met en cache le résultat
-				Mage::register($key, $msg = $canSend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), required domain was not found (%s).', $storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
+				Mage::register($key, $msg = $canSend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), required domain was not found (%s).', $storeId, $baseUrl1, $baseUrl2, implode(' ', $domains)));
 			}
 			else {
 				// met en cache le résultat
@@ -210,10 +210,10 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$canSend  = true;
 				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 				foreach ($storeIds as $storeId) {
-					$baseurl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
-					$baseurl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
+					$baseUrl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
+					$baseUrl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
 					foreach ($domains as $domain) {
-						if ((mb_stripos($baseurl1, $domain) !== false) || (mb_stripos($baseurl2, $domain) !== false)) {
+						if ((mb_stripos($baseUrl1, $domain) !== false) || (mb_stripos($baseUrl2, $domain) !== false)) {
 							$canSend = false;
 							break 2;
 						}
@@ -221,7 +221,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				}
 
 				// met en cache le résultat
-				Mage::register($key, $msg = $canSend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), a forbidden domain was found (%s).', $storeId, $baseurl1, $baseurl2, implode(' ', $domains)));
+				Mage::register($key, $msg = $canSend ? 'ok-can-send' : sprintf('STOP! For store %d (%s %s), a forbidden domain was found (%s).', $storeId, $baseUrl1, $baseUrl2, implode(' ', $domains)));
 			}
 			else {
 				// met en cache le résultat
@@ -298,8 +298,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				if (!empty($syncs->getSize())) {
 
 					$candidate = $syncs->getFirstItem();
-					$olddat = (array) explode(':', $candidate->getData('action')); // (yes)
-					$newdat = (array) explode(':', $actionKey); // (yes)
+					$olddat = explode(':', $candidate->getData('action'));
+					$newdat = explode(':', $actionKey);
 
 					// si pas de changement d'email dans l'ancienne synchro (o3) et pas de changement d'email dans la nouvelle synchro (n3)
 					// la nouvelle synchro écrase la synchro précédente
@@ -443,33 +443,6 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		}
 
 		return empty($id) ? $file : '<div style="width:180%; line-height:135%;" id="'.$id.'">'.(empty($txt) ? '' : $txt).'</div>';
-	}
-
-	public function getCronStatus() {
-
-		$cron = Mage::getResourceModel('cron/schedule_collection')
-			->addFieldToFilter('job_code', ['like' => 'maillog_cron%'])
-			->addFieldToFilter('status', 'success')
-			->setOrder('finished_at', 'desc')
-			->setPageSize(1)
-			->getFirstItem();
-
-		if (!empty($cron->getId())) {
-
-			$url = $this->getCronUrl($cron->getId());
-			$txt = $this->__('Cron job #<a %s>%d</a> finished at %s.', 'href="'.$url.'"', $cron->getId(), $this->formatDate($cron->getData('finished_at'), Zend_Date::DATETIME_SHORT));
-
-			$txt = lcfirst(trim($txt, '.'));
-			if (empty($url))
-				$txt = strip_tags($txt);
-		}
-		else {
-			$url = Mage::helper('core')->isModuleEnabled('Luigifab_Cronlog') ? 'cronlog' : 'system';
-			$url = Mage::helper('adminhtml')->getUrl('*/system_config/edit', ['section' => $url]);
-			$txt = $this->__('not yet finished or short <a %s>cron jobs history</a>', 'href="'.$url.'"');
-		}
-
-		return $this->__('last process: %s', $txt);
 	}
 
 	public function getCronUrl($id) {

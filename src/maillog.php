@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated J/25/11/2021
+ * Updated D/26/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -153,10 +153,10 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 			while (count($pids) >= $core) {
 				sleep(10);
 				foreach ($pids as $key => $pid) {
-					if (!file_exists('/proc/'.$pid))
-						unset($pids[$key]);
-					else
+					if (file_exists('/proc/'.$pid))
 						clearstatcache('/proc/'.$pid);
+					else
+						unset($pids[$key]);
 				}
 			}
 		}
@@ -164,10 +164,10 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 		while (count($pids) > 0) {
 			sleep(10);
 			foreach ($pids as $key => $pid) {
-				if (!file_exists('/proc/'.$pid))
-					unset($pids[$key]);
-				else
+				if (file_exists('/proc/'.$pid))
 					clearstatcache('/proc/'.$pid);
+				else
+					unset($pids[$key]);
 			}
 		}
 	}
@@ -313,7 +313,7 @@ function sendSyncs(object $cron, int $page) {
 		try {
 			// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
 			// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3           : 4 email
-			$info = (array) explode(':', $sync->getData('action')); // (yes)
+			$info = explode(':', $sync->getData('action'));
 			if (method_exists($sync, $info[0].'Now')) {
 				$sync->{$info[0].'Now'}();
 				$results['success'][] = 'sync:'.$sync->getId();
@@ -408,7 +408,7 @@ function saveCron(object $cron, array $results, bool $end, bool $full = false) {
 			$cron->setData('status', empty($results['error']) ? 'success' : 'error');
 		}
 
-		$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n".
+		$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).'M (max: '.ini_get('memory_limit').')'."\n".
 			'success: '.$textok."\n".'error: '.$textko);
 		$cron->save();
 	}

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated M/23/11/2021
+ * Updated L/28/03/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -29,9 +29,8 @@ $titleSecond  = $help->escapeEntities($this->__('All emails data'), true);
 $titleBgColor = $help->escapeEntities($this->__('Background color'), true);
 $titleTtColor = $help->escapeEntities($this->__('Text color'), true);
 
-$model   = Mage::getSingleton('maillog/email');
-$bgColor = $model->getDefaultBgColor();
-$ttColor = $model->getDefaultTxtColor();
+$bgColor = Mage::getStoreConfig('maillog/general/default_bgcolor');
+$ttColor = Mage::getStoreConfig('maillog/general/default_ttcolor');
 ?>
 
 <tr id="<?php echo $this->getHtmlId() ?>_head">
@@ -55,7 +54,11 @@ $ttColor = $model->getDefaultTxtColor();
 
 					<?php $key = str_replace(' ', '_', $type).'_data' ?>
 					<select name="groups[general][fields][special_config][value][<?php echo $key ?>]" title="<?php echo $titleFirst ?>">
-						<option>--</option>
+						<?php if (empty($config[$key]) || ($config[$key] == '--')): ?>
+							<option selected="selected">--</option>
+						<?php else: ?>
+							<option>--</option>
+						<?php endif ?>
 						<?php for ($i = 1; $i <= 18; $i++): ?>
 							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
 								<option value="<?php echo $i ?>" selected="selected">
@@ -90,7 +93,11 @@ $ttColor = $model->getDefaultTxtColor();
 
 					<?php $key = str_replace(' ', '_', $type).'_all' ?>
 					<select name="groups[general][fields][special_config][value][<?php echo $key ?>]" title="<?php echo $titleSecond ?>">
-						<option>--</option>
+						<?php if (empty($config[$key]) || ($config[$key] == '--')): ?>
+							<option selected="selected">--</option>
+						<?php else: ?>
+							<option>--</option>
+						<?php endif ?>
 						<?php for ($i = 1; $i <= 18; $i++): ?>
 							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
 								<option value="<?php echo $i ?>" selected="selected">
@@ -131,8 +138,11 @@ $ttColor = $model->getDefaultTxtColor();
 						value="<?php echo strtolower(empty($config[$key.'_text_color']) ? $ttColor : $config[$key.'_text_color']) ?>"
 						title="<?php echo $titleTtColor ?>" />
 
-					<button type="button" class="slink" onclick="maillog.resetLifetime(this, '<?php echo $bgColor ?>');">
+					<button type="button" class="slink reset" onclick="maillog.resetValues(this);">
 						<?php echo $this->__('Reset') ?>
+					</button>
+					<button type="button" class="slink default" onclick="maillog.defaultLifetime(this, '<?php echo $bgColor ?>', '<?php echo $ttColor ?>');">
+						<?php echo $this->__('Default') ?>
 					</button>
 
 					<?php if (!empty($canDelete)): ?>

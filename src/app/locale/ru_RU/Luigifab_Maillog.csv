@@ -1,6 +1,7 @@
 "Transactional emails","Транзакционные письма"
 "File format","Формат файла"
 "Duration","Длительность"
+" Error","Ошибка"
 "Created At: %s","Дата создания: %s"
 "Duration: %s","Длительность: %s"
 "Status: <span %s>%s</span>","Статус: <span %s>%s</span>"
@@ -27,4 +28,5 @@
 "%d months","%d месяцев"
 " %d years","%d лет"
 "%d years","%d лет"
+"Copy","Копировать"
 "Subject: %s","Тема: %s"

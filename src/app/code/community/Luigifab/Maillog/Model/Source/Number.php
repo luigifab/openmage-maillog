@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/20/08/2019
+ * Updated S/19/02/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -29,7 +29,7 @@ class Luigifab_Maillog_Model_Source_Number {
 			['value' => 30,  'label' => 30],
 			['value' => 50,  'label' => 50],
 			['value' => 100, 'label' => 100],
-			['value' => 200, 'label' => 200]
+			['value' => 200, 'label' => 200],
 		];
 	}
 }

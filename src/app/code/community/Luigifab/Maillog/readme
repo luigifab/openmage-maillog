@@ -20,17 +20,18 @@ Rewrite
 - global | model | newsletter/subscriber          | maillog/rewrite_subscriber
 - global | model | newsletter_resource/subscriber | maillog/rewrite_subscriberres
 Event
-- adminhtml | adminhtml_customer_prepare_save                  | maillog/observer::setCustomerStoreId
-- adminhtml | admin_system_config_changed_section_maillog      | maillog/observer::updateConfig
-- adminhtml | admin_system_config_changed_section_maillog_sync | maillog/observer::updateConfig
-- adminhtml | newsletter_subscriber_save_before                | maillog/observer::setSubscriberStoreId
-- frontend  | customer_address_save_after                      | maillog/observer::addressSaveSync
-- frontend  | customer_login                                   | maillog/observer::customerLoginSync
-- global    | customer_delete_after                            | maillog/observer::customerDeleteSync
-- global    | customer_save_commit_after                       | maillog/observer::customerSaveSync
-- global    | newsletter_subscriber_delete_after               | maillog/observer::subscriberDeleteSync
-- global    | newsletter_subscriber_save_after                 | maillog/observer::subscriberSaveSync
-- global    | sales_order_invoice_save_commit_after            | maillog/observer::orderInvoiceSync
+- adminhtml | adminhtml_customer_prepare_save                        | maillog/observer::setCustomerStoreId
+- adminhtml | admin_system_config_changed_section_maillog            | maillog/observer::updateConfig
+- adminhtml | admin_system_config_changed_section_maillog_directives | maillog/observer::clearCache
+- adminhtml | admin_system_config_changed_section_maillog_sync       | maillog/observer::updateConfig
+- adminhtml | newsletter_subscriber_save_before                      | maillog/observer::setSubscriberStoreId
+- frontend  | customer_address_save_after                            | maillog/observer::addressSaveSync
+- frontend  | customer_login                                         | maillog/observer::customerLoginSync
+- global    | customer_delete_after                                  | maillog/observer::customerDeleteSync
+- global    | customer_save_commit_after                             | maillog/observer::customerSaveSync
+- global    | newsletter_subscriber_delete_after                     | maillog/observer::subscriberDeleteSync
+- global    | newsletter_subscriber_save_after                       | maillog/observer::subscriberSaveSync
+- global    | sales_order_invoice_save_commit_after                  | maillog/observer::orderInvoiceSync
 Cron
 - maillog_bounces_import       | maillog/observer::bouncesFileImport
 - maillog_clean_old_data       | maillog/observer::cleanOldData

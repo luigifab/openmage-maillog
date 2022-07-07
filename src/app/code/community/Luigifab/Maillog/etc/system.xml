@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/12/11/2021
+ * Updated M/24/05/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -115,7 +115,6 @@
 						<smtp_url translate="label">
 							<label>Address</label>
 							<comment>smtps://email.example.org:465/</comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>12</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -123,7 +122,6 @@
 						</smtp_url>
 						<smtp_username translate="label">
 							<label>User Name</label>
-							<frontend_type>text</frontend_type>
 							<sort_order>13</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -239,7 +237,6 @@
 						<recipient_email translate="label comment">
 							<label>Send Emails To</label>
 							<comment>Separate addresses by a space.</comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -276,7 +273,6 @@
 						<baseurl translate="label comment">
 							<label><![CDATA[All <em>base_url</em> must contain]]></label>
 							<comment>Separate keywords by a space.</comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>1</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -285,7 +281,6 @@
 						<notbaseurl translate="label comment">
 							<label><![CDATA[All <em>base_url</em> must not contain]]></label>
 							<comment>Separate keywords by a space.</comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>2</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -419,7 +414,6 @@
 						</api>
 						<api_url translate="label">
 							<label>Address</label>
-							<frontend_type>text</frontend_type>
 							<validate>validate-url</validate>
 							<sort_order>11</sort_order>
 							<show_in_default>1</show_in_default>
@@ -428,7 +422,6 @@
 						</api_url>
 						<api_username translate="label">
 							<label>User Name</label>
-							<frontend_type>text</frontend_type>
 							<sort_order>12</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -528,7 +521,6 @@
 						</api>
 						<api_url translate="label">
 							<label>Address</label>
-							<frontend_type>text</frontend_type>
 							<validate>validate-url</validate>
 							<sort_order>11</sort_order>
 							<show_in_default>1</show_in_default>
@@ -537,7 +529,6 @@
 						</api_url>
 						<api_username translate="label">
 							<label>User Name</label>
-							<frontend_type>text</frontend_type>
 							<sort_order>12</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -600,7 +591,6 @@
 							<show_in_store>0</show_in_store>
 						</mapping_config>
 						<mautic_config>
-							<frontend_type>text</frontend_type>
 							<frontend_model>maillog/adminhtml_config_mautic</frontend_model>
 							<backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
 							<sort_order>25</sort_order>
@@ -630,7 +620,6 @@
 						<directory translate="label comment">
 							<label>Files location</label>
 							<comment><![CDATA[In <strong>var</strong> folder.]]></comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>2</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -639,7 +628,6 @@
 						<format translate="label comment">
 							<label>File format</label>
 							<comment><![CDATA[Examples: <b>txt</b> / <b>csv;2</b> / <b>csv,3"</b><br />The file must be in <b>utf-8</b> (with or without BOM).<br />Use <b>→</b> for the tabulation.]]></comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -648,7 +636,6 @@
 						<cron_expr translate="label comment">
 							<label>Cron expression</label>
 							<comment><![CDATA[By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Warning: maximum once per day.]]></comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -720,7 +707,6 @@
 						<directory translate="label comment">
 							<label>Files location</label>
 							<comment><![CDATA[In <strong>var</strong> folder.]]></comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>2</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -729,7 +715,6 @@
 						<format translate="label comment">
 							<label>File format</label>
 							<comment><![CDATA[Examples: <b>txt</b> / <b>csv;2</b> / <b>csv,3"</b><br />The file must be in <b>utf-8</b> (with or without BOM).<br />Use <b>→</b> for the tabulation.]]></comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -738,7 +723,6 @@
 						<cron_expr translate="label comment">
 							<label>Cron expression</label>
 							<comment><![CDATA[By default, everyday at 2:30 AM (<strong>30 2 * * *</strong>).<br />Warning: maximum once per day.]]></comment>
-							<frontend_type>text</frontend_type>
 							<sort_order>4</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -834,11 +818,31 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</show_image_size>
+						<picture_create_webp translate="label comment">
+							<label>Create also webp images</label>
+							<comment>In addition to jpg/gif/png images, works with: Firefox 65+, Chrome 32+, Opera 19+, Edge 18+, Safari 14+.</comment>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>12</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</picture_create_webp>
+						<picture_width_height translate="label comment">
+							<label>Add width and height attributes on img and source tags</label>
+							<comment><![CDATA[On <b>source</b> tag, works with: Chrome 90+, Opera 76+, Edge 90+.]]></comment>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>13</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</picture_width_height>
 						<special_config translate="label">
 							<label>Picture directive</label>
 							<frontend_model>maillog/adminhtml_config_picture</frontend_model>
 							<backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
-							<sort_order>12</sort_order>
+							<sort_order>14</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
@@ -900,13 +904,6 @@
 		</maillog_preview>
 		<newsletter>
 			<groups>
-				<help>
-					<frontend_model>maillog/adminhtml_config_help</frontend_model>
-					<sort_order>0</sort_order>
-					<show_in_default>1</show_in_default>
-					<show_in_website>1</show_in_website>
-					<show_in_store>1</show_in_store>
-				</help>
 				<subscription>
 					<fields>
 						<confirm_title translate="label">

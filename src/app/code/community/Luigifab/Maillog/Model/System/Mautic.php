@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/23/09/2021
- * Updated J/25/11/2021
+ * Updated V/24/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -73,7 +73,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 		foreach ($values as $system => $config) {
 
 			$type   = substr($system, 0, strpos($system, '_'));
-			$system = (string) substr($system, strpos($system, '_') + 1); // (yes)
+			$system = substr($system, strpos($system, '_') + 1);
 
 			foreach ($config as $code) {
 
@@ -205,8 +205,10 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 					$json = ['id' => $json['contact']['id']];
 				}
 				else if (is_array($json)) {
-					foreach ($json as $key => $values)
-						unset($json[$key]['fields']);
+					foreach ($json as $key => $values) {
+						if (is_array($values))
+							unset($json[$key]['fields']);
+					}
 				}
 			}
 		}

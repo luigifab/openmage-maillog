@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/18/11/2021
+ * Updated V/01/07/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -45,7 +45,7 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 	protected function _addColumnFilterToCollection($column) {
 
 		if ($column->getId() == 'action') {
-			$words  = explode(' ', $column->getFilter()->getValue());
+			$words  = array_filter(explode(' ', $column->getFilter()->getValue()));
 			$fields = ['action', 'request', 'response'];
 			foreach ($words as $word) {
 				$values = array_fill(0, count($fields), ['like' => '%'.$word.'%']);
@@ -65,25 +65,15 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 			'header'    => $this->__('Id'),
 			'index'     => 'sync_id',
 			'align'     => 'center',
-			'width'     => '80px'
+			'width'     => '80px',
 		]);
 
 		$this->addColumn('action', [
 			'header'   => $this->__('Action / Request / Response *'),
 			'index'    => 'action',
 			'sortable' => false,
-			'frame_callback' => [$this, 'decorateDetails']
+			'frame_callback' => [$this, 'decorateDetails'],
 		]);
-
-		//$this->addColumn('created_at', [
-		//	'header'    => $this->__('Created At'),
-		//	'index'     => 'created_at',
-		//	'type'      => 'datetime',
-		//	'format'    => Mage::getSingleton('core/locale')->getDateTimeFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT),
-		//	'align'     => 'center',
-		//	'width'     => '150px',
-		//	'frame_callback' => [$this, 'decorateDate']
-		//]);
 
 		$this->addColumn('sync_at', [
 			'header'    => $this->__('Synchronized At'),
@@ -92,7 +82,7 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 			'format'    => Mage::getSingleton('core/locale')->getDateTimeFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT),
 			'align'     => 'center',
 			'width'     => '150px',
-			'frame_callback' => [$this, 'decorateDate']
+			'frame_callback' => [$this, 'decorateDate'],
 		]);
 
 		$this->addColumn('status', [
@@ -104,11 +94,11 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 				'running' => $this->__('Running'),
 				'success' => $this->helper('maillog')->_('Success'),
 				'error'   => $this->helper('maillog')->_('Error'),
-				'notsync' => $this->__('Unsent')
+				'notsync' => $this->__('Unsent'),
 			],
 			'width'     => '125px',
 			'sortable'  => false,
-			'frame_callback' => [$this, 'decorateStatus']
+			'frame_callback' => [$this, 'decorateStatus'],
 		]);
 
 		return parent::_prepareColumns();

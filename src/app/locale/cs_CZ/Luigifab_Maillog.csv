@@ -3,6 +3,7 @@
 "File format","Formát souboru"
 "Recipient(s)","Příjemce(i)"
 "Duration","Délka"
+" Error","Chyba"
 "Created At: %s","Vytvořeno v: %s"
 "Duration: %s","Délka: %s"
 "Status: <span %s>%s</span>","Stav: <span %s>%s</span>"
@@ -27,4 +28,5 @@
 "%d months","%d měsíců"
 " %d years","%d roky"
 "%d years","%d let"
+"Copy","Kopírovat"
 "Subject: %s","Předmět: %s"

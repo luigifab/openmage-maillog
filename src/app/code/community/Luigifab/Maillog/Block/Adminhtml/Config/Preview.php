@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated S/18/09/2021
+ * Updated V/24/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -48,7 +48,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 
 		foreach ($codes as $code => [$label, $file]) {
 
-			$base = (array) explode('_', $code); // (yes)
+			$base = explode('_', $code);
 			if ($base[0] != $separ) {
 				if ($start && !$end) $html[] = '<td></td></tr>';
 				$html[] = '<tr>';

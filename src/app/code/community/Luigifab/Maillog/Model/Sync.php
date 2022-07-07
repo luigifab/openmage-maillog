@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated M/23/11/2021
+ * Updated V/24/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -39,7 +39,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 		// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
 		// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3           : 4 email
-		$info = (array) explode(':', $this->getData('action')); // (yes)
+		$info = explode(':', $this->getData('action'));
 
 		try {
 			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
@@ -129,7 +129,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 		// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
 		// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3           : 4 email
-		$info = (array) explode(':', $this->getData('action')); // (yes)
+		$info = explode(':', $this->getData('action'));
 
 		try {
 			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
@@ -306,15 +306,15 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 						}
 
 						if ($this->inArray('last_order_product_'.$idx.'_url', $values)) {
-							if (empty($baseurl)) {
-								$baseurl = preg_replace('#/[^/]+\.php\d*/#', '/index.php/', Mage::app()->getStore($storeId)->getBaseUrl());
+							if (empty($baseUrl)) {
+								$baseUrl = preg_replace('#/[^/]+\.php\d*/#', '/index.php/', Mage::app()->getStore($storeId)->getBaseUrl());
 								$suffix  = Mage::helper('catalog/product')->getProductUrlSuffix();
 							}
 							if (Mage::getStoreConfigFlag('urlnosql/general/enabled') && Mage::helper('core')->isModuleEnabled('Luigifab_Urlnosql')) {
-								$object->setData('last_order_product_'.$idx.'_url', $baseurl.$productId.$suffix);
+								$object->setData('last_order_product_'.$idx.'_url', $baseUrl.$productId.$suffix);
 							}
 							else {
-								$object->setData('last_order_product_'.$idx.'_url', $baseurl.'catalog/product/view/id/'.$productId.'/');
+								$object->setData('last_order_product_'.$idx.'_url', $baseUrl.'catalog/product/view/id/'.$productId.'/');
 							}
 						}
 

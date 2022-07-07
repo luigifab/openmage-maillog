@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/30/09/2021
+ * Updated V/24/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -26,19 +26,19 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 
 		$msg = $this->checkChanges();
 		if ($msg !== true)
-			return sprintf('<p class="box">%s %s <span class="right"><a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
+			return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
 				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog',
 				$this->__('INCOMPLETE MODULE INSTALLATION'),
 				$this->__('Changes in <em>%s</em> are not present. Please read the documentation.', $msg));
 
 		$msg = $this->checkRewrites();
 		if ($msg !== true)
-			return sprintf('<p class="box">%s %s <span class="right"><a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
+			return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
 				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog',
 				$this->__('INCOMPLETE MODULE INSTALLATION'),
 				$this->__('There is conflict (<em>%s</em>).', $msg));
 
-		return sprintf('<p class="box">%s %s <span class="right"><a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p>',
+		return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p>',
 			'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog');
 	}
 
@@ -47,7 +47,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 		$rewrites = [
 			['model' => 'core/email_queue'],
 			['model' => 'newsletter/subscriber'],
-			['model' => 'newsletter_resource/subscriber']
+			['model' => 'newsletter_resource/subscriber'],
 		];
 
 		foreach ($rewrites as $rewrite) {
@@ -67,17 +67,17 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 	protected function checkChanges() {
 
 		$zend = file_get_contents(BP.'/lib/Zend/Mail/Transport/Sendmail.php');
-		if (mb_strpos($zend, 'return Mage::helper(\'maillog\')->sendMail($this, $this->_mail, $this->_parts);') === false)
+		if (!str_contains($zend, 'return Mage::helper(\'maillog\')->sendMail($this, $this->_mail, $this->_parts);'))
 			return 'lib/Zend/Mail/Transport/Sendmail.php';
 
 		$varien = file_get_contents(BP.'/lib/Varien/Filter/Template.php');
-		if (mb_strpos($varien, 'Luigifab_Maillog_Model_Filter') === false)
+		if (!str_contains($varien, 'Luigifab_Maillog_Model_Filter'))
 			return 'lib/Varien/Filter/Template.php';
-		if (mb_strpos($varien, 'function filter2(') === false)
+		if (!str_contains($varien, 'function filter2('))
 			return 'lib/Varien/Filter/Template.php';
-		if (mb_strpos($varien, 'function _getVariable2') === false)
+		if (!str_contains($varien, 'function _getVariable2'))
 			return 'lib/Varien/Filter/Template.php';
-		if (mb_strpos($varien, '(\'maillog\')') !== false)
+		if (str_contains($varien, '(\'maillog\')'))
 			return 'lib/Varien/Filter/Template.php';
 
 		return true;

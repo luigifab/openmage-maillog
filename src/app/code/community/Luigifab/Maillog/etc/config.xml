@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated S/01/01/2022
+ * Updated S/19/02/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -23,7 +23,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>5.3.1</version>
+			<version>5.4.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -194,6 +194,14 @@
 					</maillog>
 				</observers>
 			</admin_system_config_changed_section_maillog_sync>
+			<admin_system_config_changed_section_maillog_directives>
+				<observers>
+					<maillog>
+						<class>maillog/observer</class>
+						<method>clearCache</method>
+					</maillog>
+				</observers>
+			</admin_system_config_changed_section_maillog_directives>
 			<adminhtml_customer_prepare_save>
 				<observers>
 					<maillog>
@@ -259,6 +267,8 @@
 				<encoding>quoted-printable</encoding>
 				<subject>1</subject>
 				<created>1</created>
+				<default_bgcolor>#F6F6F6</default_bgcolor>
+				<default_ttcolor>#000</default_ttcolor>
 			</general>
 			<filters>
 				<notbaseurl>dev test preprod</notbaseurl>

@@ -46,7 +46,6 @@ class Luigifab_Maillog_Block_Adminhtml_Tab extends Mage_Adminhtml_Block_Abstract
 		return false;
 	}
 
-
 	protected function _toHtml() {
 		return empty($block = $this->getLayout()->getBlock('adminhtml_maillog_embedtab')) ? parent::_toHtml() : $block->toHtml();
 	}

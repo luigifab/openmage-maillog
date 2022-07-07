@@ -1,0 +1,47 @@
+diff --git a/lib/Zend/Mail/Transport/Sendmail.php b/lib/Zend/Mail/Transport/Sendmail.php
+index 96ae90f4d..e02758226 100644
+--- a/lib/Zend/Mail/Transport/Sendmail.php
++++ b/lib/Zend/Mail/Transport/Sendmail.php
+@@ -97,6 +97,10 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
+      */
+     public function _sendMail()
+     {
++        // https://www.luigifab.fr/openmage/maillog
++        if (Mage::helper('core')->isModuleEnabled('Luigifab_Maillog') && Mage::getStoreConfigFlag('maillog/general/enabled'))
++            return Mage::helper('maillog')->sendMail($this, $this->_mail, $this->_parts);
++
+         if ($this->parameters === null) {
+             set_error_handler(array($this, '_handleMailErrors'));
+             $result = mail(
+diff --git a/lib/Varien/Filter/Template.php b/lib/Varien/Filter/Template.php
+index 83b6a98bd..78196fb12 100644
+--- a/lib/Varien/Filter/Template.php
++++ b/lib/Varien/Filter/Template.php
+@@ -32,7 +32,8 @@
+  * @author      Magento Core Team <core@magentocommerce.com>
+  */
+ 
+-class Varien_Filter_Template implements Zend_Filter_Interface
++// https://www.luigifab.fr/openmage/maillog
++class Varien_Filter_Template extends Luigifab_Maillog_Model_Filter implements Zend_Filter_Interface
+ {
+     /**
+      * Cunstruction regular expression
+@@ -128,7 +129,7 @@ class Varien_Filter_Template implements Zend_Filter_Interface
+      * @param string $value
+      * @return string
+      */
+-    public function filter($value)
++    public function filter2($value)
+     {
+         // "depend" and "if" operands should be first
+         foreach (array(
+@@ -281,7 +282,7 @@ class Varien_Filter_Template implements Zend_Filter_Interface
+      * @param string $default default value
+      * @return string
+      */
+-    protected function _getVariable($value, $default='{no_value_defined}')
++    protected function _getVariable2($value, $default='{no_value_defined}')
+     {
+         Varien_Profiler::start("email_template_proccessing_variables");
+         $tokenizer = new Varien_Filter_Template_Tokenizer_Variable();

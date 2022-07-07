@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated J/04/11/2021
+ * Updated D/26/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -24,7 +24,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
-		$code = (array) explode('_', $element->getHtmlId()); // (yes)
+		$code = explode('_', $element->getHtmlId());
 		$code = $code[2];
 
 		$options = ['customerid' => [], 'system' => [], 'core' => []];
@@ -60,7 +60,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 		// avec un petit hack pour ne pas perdre la configuration lorsque le système est HS
 		if (stripos($element->getHtmlId(), 'mapping_customerid_field') !== false) {
 
-			$options['customerid'][] = ['value' => '', 'label' => '--'];
+			$options['customerid'][] = ['value' => '', 'label' => '-- ('.count($fields).')'];
 
 			$value = $element->getValue();
 			if (!empty($value) && empty($fields)) {
@@ -82,7 +82,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 		// liste vide lorsque le système est HS
 		if (stripos($element->getHtmlId(), 'mapping_system') !== false) {
 
-			$options['system'][] = ['value' => '', 'label' => '--'];
+			$options['system'][] = ['value' => '', 'label' => '-- ('.count($fields).')'];
 
 			foreach ($fields as $field) {
 				if (!empty($field['readonly']))
@@ -106,11 +106,11 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 		// liste jamais vide puisque ce sont les attributs clients
 		if (stripos($element->getHtmlId(), 'mapping_openmage') !== false) {
 
-			$options['core'][] = ['value' => '', 'label' => '--'];
-			$options['core'][] = ['value' => 'entity_id'];
-
 			$customerAttributes = Mage::getModel('customer/entity_attribute_collection')->setOrder('attribute_code', 'asc');
 			$addressAttributes  = Mage::getModel('customer/entity_address_attribute_collection')->setOrder('attribute_code', 'asc');
+
+			$options['core'][] = ['value' => '', 'label' => '-- ('.(count($customerAttributes) + count($addressAttributes)).')'];
+			$options['core'][] = ['value' => 'entity_id'];
 
 			foreach ($customerAttributes as $attribute) {
 				$options['core'][] = ['value' => $attribute->getData('attribute_code')];

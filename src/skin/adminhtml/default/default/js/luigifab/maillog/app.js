@@ -1,6 +1,6 @@
 /**
  * Created J/03/12/2015
- * Updated L/18/10/2021
+ * Updated D/03/04/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -24,6 +24,20 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 		that = that || window;
 		for (i = 0; i < this.length; i++)
 			callback.call(that, this[i], i, this);
+	};
+}
+
+if (!Element.prototype.closest) {
+	if (!Element.prototype.matches)
+	    Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+	Element.prototype.closest = function (s) {
+		var el = this;
+		if (!document.documentElement.contains(el)) return null;
+		do {
+			if (el.matches(s)) return el;
+			el = el.parentElement || el.parentNode;
+		} while (el !== null && el.nodeType == 1);
+		return null;
 	};
 }
 
@@ -99,6 +113,7 @@ var maillog = new (function () {
 	};
 
 	this.decode = function (data) {
+
 		// utf-8 avec Webkit (https://stackoverflow.com/q/3626183)
 		return decodeURIComponent(escape(atob(data)));
 	};
@@ -119,13 +134,29 @@ var maillog = new (function () {
 		}
 	};
 
-	this.resetLifetime = function (elem, color) {
+	this.resetValues = function (elem) {
+
+		elem = elem.closest('li, tr');
+		elem.querySelectorAll('select, input').forEach(function (input) {
+
+			if (input.nodeName == 'SELECT')
+				input.selectedIndex = input.querySelector('option[selected]').index;
+			else
+				input.value = input.defaultValue;
+
+			if (input.classList.contains('h') && (input = input.closest('li').querySelector('div.rt')))
+				this.ratioPicture(input);
+
+		}, this); // pour que ci-dessus this = this
+	};
+
+	this.defaultLifetime = function (elem, bg, tt) {
 
 		elem = elem.parentNode;
 		elem.querySelectorAll('select')[0].selectedIndex = 0;
 		elem.querySelectorAll('select')[1].selectedIndex = 0;
-		elem.querySelectorAll('input')[0].value = color.toLowerCase();
-		elem.querySelectorAll('input')[1].value = '#000000';
+		elem.querySelectorAll('input')[0].value = bg.toLowerCase();
+		elem.querySelectorAll('input')[1].value = tt.toLowerCase();
 	};
 
 	this.removeLifetime = function (elem) {
@@ -136,48 +167,155 @@ var maillog = new (function () {
 
 	this.addPicture = function (elem) {
 
-		var tpl = document.createElement('tr'), root = elem.parentNode;
+		var tpl = document.createElement('tr'), root = elem.parentNode, tr, td;
 		while (root.nodeName !== 'TABLE')
 			root = root.parentNode;
 
 		root = root.querySelector('tbody');
 
 		tpl.setAttribute('class', 'added');
+		tpl.setAttribute('data-idx', this.nextIdx.toString());
 		tpl.innerHTML = this.template.
 			replace(/IIDDXX/g, this.nextIdx).
 			replace(/KKEEYY/g, '1');
 
+		if (!root.querySelector('tr.new')) {
+			tr = document.createElement('tr');
+			tr.setAttribute('class', 'letter new');
+			td = document.createElement('td');
+			td.setAttribute('colspan', '2');
+			td.setAttribute('class', 'a-center');
+			td.appendChild(document.createTextNode('-'));
+			tr.appendChild(td);
+			root.appendChild(tr);
+		}
+
 		root.appendChild(tpl);
+		tpl.querySelector('input').focus();
 		this.nextIdx += 1;
+
+		return tpl;
 	};
 
-	this.deletePicture = function (elem) {
+	this.ratioPicture = function (elem) {
+
+		// https://stackoverflow.com/a/11832950/2980105
+		var root = elem.closest('li'), w = root.querySelector('input.w').value, h = root.querySelector('input.h').value;
+		root.querySelector('div.rt').innerHTML = (w && h) ?
+			(Math.round((parseInt(w, 10) / parseInt(h, 10) + (Number.EPSILON ? Number.EPSILON : 0)) * 100) / 100).toLocaleString() : '';
+	};
+
+	this.copyPicture = function (elem, json) {
+
+		var config = {}, name;
+
+		elem.closest('tr').querySelectorAll('input').forEach(function (input) {
+			name = input.name.replace('groups[general][fields][special_config][value][', '').replace(/]\[/g, ':').replace(']', '');
+			name = name.substring(name.indexOf(':') + 1);
+			config[name] = input.value;
+		});
+
+		config = JSON.stringify(config);
+		if (json === true) {
+			return config;
+		}
+		else if (typeof navigator.clipboard == 'object') {
+			navigator.clipboard.writeText(config).then(function () {
+				elem.closest('tr').classList.add('maillog-flash');
+				self.setTimeout(function () {
+					elem.closest('tr').classList.remove('maillog-flash');
+				}, 1000);
+			}, function () {
+				self.prompt('copy', config);
+			});
+		}
+		else {
+			self.prompt('copy', config);
+		}
+	};
+
+	this.pastePicture = function (elem, ev) {
+
+		var config = JSON.parse((ev.clipboardData || window.clipboardData).getData('text')), idx = 1, root, line;
+		ev.preventDefault();
+
+		if (elem.classList.contains('cde')) {
+			root = elem.closest('tr');
+			if (!confirm(Translator.translate('Are you sure?') + ' (paste/replace picture)'))
+				return;
+		}
+		else {
+			elem.closest('table').querySelectorAll('input.cde').forEach(function (input) {
+				if (input.value == config.c)
+					root = input.closest('tr');
+			});
+			if (root) {
+				if (!confirm(Translator.translate('Are you sure?') + ' (paste/replace picture ' + config.c + ')'))
+					return;
+			}
+			else {
+				root = this.addPicture(document.querySelector('button.add.picture'));
+			}
+		}
+
+		root.querySelector('input.cde').value = config.c;
+		root.querySelector('input.cmt').value = config.d;
+		root.querySelector('li.default input.w').value = config['0:w'];
+		root.querySelector('li.default input.h').value = config['0:h'];
+		this.ratioPicture(root.querySelector('li.default'));
+
+		root.querySelectorAll('li.breakpoint').forEach(function (elem) { elem.remove(); });
+		while (config[idx + ':b']) {
+			line = this.addBreak(root.querySelector('button.add.break'), false);
+			line.querySelector('input.b').value = config[idx + ':b'];
+			line.querySelector('input.w').value = config[idx + ':w'];
+			line.querySelector('input.h').value = config[idx + ':h'];
+			this.ratioPicture(line);
+			idx++;
+		}
+
+		self.scrollTo(0, root.getBoundingClientRect().top + self.scrollY - 150);
+		root.querySelector('input').focus();
+
+		root.closest('tr').classList.add('maillog-flash');
+		self.setTimeout(function () {
+			root.closest('tr').classList.remove('maillog-flash');
+		}, 1000);
+	};
+
+	this.removePicture = function (elem) {
 
 		var empty = true;
-		elem.parentNode.parentNode.querySelectorAll('input').forEach(function (input) { empty = empty && (input.value == ''); });
+		elem.closest('tr').querySelectorAll('input').forEach(function (input) { empty = empty && (input.value == ''); });
 
-		if (empty || confirm(Translator.translate('Are you sure?')))
-			elem.parentNode.parentNode.remove();
+		if (empty || confirm(Translator.translate('Are you sure?') + ' (remove picture)'))
+			elem.closest('tr').remove();
 	};
 
-	this.addBreak = function (elem, idx) {
+	this.addBreak = function (elem, focus) {
 
-		var tpl = document.createElement('ul'), ul = elem.parentNode.parentNode.parentNode.querySelector('ul');
+		var tpl = document.createElement('ul'), ul = elem.closest('td').querySelector('ul');
 
 		tpl.innerHTML = this.template.
-			replace(/IIDDXX/g, idx).
+			replace(/IIDDXX/g, elem.closest('tr').getAttribute('data-idx')).
 			replace(/KKEEYY/g, ul.querySelectorAll('li').length.toString());
 
-		ul.appendChild(tpl.querySelector('li.breakpoint'));
+		tpl = tpl.querySelector('li.breakpoint');
+		ul.appendChild(tpl);
+
+		if (focus !== false)
+			tpl.querySelector('input').focus();
+
+		return tpl;
 	};
 
-	this.deleteBreak = function (elem) {
+	this.removeBreak = function (elem) {
 
 		var empty = true;
-		elem.parentNode.parentNode.querySelectorAll('input').forEach(function (input) { empty = empty && (input.value == ''); });
+		elem.closest('li').querySelectorAll('input').forEach(function (input) { empty = empty && (input.value == ''); });
 
-		if (empty || confirm(Translator.translate('Are you sure?')))
-			elem.parentNode.parentNode.remove();
+		if (empty || confirm(Translator.translate('Are you sure?') + ' (remove breakpoint)'))
+			elem.closest('li').remove();
 	};
 
 })();

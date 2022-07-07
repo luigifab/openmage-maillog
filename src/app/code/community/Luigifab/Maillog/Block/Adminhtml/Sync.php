@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated S/02/10/2021
+ * Updated D/26/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -28,11 +28,11 @@ class Luigifab_Maillog_Block_Adminhtml_Sync extends Mage_Adminhtml_Block_Widget_
 
 		$this->_controller = 'adminhtml_sync';
 		$this->_blockGroup = 'maillog';
-		$this->_headerText = sprintf('%s <span>%s</span>', $this->__('Customers synchronization'), $this->helper('maillog')->getCronStatus());
+		$this->_headerText = $this->__('Customers synchronization');
 
 		$this->_removeButton('add');
 
-		$allowed = Mage::getSingleton('admin/session')->isAllowed('system/config');
+		$allowed = Mage::getSingleton('admin/session')->isAllowed('system/config/maillog_sync');
 		$this->_addButton('config', [
 			'label'   => $this->__('Configuration'),
 			'onclick' => $allowed ? "setLocation('".$this->getUrl('*/system_config/edit', ['section' => 'maillog_sync'])."');" : '',

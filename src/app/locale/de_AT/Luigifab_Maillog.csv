@@ -111,6 +111,7 @@
 "%d months","%d Monate"
 " %d years","%d Jahren"
 "%d years","%d Jahren"
+"Copy","Kopieren"
 "Subject: %s","Betreff: %s"
 "<a %s>Print</a> this email only if necessary.","Nur bei Bedarf diese Nachricht <a %s>ausdrucken</a>."
 "Sorry, your email is too old, it is not available online anymore.","Entschuldigung, Ihre E-Mail ist zu alt, so ist sie nicht mehr online verfügbar."

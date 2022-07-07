@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/05/09/2021
- * Updated J/30/09/2021
+ * Updated S/19/02/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -39,8 +39,8 @@ try {
 		$config->setData('value', empty($user) ? null : $user)->save();
 	}
 
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog_directives/general/update%";');
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog_sync/dolist%";');
+	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog_directives/general/update%"');
+	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog_sync/dolist%"');
 
 	Mage::getConfig()->reinit();
 }

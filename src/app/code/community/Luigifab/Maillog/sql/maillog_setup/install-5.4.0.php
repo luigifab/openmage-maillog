@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/23/11/2021
+ * Updated L/21/03/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -57,8 +57,8 @@ try {
 		CREATE TABLE '.$this->getTable('maillog/email').' (
 			email_id                int(11) unsigned NOT NULL AUTO_INCREMENT,
 			status                  enum("pending","sent","error","read","notsent","bounce","sending") NOT NULL DEFAULT "pending",
-			created_at              datetime         DEFAULT NULL,
-			sent_at                 datetime         DEFAULT NULL,
+			created_at              datetime         NULL DEFAULT NULL,
+			sent_at                 datetime         NULL DEFAULT NULL,
 			duration                int(4)           NOT NULL DEFAULT -1,
 			uniqid                  varchar(30)      NOT NULL,
 			type                    varchar(50)      NOT NULL DEFAULT "--",

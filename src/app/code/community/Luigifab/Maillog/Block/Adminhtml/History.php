@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/02/10/2021
+ * Updated D/26/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -28,11 +28,11 @@ class Luigifab_Maillog_Block_Adminhtml_History extends Mage_Adminhtml_Block_Widg
 
 		$this->_controller = 'adminhtml_history';
 		$this->_blockGroup = 'maillog';
-		$this->_headerText = sprintf('%s <span>%s</span>', $this->__('Transactional emails'), $this->helper('maillog')->getCronStatus());
+		$this->_headerText = $this->__('Transactional emails');
 
 		$this->_removeButton('add');
 
-		$allowed = Mage::getSingleton('admin/session')->isAllowed('system/config');
+		$allowed = Mage::getSingleton('admin/session')->isAllowed('system/config/maillog');
 		$this->_addButton('config', [
 			'label'   => $this->__('Configuration'),
 			'onclick' => $allowed ? "setLocation('".$this->getUrl('*/system_config/edit', ['section' => 'maillog'])."');" : '',

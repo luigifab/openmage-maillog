@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/28/12/2021
+ * Updated V/24/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -21,6 +21,8 @@
  */
 
 abstract class Luigifab_Maillog_Model_Filter {
+
+	protected $_templateVars = [];
 
 	public function resetVariables(array $vars) {
 		$this->_templateVars = $vars;
@@ -48,7 +50,6 @@ abstract class Luigifab_Maillog_Model_Filter {
 				}
 				$i++;
 			}
-			unset($item);
 		}
 		else if (isset($match[4])) {
 			$replace = $match[4];
@@ -84,7 +85,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 	public function ifconfigDirective(array $match) {
 
 		$store = empty($this->_templateVars['store']) ? null : $this->_templateVars['store'];
-		if (Mage::getStoreConfigFlag(trim(str_replace(['path=', '\'', '"'], '', $match[1])), $store))
+		if ($this->getConfigFlag(trim(str_replace(['path=', 'config=', 'ifconfig=', '\'', '"'], '', $match[1])), $store))
 			return $match[2];
 
 		return empty($match[3]) ? '' : $match[3];
@@ -96,10 +97,10 @@ abstract class Luigifab_Maillog_Model_Filter {
 		$store = empty($this->_templateVars['store']) ? null : $this->_templateVars['store'];
 		$attrs = $this->extractAttributes($match[2]);
 
-		if (array_key_exists('ifconfig', $attrs) && !Mage::getStoreConfigFlag($attrs['ifconfig'], $store))
+		if (array_key_exists('ifconfig', $attrs) && !$this->getConfigFlag($attrs['ifconfig'], $store))
 			$action = null;
 		else if (array_key_exists('action', $attrs) && preg_match('#\w+(?:/\w+)?::\w+#', $attrs['action']) === 1)
-			$action = (array) explode('::', $attrs['action']); // (yes)
+			$action = explode('::', $attrs['action']);
 
 		return empty($action) ? '' : Mage::helper($action[0])->{$action[1]}(...array_values(array_slice($attrs, 1)));
 	}
@@ -111,12 +112,12 @@ abstract class Luigifab_Maillog_Model_Filter {
 			Mage::getStoreConfig('general/locale/code', $store);
 
 		$attrs = $this->extractAttributes($match[2], 'number');
-		if (array_key_exists('ifconfig', $attrs) && !Mage::getStoreConfigFlag($attrs['ifconfig'], $store))
+		if (array_key_exists('ifconfig', $attrs) && !$this->getConfigFlag($attrs['ifconfig'], $store))
 			$number = null;
 		else if (array_key_exists('path', $attrs))
-			$number = Mage::getStoreConfig($attrs['path'], $store);
+			$number = $this->getConfig($attrs['path'], $store);
 		else if (array_key_exists('config', $attrs))
-			$number = Mage::getStoreConfig($attrs['config'], $store);
+			$number = $this->getConfig($attrs['config'], $store);
 		else
 			$number = $attrs['number'];
 
@@ -144,12 +145,12 @@ abstract class Luigifab_Maillog_Model_Filter {
 		if (!empty($this->_templateVars['order']) && is_object($order = $this->_templateVars['order']))
 			$currency = $order;
 
-		if (array_key_exists('ifconfig', $attrs) && !Mage::getStoreConfigFlag($attrs['ifconfig'], $store))
+		if (array_key_exists('ifconfig', $attrs) && !$this->getConfigFlag($attrs['ifconfig'], $store))
 			$number = null;
 		else if (array_key_exists('path', $attrs))
-			$number = Mage::getStoreConfig($attrs['path'], $store);
+			$number = $this->getConfig($attrs['path'], $store);
 		else if (array_key_exists('config', $attrs))
-			$number = Mage::getStoreConfig($attrs['config'], $store);
+			$number = $this->getConfig($attrs['config'], $store);
 		else if (array_key_exists('product', $attrs)) {
 			$website = Mage::app()->getStore($store)->getWebsite();
 			$product = Mage::getResourceModel('catalog/product_collection')
@@ -184,12 +185,12 @@ abstract class Luigifab_Maillog_Model_Filter {
 		else if (!empty($this->_templateVars['store']))
 			$store = $this->_templateVars['store'];
 
-		if (array_key_exists('ifconfig', $attrs) && !Mage::getStoreConfigFlag($attrs['ifconfig'], $store))
+		if (array_key_exists('ifconfig', $attrs) && !$this->getConfigFlag($attrs['ifconfig'], $store))
 			$currency = null;
 		else if (array_key_exists('path', $attrs))
-			$currency = strtoupper(Mage::getStoreConfig($attrs['path'], $store));
+			$currency = strtoupper((string) Mage::getStoreConfig($attrs['path'], $store));
 		else if (array_key_exists('config', $attrs))
-			$currency = strtoupper(Mage::getStoreConfig($attrs['config'], $store));
+			$currency = strtoupper((string) Mage::getStoreConfig($attrs['config'], $store));
 		else
 			$currency = strtoupper($attrs['code']);
 
@@ -204,7 +205,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 
 		$attrs  = $this->extractAttributes($match[1]);
 
-		if (array_key_exists('template', $attrs) && (!array_key_exists('ifconfig',$attrs)||Mage::getStoreConfigFlag($attrs['ifconfig'], $store))) {
+		if (array_key_exists('template', $attrs) && (!array_key_exists('ifconfig', $attrs) || $this->getConfigFlag($attrs['ifconfig'], $store))) {
 			$file = Mage::getBaseDir('app').'/locale/'.$locale.'/template/email/'.$attrs['template'];
 			if (!is_file($file))
 				$file = Mage::getBaseDir('app').'/locale/en_US/template/email/'.$attrs['template'];
@@ -291,6 +292,26 @@ abstract class Luigifab_Maillog_Model_Filter {
 		}
 
 		return $value;
+	}
+
+	protected function getConfigFlag($path, $store = null) {
+		return !empty($path) && $this->isAllowed($path) && Mage::getStoreConfigFlag($path, $store);
+	}
+
+	protected function getConfig($path, $store = null) {
+		return (!empty($path) && $this->isAllowed($path)) ? (string) Mage::getStoreConfig($path, $store) : '';
+	}
+
+	protected function isAllowed($path) {
+
+		if (in_array($path, ['maillog/general/enabled', 'maillog/general/unknown', 'maillog/general/number']))
+			return true;
+
+		$result = Mage::helper('admin/variable')->isPathAllowed($path);
+		if (!$result)
+			Mage::log(sprintf('Path "%s" not authorised when parsing template.', $path), Zend_Log::WARN);
+
+		return $result;
 	}
 
 	protected function _getVariable($value, $default = '{no_value_defined}') {
@@ -408,13 +429,18 @@ abstract class Luigifab_Maillog_Model_Filter {
 			return $attrs;
 
 		// https://stackoverflow.com/a/1083799/2980105
-		preg_match_all('#(\w+)\s*=\s*(?:"(.*?)"|\'(.*?)\')\s*#', $data, $parts, PREG_SET_ORDER);
+		//               1               2        3         4
+		preg_match_all('#(\w+)\s*=\s*(?:"(.*?)"|\'(.*?)\'|\$(\S+))\s*#', $data, $parts, PREG_SET_ORDER);
 		foreach ($parts as $part) {
 			$data = trim(str_replace($part[0], '', $data));
-			if (mb_stripos($part[1], '$') === false)
+			if (isset($part[4]))
+				$attrs[$part[1]] = $this->_getVariable($part[4], $part[4]);
+			else if (isset($part[3]))
+				$attrs[$part[1]] = $part[3];
+			else if (isset($part[2]))
 				$attrs[$part[1]] = $part[2];
 			else
-				$attrs[$part[1]] = $this->_getVariable($part[2] = trim($part[2], '$'), $part[2]);
+				$attrs[$part[1]] = '';
 		}
 
 		if (!empty($default) && !isset($attrs[$default]))

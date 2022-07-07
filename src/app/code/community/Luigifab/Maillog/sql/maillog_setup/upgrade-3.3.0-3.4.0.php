@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated V/18/06/2021
+ * Updated S/19/02/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -33,6 +33,7 @@ ignore_user_abort(true);
 set_time_limit(0);
 
 try {
+	// autorise une variable
 	$var = Mage::getModel('admin/variable');
 	if (is_object($var)) {
 		$var->load('design/head/default_title', 'variable_name');
@@ -41,6 +42,7 @@ try {
 		$var->save();
 	}
 
+	// remplace maillog/ par maillog_sync/
 	$table = $this->getTable('core_config_data');
 	$this->run('UPDATE '.$table.' SET path = REPLACE(path, "maillog/sync/", "maillog_sync/general/")
 		WHERE path LIKE "maillog/sync/%"');
@@ -48,6 +50,7 @@ try {
 		WHERE path LIKE "maillog/bounces/%"');
 	$this->run('UPDATE '.$table.' SET path = REPLACE(path, "maillog/unsubscribers/", "maillog_sync/unsubscribers/")
 		WHERE path LIKE "maillog/unsubscribers/%"');
+
 	Mage::getConfig()->reinit();
 }
 catch (Throwable $t) {

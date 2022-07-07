@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/27/01/2022
+ * Updated V/01/07/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -28,14 +28,6 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		$this->_init('maillog/email');
 	}
 
-
-	public function getDefaultBgColor() {
-		return '#F6F6F6';
-	}
-
-	public function getDefaultTxtColor() {
-		return '#000';
-	}
 
 	public function getSubject() {
 		return Mage::helper('maillog')->escapeEntities($this->getData('mail_subject'));
@@ -193,8 +185,8 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		}
 
 		return [
-			empty($bgColor) ? $this->getDefaultBgColor()  : $bgColor,
-			empty($ttColor) ? $this->getDefaultTxtColor() : $ttColor
+			empty($bgColor) ? Mage::getStoreConfig('maillog/general/default_bgcolor') : $bgColor,
+			empty($ttColor) ? Mage::getStoreConfig('maillog/general/default_ttcolor') : $ttColor,
 		];
 	}
 
@@ -330,8 +322,6 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 						trim('CURL_ERROR '.curl_errno($ch).' '.curl_error($ch)) : (empty($result) ? true : $result);
 					curl_close($ch);
 					fclose($fp);
-
-					//$this->delete(); var_dump($result); exit;
 				}
 				else {
 					$result = mail(

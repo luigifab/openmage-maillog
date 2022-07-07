@@ -1,6 +1,6 @@
 /**
  * Created D/22/03/2015
- * Updated M/05/10/2021
+ * Updated J/26/05/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,14 +22,9 @@
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& global &&& */
 body.adminhtml-maillog-history-index h3.icon-head, body.adminhtml-maillog-history-view h3.icon-head,
 body.adminhtml-maillog-sync-index h3.icon-head {
-	float:none; min-height:19px; background:url("../../../images/fam_lorry.gif") no-repeat left center;
+	min-height:19px; padding-left:22px;
+	background:url("../../../images/fam_lorry.gif") no-repeat left center;
 }
-
-body.adminhtml-maillog-history-index h3.icon-head span,
-body.adminhtml-maillog-sync-index h3.icon-head span { float:right; font-size:12px; font-weight:400; }
-
-body.adminhtml-maillog-history-index h3.icon-head span a,
-body.adminhtml-maillog-sync-index h3.icon-head span a { color:inherit; }
 
 body table.data.adminhtml-maillog-history tr.parts td.a-right {
 	background:url("../../../images/luigifab/maillog/mail-attachment.svg") no-repeat -7px center;
@@ -87,13 +82,19 @@ textarea.maillogsync { margin-left:-206px; width:480px !important; }
 
 #lifetimeConfig li:hover { background-color:#DEDEDE; }
 #lifetimeConfig span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
-#lifetimeConfig input { margin-right:5px; width:60px; height:17px; cursor:pointer; border:0; appearance:none; }
+#lifetimeConfig input {
+	margin-right:5px; width:60px; height:17px; cursor:pointer; border:0;
+	appearance:none; -moz-appearance:none; -webkit-appearance:none;
+}
+
 #lifetimeConfig input::-webkit-color-swatch-wrapper { padding:0; }
 #lifetimeConfig select { margin-right:5px; width:136px; }
 
 #pictureConfig { margin:10px 0 15px; }
 #pictureConfig thead tr.headings th { position:sticky; top:37px; padding:2px 5px; background:url("../../../images/sort_row_bg.gif") 0 50% repeat-x; }
+#pictureConfig tfoot tr td { position:sticky; bottom:0; background:#D7E5EF !important; }
 #pictureConfig tr.template { display:none; }
+#pictureConfig tr.letter td { background-color:#F2F2F2 !important; }
 #pictureConfig td.config { padding-bottom:0.5em; }
 #pictureConfig input.cde { display:block; margin-top:0.3em; width:95%; }
 #pictureConfig input.cmt { display:block; margin-top:0.3em; width:95%; color:gray; }
@@ -106,6 +107,10 @@ textarea.maillogsync { margin-left:-206px; width:480px !important; }
 #pictureConfig .bp { min-width:12em; }
 #pictureConfig .sz { min-width:13em; }
 #pictureConfig .rt { min-width:4em; }
+#pictureConfig .remove { color:red; }
+
+#pictureConfig tr td { transition:background-color 0.5s ease-in !important; background-color:transparent !important; }
+#pictureConfig tr.maillog-flash td, #pictureConfig tr.maillog-flash:hover td { background-color:#FDFAA4 !important; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& statut &&& */
 .maillog-status {
@@ -130,3 +135,11 @@ textarea.maillogsync { margin-left:-206px; width:480px !important; }
 
 @keyframes maillogBlink { 30% { color:transparent; } }
 @-webkit-keyframes maillogBlink { 30% { color:transparent; } }
+
+.grid table.border tr.maillog-flash td,
+.grid table.border tr.maillog-flash:hover td {
+	animation:maillogFlash 1s; -webkit-animation:maillogFlash 1s;
+}
+
+@keyframes maillogFlash { 0% { background-color:gray !important; } 100% { background-color:transparent !important; } }
+@-webkit-keyframes maillogFlash { 0% { background-color:gray !important; } 100% { background-color:transparent !important; } }

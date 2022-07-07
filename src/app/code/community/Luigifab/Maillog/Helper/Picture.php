@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated J/20/01/2022
+ * Updated M/05/07/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -99,10 +99,13 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		if (empty($this->_pictureConfig)) {
 
+			// config des images
 			$this->_configFontSize = (float) Mage::getStoreConfig('maillog_directives/general/font_size');
 			$this->_configFontSize = ($this->_configFontSize > 0) ? $this->_configFontSize : 16;
 
 			$this->_configShowImageSize = Mage::getStoreConfigFlag('maillog_directives/general/show_image_size');
+			$this->_configWidthHeight   = Mage::getStoreConfigFlag('maillog_directives/general/picture_width_height');
+			$this->_configCreateWebp    = Mage::getStoreConfigFlag('maillog_directives/general/picture_create_webp');
 
 			// config des tags (avec mise en cache)
 			$config = Mage::app()->useCache('config') ? @json_decode(Mage::app()->loadCache('maillog_config'), true) : null;
@@ -183,7 +186,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		// debug
 		if ($this->_configShowImageSize) {
 
-			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; height:14px; line-height:14px; padding:0 1px; z-index:4; font-size:12px; color:#FFF; background-color:#000;">...</span>');
+			array_unshift($tags, '<span class="maillogdebug" style="position:absolute; display:block; height:auto; min-height:14px; line-height:14px; padding:0 1px; letter-spacing:inherit; font-weight:400; text-align:left; z-index:4; font-size:12px; white-space:nowrap; color:#FFF; background-color:rgba(0,0,0,0.8);">...</span>');
 
 			// ajoute un js une seule fois
 			if (empty(Mage::registry('maillog_debug'))) {
@@ -201,31 +204,76 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		$file = $params['file'];
 		$tags = ['<picture>'];
 
-		if (substr($file, -4) == '.svg') {
+		if (str_ends_with($file, '.svg')) {
 			$size   = (array) end($sizes); // (yes)
-			$tags[] = '<img src="'.$help->init($object, $attribute, $file)->resize($size['w'], $size['h']).'" '.implode(' ', $attrs).' />';
+			$tags[] = '<img src="'.$help->init($object, $attribute, $file)->resize($size['w'], $size['h']).'" width="'.$size['w'].'" height="'.$size['h'].'" '.implode(' ', $attrs).' />';
 		}
 		else {
 			$total = count($sizes);
+
+			// source (jpg jpeg gif png webp)
+			$orig = strtolower(mb_substr($file, mb_strrpos($file, '.') + 1));
+			$mime = '';
+			if (($orig == 'jpg') || ($orig == 'jpeg'))
+				$mime = ' type="image/jpeg"';
+			else if ($orig == 'png')
+				$mime = ' type="image/png"';
+			else if ($orig == 'gif')
+				$mime = ' type="image/gif"';
+			else if ($orig == 'webp')
+				$mime = ' type="image/webp"';
+
+			// ajoute des images webp en plus des jpg jpeg gif png
+			if ($this->_configCreateWebp && ($orig != 'webp') && method_exists($help, 'hasWebp') && $help->hasWebp()) {
+
+				foreach ($sizes as $breakpoint => $size) {
+					$srcs = [
+						(string) $help->init($object, $attribute, $file, true, true)->resize($size['w'] * 1, $size['h'] * 1),
+						(string) $help->init($object, $attribute, $file, true, true)->resize($size['w'] * 2, $size['h'] * 2)
+					];
+					// width et height
+					$wh = $this->_configWidthHeight ? ' width="'.$size['w'].'" height="'.$size['h'].'"' : '';
+					// n'ajoute pas une seule balise source (avec 0 rem)
+					if ($total == 1) break;
+					// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
+					// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
+					if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
+						$rem    = empty($rem) ? 0 : $rem;
+						$tags[] = '<source data-dbg="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+					}
+					else {
+						$rem    = round($breakpoint / $this->_configFontSize, 1);
+						$tags[] = '<source data-dbg="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+					}
+				}
+
+				if ($total == 1)
+					$tags[] = '<source data-dbg="'.$size['w'].'/'.($size['w'] * 2).'" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+			}
+
+			// source (jpg jpeg gif png webp)
 			foreach ($sizes as $breakpoint => $size) {
 				$srcs = [
 					(string) $help->init($object, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
 					(string) $help->init($object, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
 				];
-				// n'ajoute pas une seule balise source
+				// width et height
+				$wh = $this->_configWidthHeight ? ' width="'.$size['w'].'" height="'.$size['h'].'"' : '';
+				// n'ajoute pas une seule balise source (avec 0 rem)
 				if ($total == 1) break;
 				// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
 				// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
 				if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
 					$rem    = empty($rem) ? 0 : $rem;
-					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+					$tags[] = '<source data-dbg="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'"'.$mime.' media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 				}
 				else {
 					$rem    = round($breakpoint / $this->_configFontSize, 1);
-					$tags[] = '<source data-debug="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'" />';
+					$tags[] = '<source data-dbg="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'"'.$mime.' media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 				}
 			}
-			$tags[] = '<img data-debug="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x" '.implode(' ', $attrs).' />';
+
+			$tags[] = '<img data-dbg="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x"'.$wh.' '.implode(' ', $attrs).' />';
 		}
 
 		$tags[] = '</picture>';
@@ -264,25 +312,24 @@ function maillogdebug() {
 			elem.setAttribute("onload", "maillogdebug();");
 		}
 		if (!elem.currentSrc) return;
-		var cur = elem.currentSrc.slice(elem.currentSrc.indexOf("/", 9)),
-		    src = elem.parentNode.querySelector("source[srcset*=\"" + cur + "\"], img"),
+		var cur = elem.currentSrc,
 		    nbs = elem.parentNode.querySelectorAll("source").length,
-		    tmp = elem.getAttribute("src").substr(-4);
-		if (!src && (tmp !== ".svg")) return;
+		    tmp = cur.substr(cur.lastIndexOf(".") + 1);
 		elem = elem.parentNode.previousSibling;
 		while ((elem.nodeName !== "BODY") && (elem.nodeName !== "SPAN")) elem = elem.previousSibling;
-		if (tmp !== ".svg") {
-			tmp = src.getAttribute("data-debug");
-			tmp = tmp.slice(tmp.indexOf(" ") + 1).split("/");
-			if (cur.indexOf("/" + tmp[0] + "x") > 0)
-				elem.textContent = tmp[0] + " (" + nbs + "s)";
-			else if (cur.indexOf("/" + tmp[1] + "x") > 0)
-				elem.textContent = tmp[1] + " (" + nbs + "s)";
-			else
-				elem.textContent = "??? (" + nbs + "s)";
+		if (tmp.indexOf("base64") > 0) {
+			elem.textContent = "base64";
+		}
+		else if (tmp.indexOf(".svg") > 0) {
+			elem.textContent = "svg";
 		}
 		else {
-			elem.textContent = "SVG";
+			elem.textContent = tmp + " ";
+			tmp = cur.match(new RegExp("\\\\d+x\\\\d*"));
+			if (tmp && (tmp.length > 0))
+				elem.textContent += tmp[0] + " (" + nbs + "s)";
+			else
+				elem.textContent += "??? (" + nbs + "s)";
 		}
 	});
 }
@@ -292,6 +339,16 @@ self.addEventListener("resize", maillogdebug);
 	}
 
 	protected function after(string $html, string $code, array $sizes) {
+
+		/* if (stripos($code, 'email') !== false)
+			return $html;
+
+		$size = empty($sizes) ? ['w' => 1, 'h' => 1] : end($sizes);
+		//$html = str_replace(' src="', ' src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="', $html);
+		// https://css-tricks.com/preventing-content-reflow-from-lazy-loaded-images/
+		$html = str_replace(' src="', ' src="data:image/svg+xml;base64,'.base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="'.$size['w'].'px" height="'.$size['h'].'"></svg>').'" data-src="', $html);
+		$html = str_replace(' srcset="', ' data-srcset="', $html); */
+
 		return $html;
 	}
 

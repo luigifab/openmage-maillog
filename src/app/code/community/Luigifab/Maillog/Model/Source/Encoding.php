@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/12/06/2016
- * Updated M/20/08/2019
+ * Updated S/19/02/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -26,7 +26,7 @@ class Luigifab_Maillog_Model_Source_Encoding {
 
 		return [
 			['value' => 'quoted-printable', 'label' => 'quoted-printable'],
-			['value' => 'base64', 'label' => 'base64']
+			['value' => 'base64', 'label' => 'base64'],
 		];
 	}
 }

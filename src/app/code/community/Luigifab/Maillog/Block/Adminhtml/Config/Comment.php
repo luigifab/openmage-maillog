@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/26/10/2019
- * Updated M/28/09/2021
+ * Updated S/19/02/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -33,7 +33,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 
 		$vars = [
 			'myvar1' => [['numb' => -2, 'text' => 'hello'], ['numb' => 0, 'text' => 'hello'], ['numb' => 2, 'text' => 'hello']],
-			'myvar2' => ['str1', 'str2']
+			'myvar2' => ['str1', 'str2'],
 		];
 		foreach ($vars['myvar1'] as $i => $n) {
 			$t = $n['text'];

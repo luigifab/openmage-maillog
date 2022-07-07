@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated M/28/12/2021
+ * Updated L/28/03/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -39,28 +39,32 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 			<tfoot>
 				<tr>
 					<td colspan="2">
-						<button type="button" class="scalable add" onclick="maillog.addPicture(this);">
+						<button type="button" class="scalable add picture" onclick="maillog.addPicture(this);">
 							<span><?php echo $this->__('Add') ?></span>
 						</button>
+						<input type="text" class="input-text" placeholder="<?php echo $help->escapeEntities($this->__('Paste (if code already exist, data will be updated)')) ?>" onpaste="maillog.pastePicture(this, event);" />
 					</td>
 				</tr>
 			</tfoot>
 			<tbody>
 				<tr class="template" data-next="<?php echo empty($config) ? 0 : (max(array_keys($config)) + 1) ?>">
 					<td>
-						<label>
+						<label title="<?php echo $titleCode ?>">
 							<input type="text" placeholder="<?php echo $titleCode ?>"
 								name="groups[general][fields][special_config][value][IIDDXX][c]"
-								class="input-text cde required-entry validate-alphanum" />
+								class="input-text cde required-entry validate-alphanum"
+								onpaste="maillog.pastePicture(this, event);" />
 						</label>
-						<label>
+						<label title="<?php echo $titleDesc ?>">
 							<input type="text" placeholder="<?php echo $titleDesc ?>"
 								name="groups[general][fields][special_config][value][IIDDXX][d]"
 								class="input-text cmt" />
 						</label>
-						<br />
-						<button type="button" class="slink" onclick="maillog.deletePicture(this);">
-							<?php echo $this->__('Delete') ?>
+						<button type="button" class="slink copy picture" onclick="maillog.copyPicture(this);">
+							<?php echo $this->__('Copy') ?>
+						</button>
+						<button type="button" class="slink remove picture" onclick="maillog.removePicture(this);">
+							<?php echo $this->__('Remove') ?>
 						</button>
 					</td>
 					<td class="config">
@@ -73,15 +77,18 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 									<label title="width (px)">
 										<input type="number"
 											name="groups[general][fields][special_config][value][IIDDXX][0][w]"
-											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+											min="0" step="1" class="input-text w required-entry validate-greater-than-zero"
+											oninput="maillog.ratioPicture(this);" />
 									</label>
 									x
 									<label title="height (px)">
 										<input type="number"
 											name="groups[general][fields][special_config][value][IIDDXX][0][h]"
-											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+											min="0" step="1" class="input-text h required-entry validate-greater-than-zero"
+											oninput="maillog.ratioPicture(this);" />
 									</label>
 								</div>
+								<div class="rt"></div>
 							</li>
 							<li class="line breakpoint">
 								<div class="bp">
@@ -89,26 +96,28 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 									<label title="max-width (px)">
 										<input type="number"
 											name="groups[general][fields][special_config][value][IIDDXX][KKEEYY][b]"
-											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+											min="0" step="1" class="input-text b required-entry validate-greater-than-zero" />
 									</label>
 								</div>
 								<div class="sz">
 									<label title="width (px)">
 										<input type="number"
 											name="groups[general][fields][special_config][value][IIDDXX][KKEEYY][w]"
-											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+											min="0" step="1" class="input-text w required-entry validate-greater-than-zero"
+											oninput="maillog.ratioPicture(this);" />
 									</label>
 									x
 									<label title="height (px)">
 										<input type="number"
 											name="groups[general][fields][special_config][value][IIDDXX][KKEEYY][h]"
-											min="0" step="1" class="input-text required-entry validate-greater-than-zero" />
+											min="0" step="1" class="input-text h required-entry validate-greater-than-zero"
+											oninput="maillog.ratioPicture(this);" />
 									</label>
 								</div>
 								<div class="rt"></div>
 								<div class="btn">
-									<button type="button" class="slink" onclick="maillog.deleteBreak(this);">
-										<?php echo $this->__('Delete') ?>
+									<button type="button" class="slink remove break" onclick="maillog.removeBreak(this);">
+										<?php echo $this->__('Remove') ?>
 									</button>
 								</div>
 							</li>
@@ -118,31 +127,43 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 							<div class="sz"></div>
 							<div class="rt"></div>
 							<div class="btn">
-								<button type="button" class="slink" onclick="maillog.addBreak(this, IIDDXX);">
+								<button type="button" class="slink add break" onclick="maillog.addBreak(this);">
 									<?php echo $this->__('Add') ?>
 								</button>
 							</div>
 						</div>
 					</td>
 				</tr>
+				<?php $letter = null; ?>
 				<?php foreach ($config as $idx => $data): ?>
-					<tr class="config">
+					<?php if (strtolower($data['c'][0]) != $letter): ?>
+						<tr class="letter a-center">
+							<td colspan="2"><?php echo $letter = strtolower($data['c'][0]) ?></td>
+						</tr>
+					<?php endif ?>
+					<tr class="config" data-idx="<?php echo $idx ?>">
 						<td>
-							<label>
+							<label title="<?php echo $titleCode ?>">
 								<input type="text" placeholder="<?php echo $titleCode ?>"
 									name="groups[general][fields][special_config][value][<?php echo $idx ?>][c]"
 									value="<?php echo $data['c'] ?>"
-									class="input-text cde required-entry validate-alphanum" />
+									class="input-text cde required-entry validate-alphanum"
+									onpaste="maillog.pastePicture(this, event);" />
 							</label>
-							<label>
+							<label title="<?php echo $titleDesc ?>">
 								<input type="text" placeholder="<?php echo $titleDesc ?>"
 									name="groups[general][fields][special_config][value][<?php echo $idx ?>][d]"
 									value="<?php echo str_replace("\n", ' ', $help->escapeEntities($data['d'], true)) ?>"
 									class="input-text cmt" />
 							</label>
-							<br />
-							<button type="button" class="slink" onclick="maillog.deletePicture(this);">
-								<?php echo $this->__('Delete') ?>
+							<button type="button" class="slink copy picture" onclick="maillog.copyPicture(this);">
+								<?php echo $this->__('Copy') ?>
+							</button>
+							<button type="button" class="slink reset picture" onclick="maillog.resetValues(this);">
+								<?php echo $this->__('Reset') ?>
+							</button>
+							<button type="button" class="slink remove picture" onclick="maillog.removePicture(this);">
+								<?php echo $this->__('Remove') ?>
 							</button>
 						</td>
 						<td class="config">
@@ -156,20 +177,28 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 											<input type="number"
 												name="groups[general][fields][special_config][value][<?php echo $idx ?>][0][w]"
 												min="0" step="1" value="<?php echo $data[0]['w'] ?>"
-												class="input-text required-entry validate-greater-than-zero" />
+												class="input-text w required-entry validate-greater-than-zero"
+												oninput="maillog.ratioPicture(this);" />
 										</label>
 										x
 										<label title="height (px)">
 											<input type="number"
 												name="groups[general][fields][special_config][value][<?php echo $idx ?>][0][h]"
 												min="0" step="1" value="<?php echo $data[0]['h'] ?>"
-												class="input-text required-entry validate-greater-than-zero" />
+												class="input-text h required-entry validate-greater-than-zero"
+												oninput="maillog.ratioPicture(this);" />
 										</label>
 									</div>
 									<div class="rt">
 										<?php echo $help->getNumber($data[0]['w'] / $data[0]['h'], ['precision' => 2]) ?>
 									</div>
+									<div class="btn">
+										<button type="button" class="slink reset break" onclick="maillog.resetValues(this);">
+											<?php echo $this->__('Reset') ?>
+										</button>
+									</div>
 								</li>
+								<?php $nkey = 1 ?>
 								<?php foreach ($data as $key => $subdata): ?>
 									<?php if (!is_numeric($key) || !is_array($subdata) || empty($key)) continue; ?>
 									<li class="line breakpoint">
@@ -177,35 +206,41 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 											max-width:
 											<label title="max-width (px)">
 												<input type="number"
-													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $key ?>][b]"
+													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $nkey ?>][b]"
 													min="0" step="1" value="<?php echo $subdata['b'] ?>"
-													class="input-text required-entry validate-greater-than-zero" />
+													class="input-text b required-entry validate-greater-than-zero" />
 											</label>
 										</div>
 										<div class="sz">
 											<label title="width (px)">
 												<input type="number"
-													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $key ?>][w]"
+													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $nkey ?>][w]"
 													min="0" step="1" value="<?php echo $subdata['w'] ?>"
-													class="input-text required-entry validate-greater-than-zero" />
+													class="input-text w required-entry validate-greater-than-zero"
+													oninput="maillog.ratioPicture(this);" />
 											</label>
 											x
 											<label title="height (px)">
 												<input type="number"
-													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $key ?>][h]"
+													name="groups[general][fields][special_config][value][<?php echo $idx ?>][<?php echo $nkey?>][h]"
 													min="0" step="1" value="<?php echo $subdata['h'] ?>"
-													class="input-text required-entry validate-greater-than-zero" />
+													class="input-text h required-entry validate-greater-than-zero"
+													oninput="maillog.ratioPicture(this);" />
 											</label>
 										</div>
 										<div class="rt">
 											<?php echo $help->getNumber($subdata['w'] / $subdata['h'], ['precision' => 2]) ?>
 										</div>
 										<div class="btn">
-											<button type="button" class="slink" onclick="maillog.deleteBreak(this);">
-												<?php echo $this->__('Delete') ?>
+											<button type="button" class="slink reset break" onclick="maillog.resetValues(this);">
+												<?php echo $this->__('Reset') ?>
+											</button>
+											<button type="button" class="slink remove break" onclick="maillog.removeBreak(this);">
+												<?php echo $this->__('Remove') ?>
 											</button>
 										</div>
 									</li>
+									<?php $nkey++ ?>
 								<?php endforeach ?>
 							</ul>
 							<div class="line">
@@ -213,7 +248,7 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 								<div class="sz"></div>
 								<div class="rt"></div>
 								<div class="btn">
-									<button type="button" class="slink" onclick="maillog.addBreak(this, <?php echo $idx ?>);">
+									<button type="button" class="slink add break" onclick="maillog.addBreak(this);">
 										<?php echo $this->__('Add') ?>
 									</button>
 								</div>

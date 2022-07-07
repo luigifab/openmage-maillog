@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/23/11/2021
+ * Updated S/19/02/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -38,7 +38,7 @@ class Luigifab_Maillog_Model_Resource_Email_Collection extends Mage_Core_Model_R
 	public function addFieldToFilterWithMatch($field, $value) {
 
 		// https://stackoverflow.com/a/3645859/2980105
-		// MATCH (field) AGAINST ('"value"' IN BOOLEAN MODE) pour utiliser l'index fulltext
+		// MATCH (field) AGAINST ('"value"' IN BOOLEAN MODE)
 		$this->getSelect()->where(new Zend_Db_Expr('MATCH ('.$field.') AGAINST (\'"'.
 			trim($this->getConnection()->quote(trim($value, '\'')), '\'').
 		'"\' IN BOOLEAN MODE)'));

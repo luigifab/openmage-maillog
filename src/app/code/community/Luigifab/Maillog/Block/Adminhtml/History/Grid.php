@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/23/11/2021
+ * Updated V/20/05/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -82,7 +82,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	protected function _addColumnFilterToCollection($column) {
 
 		if (in_array($column->getId(), ['mail_recipients', 'mail_subject'])) {
-			$words = explode(' ', $column->getFilter()->getValue());
+			$words = array_filter(explode(' ', $column->getFilter()->getValue()));
 			foreach ($words as $word) {
 				//$this->getCollection()->addFieldToFilter($column->getId(), ['like' => '%'.$word.'%']);
 				$this->getCollection()->addFieldToFilterWithMatch($column->getId(), $word);
@@ -106,7 +106,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 				'field_name' => 'choice',
 				'align'      => 'center',
 				'width'      => '75px',
-				'sortable'   => false
+				'sortable'   => false,
 			]);
 			$this->addColumn('position', [
 				'index'      => 'position',
@@ -116,7 +116,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 				'editable'   => true,
 				'filter'     => false,
 				'sortable'   => false,
-				'validate_class' => 'validate-number'
+				'validate_class' => 'validate-number',
 			]);
 		}
 
@@ -124,7 +124,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'header'    => $this->__('Id'),
 			'index'     => 'email_id',
 			'align'     => 'center',
-			'width'     => '80px'
+			'width'     => '80px',
 		]);
 
 		$this->addColumn('type', [
@@ -133,19 +133,19 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'type'      => 'options',
 			'options'   => $this->helper('maillog')->getAllTypes(),
 			'align'     => 'center',
-			'width'     => '100px'
+			'width'     => '100px',
 		]);
 
 		$this->addColumn('mail_recipients', [
 			'header'    => $this->__('Recipient(s)').' *',
 			'index'     => 'mail_recipients',
-			'frame_callback' => [$this, 'decorateRecipients']
+			'frame_callback' => [$this, 'decorateRecipients'],
 		]);
 
 		$this->addColumn('mail_subject', [
 			'header'    => $this->__('Subject').' *',
 			'index'     => 'mail_subject',
-			'frame_callback' => [$this, 'decorateSubject']
+			'frame_callback' => [$this, 'decorateSubject'],
 		]);
 
 		$this->addColumn('size', [
@@ -155,7 +155,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'width'     => '85px',
 			'filter'    => false,
 			'sortable'  => false,
-			'frame_callback' => [$this, 'decorateSize']
+			'frame_callback' => [$this, 'decorateSize'],
 		]);
 
 		$this->addColumn('created_at', [
@@ -165,7 +165,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'format'    => Mage::getSingleton('core/locale')->getDateTimeFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT),
 			'align'     => 'center',
 			'width'     => '150px',
-			'frame_callback' => [$this, 'decorateDate']
+			'frame_callback' => [$this, 'decorateDate'],
 		]);
 
 		$this->addColumn('sent_at', [
@@ -175,7 +175,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'format'    => Mage::getSingleton('core/locale')->getDateTimeFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT),
 			'align'     => 'center',
 			'width'     => '150px',
-			'frame_callback' => [$this, 'decorateDate']
+			'frame_callback' => [$this, 'decorateDate'],
 		]);
 
 		$this->addColumn('duration', [
@@ -185,7 +185,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'width'     => '60px',
 			'filter'    => false,
 			'sortable'  => false,
-			'frame_callback' => [$this, 'decorateDuration']
+			'frame_callback' => [$this, 'decorateDuration'],
 		]);
 
 		$this->addColumn('status', [
@@ -199,10 +199,10 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 				'read'    => $this->__('Open/read'),
 				'error'   => $this->helper('maillog')->_('Error'),
 				'notsent' => $this->__('Unsent'),
-				'bounce'  => $this->__('Blocked')
+				'bounce'  => $this->__('Blocked'),
 			],
 			'width'     => '125px',
-			'frame_callback' => [$this, 'decorateStatus']
+			'frame_callback' => [$this, 'decorateStatus'],
 		]);
 
 		$this->addColumn('action', [
@@ -214,14 +214,14 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 					'url'     => (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) ?
 						['base' => '*/maillog_history/view/back/'.$this->_backUrl['back'].'/bid/'.$this->_backUrl['bid']] :
 						['base' => '*/maillog_history/view'],
-					'field'   => 'id'
-				]
+					'field'   => 'id',
+				],
 			],
 			'align'     => 'center',
 			'width'     => '55px',
 			'filter'    => false,
 			'sortable'  => false,
-			'is_system' => true
+			'is_system' => true,
 		]);
 
 		// embed tab (filtrage des colonnes)

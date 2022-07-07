@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/24/08/2017
- * Updated V/12/02/2021
+ * Updated S/19/02/2021
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -36,7 +36,7 @@ class Luigifab_Maillog_Model_Source_Bounce extends Mage_Eav_Model_Entity_Attribu
 				['value' => 1, 'label' => Mage::helper('adminhtml')->__('Yes')],
 				['value' => 2, 'label' => $help->__('Yes - forced by admin')],
 				['value' => 3, 'label' => $help->__('No - forced by admin')],
-				['value' => 4, 'label' => $help->__('No - forced by customer')]
+				['value' => 4, 'label' => $help->__('No - forced by customer')],
 			];
 		}
 

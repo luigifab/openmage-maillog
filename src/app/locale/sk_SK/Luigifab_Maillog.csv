@@ -2,6 +2,7 @@
 "File format","Formát súboru"
 "Recipient(s)","Prijímatel(ia)"
 "Duration","Trvanie"
+" Error","Chyba"
 "Created At: %s","Vytvorené: %s"
 "Duration: %s","Trvanie: %s"
 "Status: <span %s>%s</span>","Stav: <span %s>%s</span>"
@@ -26,4 +27,5 @@
 "%d months","%d mesiacov"
 " %d years","%d roky"
 "%d years","%d rokov"
+"Copy","Kopírovať"
 "Subject: %s","Subjekt: %s"

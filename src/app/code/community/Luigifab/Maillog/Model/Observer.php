@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated D/26/12/2021
+ * Updated V/01/07/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -115,6 +115,15 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		Mage::getConfig()->reinit(); // très important
 	}
 
+	// EVENT admin_system_config_changed_section_maillog_directives (adminhtml)
+	public function clearCache(Varien_Event_Observer $observer) {
+
+		Mage::app()->cleanCache();
+		Mage::dispatchEvent('adminhtml_cache_flush_system');
+
+		Mage::getSingleton('adminhtml/session')->addSuccess(str_replace('Magento', 'OpenMage', Mage::helper('adminhtml')->__('The Magento cache storage has been flushed.')));
+	}
+
 
 	// CRON maillog_send_report
 	public function sendEmailReport($cron = null) {
@@ -205,13 +214,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 				// n'affiche plus la semaine et le mois en cours
 				for ($i = 2; $i <= 14; $i++) {
 
-					$variation = ($i > 1) && ($i < 14);
-					$dates     = $this->getDateRange($isWeek ? 'week' : 'month', $i - 1);
-					$oldDates  = $this->getDateRange($isWeek ? 'week' : 'month', $i);
-					$where     = ['from' => $dates['start']->toString(Zend_Date::RFC_3339),
-						'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
-					$oldWhere  = ['from' => $oldDates['start']->toString(Zend_Date::RFC_3339),
-						'to' => $oldDates['end']->toString(Zend_Date::RFC_3339)];
+					$dates = $this->getDateRange($isWeek ? 'week' : 'month', $i - 1);
+					$where = ['from' => $dates['start']->toString(Zend_Date::RFC_3339), 'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
 
 					// affiche les dates
 					if ($isWeek) {
@@ -227,23 +231,11 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					}
 
 					// calcul les statistiques
-					$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation);
-					$vars['items'][$i][$key.'total_email']       = array_shift($tmp);
-					$vars['items'][$i][$key.'variation_email']   = array_shift($tmp);
-					$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation, ['in'  => ['sent', 'read']]);
-					$vars['items'][$i][$key.'percent_sent']      = array_shift($tmp);
-					$vars['items'][$i][$key.'variation_sent']    = array_shift($tmp);
-					$tmp = $this->getNumbers($where, $oldWhere, $emails, $variation, ['in'  => ['sent', 'read']], 'read');
-					$vars['items'][$i][$key.'percent_read']      = array_shift($tmp);
-					$vars['items'][$i][$key.'variation_read']    = array_shift($tmp);
-
-					// calcul les statistiques
-					$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation);
-					$vars['items'][$i][$key.'total_sync']        = array_shift($tmp);
-					$vars['items'][$i][$key.'variation_sync']    = array_shift($tmp);
-					$tmp = $this->getNumbers($where, $oldWhere, $syncs, $variation, 'success');
-					$vars['items'][$i][$key.'percent_success']   = array_shift($tmp);
-					$vars['items'][$i][$key.'variation_success'] = array_shift($tmp);
+					$vars['items'][$i][$key.'total_email']     = $this->calcNumber($where, $emails);
+					$vars['items'][$i][$key.'percent_sent']    = $this->calcNumber($where, $emails, ['in' => ['sent', 'read']]);
+					$vars['items'][$i][$key.'percent_read']    = $this->calcNumber($where, $emails, ['in' => ['sent', 'read']], 'read');
+					$vars['items'][$i][$key.'total_sync']      = $this->calcNumber($where, $syncs);
+					$vars['items'][$i][$key.'percent_success'] = $this->calcNumber($where, $syncs, 'success');
 				}
 			}
 
@@ -253,19 +245,14 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);
 
 		if (is_object($cron))
-			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n".print_r($locales, true));
+			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).'M (max: '.ini_get('memory_limit').')'."\n".print_r($locales, true));
 	}
 
-	protected function getNumbers(array $where, array $oldWhere, object $collection, bool $variation = true, $status1 = null, $status2 = null) {
+	protected function calcNumber(array $where, object $collection, $status1 = null, $status2 = null) {
 
-		$nb3 = 0;
-		$nb4 = 0;
 		$where['datetime'] = true;
-		if (!empty($oldWhere))
-			$oldWhere['datetime'] = true;
 
 		// avec des resets sinon le where est conservé malgré le clone
-		// période actuelle
 		if (empty($status1)) {
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
@@ -296,48 +283,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$nb2 = $data->getSize(); // filtré
 		}
 
-		// avec des resets sinon le where est conservé malgré le clone
-		// période précédente
-		if ($variation && !empty($oldWhere)) {
-			if (empty($status1)) {
-				$data = clone $collection;
-				$data->getSelect()->reset(Zend_Db_Select::WHERE);
-				$data->addFieldToFilter('created_at', $oldWhere);
-				$nb3 = $data->getSize(); // totalité
-			}
-			else if (empty($status2)) {
-				$data = clone $collection;
-				$data->getSelect()->reset(Zend_Db_Select::WHERE);
-				$data->addFieldToFilter('created_at', $oldWhere);
-				$nb3 = $data->getSize(); // totalité
-				$data = clone $collection;
-				$data->getSelect()->reset(Zend_Db_Select::WHERE);
-				$data->addFieldToFilter('created_at', $oldWhere);
-				$data->addFieldToFilter('status', $status1);
-				$nb4 = $data->getSize(); // filtré
-			}
-			else {
-				$data = clone $collection;
-				$data->getSelect()->reset(Zend_Db_Select::WHERE);
-				$data->addFieldToFilter('created_at', $oldWhere);
-				$data->addFieldToFilter('status', $status1);
-				$nb3 = $data->getSize(); // totalité
-				$data = clone $collection;
-				$data->getSelect()->reset(Zend_Db_Select::WHERE);
-				$data->addFieldToFilter('created_at', $oldWhere);
-				$data->addFieldToFilter('status', $status2);
-				$nb4 = $data->getSize(); // filtré
-			}
-		}
-
-		// nombre d'email/sync période actuelle, variation par rapport à la période précédente
-		if (empty($status1))
-			return [$nb1, ($nb3 != 0) ? floor(($nb1 - $nb3) / $nb3 * 100) : ($variation ? 0 : '')];
-
-		// pourcentage période actuelle, variation par rapport à la période précédente
-		$pct1 = ($nb1 > 0) ? ($nb2 * 100) / $nb1 : 0;
-		$pct2 = ($nb3 > 0) ? ($nb4 * 100) / $nb3 : 0;
-		return [floor($pct1), ($pct2 != 0) ? floor(($pct1 - $pct2) / $pct2 * 100) : ($variation ? 0 : '')];
+		// nombre d'email/sync ou pourcentage
+		return empty($status1) ? $nb1 : floor(($nb1 > 0) ? ($nb2 * 100) / $nb1 : 0);
 	}
 
 	protected function getDateRange(string $range, int $coef = 1) {
@@ -525,6 +472,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 		$msg = [];
 		$cnt = 0;
+		$all = 0;
 
 		$val = Mage::getStoreConfig('maillog_sync/general/lifetime');
 		if (!empty($val) && is_numeric($val)) {
@@ -597,6 +545,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					$msg[] = '';
 
 					if ($cnt > 0) {
+						$all += $cnt;
 						if ($action == 'all') {
 							$emails->deleteAll();
 						}
@@ -615,10 +564,16 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					}
 				}
 			}
+
+			if ($all > 0) {
+				// mysqltuner: can free 8823 MB
+				$database = Mage::getSingleton('core/resource');
+				$database->getConnection('core_write')->query('OPTIMIZE TABLE '.$database->getTableName('luigifab_maillog'));
+			}
 		}
 
 		if (is_object($cron))
-			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n\n".trim(implode("\n", $msg)));
+			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).'M (max: '.ini_get('memory_limit').')'."\n\n".trim(implode("\n", $msg)));
 
 		return $msg;
 	}
@@ -653,7 +608,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		catch (Throwable $t) {
 
 			$error = empty($diff['errors']) ? $t->getMessage() : implode("\n", $diff['errors']);
-			$this->writeLog($folder, $source, $error, $cron);
+			$this->writeLog($folder, empty($source) ? 'none' : $source, $error, $cron);
 
 			Mage::unregister('maillog_no_sync');
 			Mage::throwException($error);
@@ -692,7 +647,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		catch (Throwable $t) {
 
 			$error = empty($diff['errors']) ? $t->getMessage() : implode("\n", $diff['errors']);
-			$this->writeLog($folder, $source, $error, $cron);
+			$this->writeLog($folder, empty($source) ? 'none' : $source, $error, $cron);
 
 			Mage::unregister('maillog_no_sync');
 			Mage::throwException($error);
@@ -709,7 +664,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 		// vérifications du dossier
 		if (!is_dir($folder))
-			Mage::throwException('Sorry, the directory "'.$folder.'" is not set.');
+			Mage::throwException('Sorry, the directory "'.$folder.'" does not exist.');
 		if (!is_readable($folder))
 			Mage::throwException('Sorry, the directory "'.$folder.'" is not readable.');
 		if (!is_writable($folder))
@@ -774,20 +729,17 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		if (mb_detect_encoding($lines, 'utf-8', true) === false)
 			Mage::throwException('Sorry, the file "'.$folder.$source.'" is not an utf-8 file.');
 
-		$lines = explode("\n", $lines);
+		$lines = array_map('trim', explode("\n", $lines));
 		foreach ($lines as $line) {
-
-			$line = trim($line);
-
 			if (mb_strlen($line) > 5) {
 				if ($type == 'csv') {
 					$delim = ($delim == '→') ? "\t" : $delim;
-					$data  = (array) explode($delim, $line); // (yes)
+					$data  = array_map('trim', explode($delim, $line));
 					if (!empty($data[$colum]) && (mb_stripos($data[$colum], '@') !== false))
-						$items[] = trim(str_replace($separ, '', $data[$colum]));
+						$items[] = str_replace($separ, '', $data[$colum]);
 				}
 				else if (($type == 'txt') && (mb_stripos($line, '@') !== false)) {
-					$items[] = trim($line);
+					$items[] = $line;
 				}
 			}
 		}
@@ -826,7 +778,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 						$customer->setData('is_bounce', 1); // 1 pour Yes
 						$customer->getResource()->saveAttribute($customer, 'is_bounce');
-						//$customer->save();
 
 						$diff['invalidated'][] = $email;
 					}
@@ -862,7 +813,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 							$customer->setData('is_bounce', 0); // 0 pour No
 							$customer->getResource()->saveAttribute($customer, 'is_bounce');
-							//$customer->save();
 
 							$diff['validated'][] = $email;
 						}
@@ -905,7 +855,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 						$subscriber->setData('change_status_at', date('Y-m-d H:i:s'));
 						$subscriber->setData('subscriber_status', Mage_Newsletter_Model_Subscriber::STATUS_UNSUBSCRIBED);
 						$subscriber->getResource()->save($subscriber);
-						//$subscriber->save();
 
 						$diff['unsubscribed'][] = $email;
 					}
@@ -940,7 +889,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 							$subscriber->setData('change_status_at', date('Y-m-d H:i:s'));
 							$subscriber->setData('subscriber_status', Mage_Newsletter_Model_Subscriber::STATUS_SUBSCRIBED);
 							$subscriber->getResource()->save($subscriber);
-							//$subscriber->save();
 
 							$diff['subscribed'][] = $email;
 						}
@@ -995,12 +943,12 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		// pour le message du cron
 		if (is_object($cron)) {
 			$text = str_replace(['    ', ' => Array', "\n\n"], [' ', '', "\n"], preg_replace('#\s+[()]#', '', print_r($diff, true)));
-			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).' M'."\n".$text);
+			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).'M (max: '.ini_get('memory_limit').')'."\n".$text);
 			$diff['cron'] = $cron->getId();
 		}
 
 		// pour le status.dat
-		if (!empty($source)) {
+		if ($source != 'none') {
 			$diff['size'] = mb_strlen(gzdecode(file_get_contents($source)));
 			$diff['file'] = basename($source);
 		}

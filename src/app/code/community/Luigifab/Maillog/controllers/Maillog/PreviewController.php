@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated L/25/10/2021
+ * Updated D/26/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -23,7 +23,7 @@
 class Luigifab_Maillog_Maillog_PreviewController extends Mage_Adminhtml_Controller_Action {
 
 	protected function _isAllowed() {
-		return Mage::getSingleton('admin/session')->isAllowed('system/config');
+		return Mage::getSingleton('admin/session')->isAllowed('system/config/maillog_preview');
 	}
 
 	public function getUsedModuleName() {

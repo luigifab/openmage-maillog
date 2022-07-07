@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/21/01/2020
- * Updated J/30/09/2021
+ * Updated V/24/06/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -30,7 +30,7 @@ abstract class Luigifab_Maillog_Model_System implements Luigifab_Maillog_Model_I
 		$lines  = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog_sync/'.$this->_code.'/mapping_config')));
 
 		foreach ($lines as $line) {
-			if ((strpos($line, ':') !== false) && (strlen($line) > 3) && ($line[0] != '#')) {
+			if (str_contains($line, ':') && (strlen($line) > 3) && ($line[0] != '#')) {
 				$line = array_map('trim', explode(':', $line));
 				$code = trim(array_shift($line));
 				$values[$code] = $line;
