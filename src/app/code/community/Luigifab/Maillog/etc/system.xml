@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated M/24/05/2022
+ * Updated V/08/07/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -137,6 +137,14 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</smtp_password>
+						<smtp_domain translate="label">
+							<label>Domain for Message-ID</label>
+							<comment><![CDATA[<a href="https://stackoverflow.com/q/14483861">email.example.org</a>]]></comment>
+							<sort_order>15</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</smtp_domain>
 						<options translate="label">
 							<label>Options</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/01/07/2022
+ * Updated S/30/07/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -286,13 +286,17 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 					$heads = 'To: '.$recpt."\r\n".$heads;
 
+					// 550, 5.7.1, delivery not authorized: message missing a valid messageId header are not accepted (gmail)
+					// https://stackoverflow.com/q/14483861
+					if (!empty($domain = Mage::getStoreConfig('maillog/general/smtp_domain')))
+						$heads .= "\r\n".'Message-ID: <'.time().'-'.$this->getData('uniqid').'@'.$domain.'>';
+
 					// recherche l'email de l'expéditeur et des destinataires
 					$from = $this->getData('mail_sender');
 					$from = trim(empty($pos = strpos($from, '<')) ? $from : substr($from, $pos + 1, -1));
 					$recpts = [];
-					foreach (explode(',', $recpt) as $info) {
+					foreach (explode(',', $recpt) as $info)
 						$recpts[] = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
-					}
 
 					// une trouvaille fantastique
 					// https://gist.github.com/hdogan/8649cd9c25c75d0ab27e140d5eef5ce2
@@ -316,12 +320,18 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					curl_setopt($ch, CURLOPT_UPLOAD, true);
 					curl_setopt($ch, CURLOPT_INFILE, $fp);
 					curl_setopt($ch, CURLOPT_READFUNCTION, static function ($ch, $fp, $length) { return fread($fp, $length); });
+					//curl_setopt($ch, CURLOPT_VERBOSE, true);
+					//curl_setopt($ch, CURLOPT_STDERR, $log = fopen('php://temp', 'w+'));
 
 					$result = curl_exec($ch);
 					$result = (($result === false) || (curl_errno($ch) !== 0)) ?
 						trim('CURL_ERROR '.curl_errno($ch).' '.curl_error($ch)) : (empty($result) ? true : $result);
 					curl_close($ch);
 					fclose($fp);
+
+					//rewind($log);
+					//echo '<pre>',stream_get_contents($log);
+					//fclose($log);
 				}
 				else {
 					$result = mail(

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated V/01/07/2022
+ * Updated S/30/07/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -205,9 +205,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			// chargement des statistiques des emails et des synchronisations
 			// optimisation maximale de manière à ne faire que des COUNT en base de données
-			// ne recherche pas les données au dela de la durée de vie maximale (email et sync)
 			$emails = Mage::getResourceModel('maillog/email_collection');
 			$syncs  = Mage::getResourceModel('maillog/sync_collection');
+			$val    = Mage::getStoreConfig('maillog_sync/general/lifetime');
 
 			foreach (['week_' => true, 'month_' => false] as $key => $isWeek) {
 
@@ -231,11 +231,15 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					}
 
 					// calcul les statistiques
-					$vars['items'][$i][$key.'total_email']     = $this->calcNumber($where, $emails);
-					$vars['items'][$i][$key.'percent_sent']    = $this->calcNumber($where, $emails, ['in' => ['sent', 'read']]);
-					$vars['items'][$i][$key.'percent_read']    = $this->calcNumber($where, $emails, ['in' => ['sent', 'read']], 'read');
-					$vars['items'][$i][$key.'total_sync']      = $this->calcNumber($where, $syncs);
-					$vars['items'][$i][$key.'percent_success'] = $this->calcNumber($where, $syncs, 'success');
+					$vars['items'][$i][$key.'total_email']  = $this->calcNumber($where, $emails);
+					$vars['items'][$i][$key.'percent_sent'] = $this->calcNumber($where, $emails, ['in' => ['sent', 'read']]);
+					$vars['items'][$i][$key.'percent_read'] = $this->calcNumber($where, $emails, ['in' => ['sent', 'read']], 'read');
+
+					if (!empty($val))
+						$where['gteq'] = new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$val.' MINUTE)');
+
+					$vars['items'][$i][$key.'total_sync']   = $this->calcNumber($where, $syncs);
+					$vars['items'][$i][$key.'percent_sync'] = $this->calcNumber($where, $syncs, 'success');
 				}
 			}
 
@@ -252,20 +256,33 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 		$where['datetime'] = true;
 
-		// avec des resets sinon le where est conservé malgré le clone
+		if (!empty($where['gteq'])) {
+			$gteq = ['gteq' => $where['gteq']];
+			unset($where['gteq']);
+		}
+
+		// avec des resets sinon le where est conservé avec le clone
 		if (empty($status1)) {
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
+			if (!empty($gteq))
+				$data->addFieldToFilter('created_at', $gteq);
 			$data->addFieldToFilter('created_at', $where);
 			$nb1 = $data->getSize(); // totalité
 		}
 		else if (empty($status2)) {
+
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
+			if (!empty($gteq))
+				$data->addFieldToFilter('created_at', $gteq);
 			$data->addFieldToFilter('created_at', $where);
 			$nb1 = $data->getSize(); // totalité
+
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
+			if (!empty($gteq))
+				$data->addFieldToFilter('created_at', $gteq);
 			$data->addFieldToFilter('created_at', $where);
 			$data->addFieldToFilter('status', $status1);
 			$nb2 = $data->getSize(); // filtré
@@ -273,11 +290,16 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		else {
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
+			if (!empty($gteq))
+				$data->addFieldToFilter('created_at', $gteq);
 			$data->addFieldToFilter('created_at', $where);
 			$data->addFieldToFilter('status', $status1);
 			$nb1 = $data->getSize(); // totalité
+
 			$data = clone $collection;
 			$data->getSelect()->reset(Zend_Db_Select::WHERE);
+			if (!empty($gteq))
+				$data->addFieldToFilter('created_at', $gteq);
 			$data->addFieldToFilter('created_at', $where);
 			$data->addFieldToFilter('status', $status2);
 			$nb2 = $data->getSize(); // filtré

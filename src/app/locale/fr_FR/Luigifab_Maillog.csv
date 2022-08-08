@@ -7,6 +7,7 @@
 "Emails encoding","Encodage des emails"
 "Minify <abbr title=""HyperText Markup Language"">HTML</abbr> code","Minifier le code <abbr title=""Langage de balisage hypertexte (HyperText Markup Language)"">HTML</abbr>"
 "Email history lifetime and email header colors","Durée de vie de l'historique des emails et couleurs de l'entête des emails"
+"Domain for Message-ID","Domaine pour le Message-ID"
 "Number of emails per page","Nombre d'emails par page"
 "Show the subject column","Afficher la colonne sujet"
 "Show the size column","Afficher la colonne taille"

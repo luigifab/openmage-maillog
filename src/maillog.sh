@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Created D/23/09/2018
-# Updated M/05/10/2021
+# Updated S/30/07/2022
 #
 # Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
 # Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -29,6 +29,7 @@ DEV=""
 ONLYSYNC=""
 ONLYEMAIL=""
 MULTI=""
+HELP=""
 
 if [ ! -d "$BASEDIR$LOGDIR" ] ; then
 	mkdir -p "$BASEDIR$LOGDIR"
@@ -44,11 +45,15 @@ do
 		ONLYEMAIL=" --only-email"
 	elif [[ $ARG == "--multi" ]] ; then
 		MULTI=" --multi"
+	elif [[ $ARG == "--help" ]] ; then
+		HELP=" --help"
+	elif [[ $ARG == "-h" ]] ; then
+		HELP=" --help"
 	else
 		echo "unknown argument: $ARG" >> $BASEDIR$LOGDIR$LOGFILE
 	fi
 done
 
 if ! ps auxwww | grep "$BASEDIR$SCRIPT$DEV$ONLYSYNC$ONLYEMAIL" | grep -v grep 1>/dev/null 2>/dev/null ; then
-	$PHPBIN $BASEDIR$SCRIPT$DEV$ONLYSYNC$ONLYEMAIL$MULTI >> $BASEDIR$LOGDIR$LOGFILE 2>&1 &
+	$PHPBIN $BASEDIR$SCRIPT$DEV$ONLYSYNC$ONLYEMAIL$MULTI$HELP >> $BASEDIR$LOGDIR$LOGFILE 2>&1 &
 fi

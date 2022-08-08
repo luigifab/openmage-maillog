@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated D/26/06/2022
+ * Updated S/30/07/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -32,15 +32,21 @@ if (is_file('maintenance.flag') || is_file('upgrade.flag'))
 if (is_file('app/bootstrap.php'))
 	require_once('app/bootstrap.php');
 
-// php .../maillog.php --dev                        => single thread  / email + data sync
-// php .../maillog.php --only-sync  [--dev]         => single thread  / data sync only
-// php .../maillog.php --only-email [--dev]         => single thread  / email only
-// php .../maillog.php --multi      [--dev]         => multi threads* / email + data sync
-// php .../maillog.php --multi --only-sync  [--dev] => multi threads* / data sync only
-// php .../maillog.php --multi --only-email [--dev] => multi threads* / email only
-// php .../maillog.php --all-customers [--dev]      => multi threads* / full data sync only
-//   nice -n 15 su - www-data -s /bin/bash -c 'php /var/www/openmage/web/maillog.php --all-customers'
-//   SELECT SUBSTRING(messages, 1, 15) AS msg FROM cron_schedule WHERE job_code LIKE "maillog_cron_fullsync%";
+if (in_array('--help', $argv) || in_array('-h', $argv)) {
+	echo 'Usage: maillog.sh (crontab every minute) or maillog.php (cli)',"\n";
+	echo 'Without arguments, sends all pending emails, and performs all pending synchronizations.',"\n";
+	echo "\n";
+	echo ' --help -h        this screen',"\n";
+	echo ' --dev            enable developer mode',"\n";
+	echo ' --only-email     send only pending emails',"\n";
+	echo ' --only-sync      perform only pending synchronizations',"\n";
+	echo ' --multi          enable multi threads max(1, nbOfCpu-2) (500 emails/syncs per thread)',"\n";
+	echo ' --all-customers  synchronize all customers in multi threads (5000 customers per thread)',"\n";
+	echo "\n";
+	echo 'For example to sync all customers:',"\n";
+	echo ' nice -n 15 su - www-data -s /bin/bash -c \'php .../maillog.php --all-customers\'',"\n";
+	exit(0);
+}
 
 $isDev   = isset($_SERVER['MAGE_IS_DEVELOPER_MODE']) || in_array('--dev', $argv);
 $isEmail = !in_array('--only-sync', $argv);
@@ -55,11 +61,10 @@ Mage::app('admin')->setUseSessionInUrl(false);
 Mage::app()->addEventArea('crontab');
 Mage::setIsDeveloperMode($isDev);
 
-exec('nproc', $core);
-$core = max(1, (int) trim(implode($core)));
 $stop = Mage::getBaseDir('var').'/maillog.stop';
 
 
+// info
 if ($isDev) {
 	Mage::log('dev:true'.
 		' email:'.($isEmail ? 'true' : 'false').
@@ -67,45 +72,43 @@ if ($isDev) {
 		' multi:'.($isMulti ? 'true' : 'false').
 		' full:'.($isFull ? 'true' : 'false').
 		' run:'.($runNumb ?: 'false'),
-	Zend_Log::INFO);
+	Zend_Log::INFO, 'maillog.log');
 }
 
 if (is_file($stop)) {
-	echo 'Stop file is here: ',$stop,' - Exiting now.',"\n";
+	echo 'Stop file is here: ',$stop,' - Stop now.',"\n";
 	exit(-1);
 }
 
 if (empty($runNumb) && $isFull) {
 	echo 'Starting full sync in 25 seconds...',"\n";
-	echo 'You can cancel it at any moment by creating the stop file: '.$stop,"\n";
+	echo 'You can cancel it at any moment by creating the stop file:'."\n".' '.$stop,"\n";
 	file_put_contents($stop, 'checking');
 	sleep(25);
 	unlink($stop);
-	echo 'Go!',"\n";
+	echo 'Go... ',date('c'),"\n";
 }
 
 
 // mode multi threads
-// dans tous les cas s'il y en a plus de 500 à faire, laisse toujours 3 CPU de libre
 if (empty($runNumb) && ($isMulti || $isFull)) {
 
-	$core = max(1, $core - 3);
+	exec('nproc', $core);
+	$core = max(1, (int) trim(implode($core)) - 2);
 	$pids = [];
 	$cmds = [];
 
-	// multi threads
-	// passe en single thread si nécessaire
 	if ($isFull) {
 
 		// syncs
-		$nbRunOfSyncs = ceil(Mage::getResourceModel('customer/customer_collection')->getSize() / 5000);
-		if ($nbRunOfSyncs > 1) {
-			while ($nbRunOfSyncs > 0) {
-				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --all-customers'.($isDev ? ' --dev ' : ' ').$nbRunOfSyncs;
-				$nbRunOfSyncs--;
-			}
+		$nbRunOfSyncs = Mage::getResourceModel('customer/customer_collection')->getSize();
+		$nbRunOfSyncs = ceil(Mage::getResourceModel('customer/customer_collection')->getSize() / (($nbRunOfSyncs > 5000) ? 5000 : 500));
+		while ($nbRunOfSyncs > 0) {
+			$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --all-customers'.($isDev ? ' --dev ' : ' ').$nbRunOfSyncs;
+			$nbRunOfSyncs--;
 		}
 
+		$isMulti = true;
 		$isEmail = false;
 		$isSync  = false;
 	}
@@ -116,12 +119,9 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 			->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 SECOND)')])
 			->getSize() / 500) : 0;
 
-		if ($nbRunOfEmails > 1) {
-			while ($nbRunOfEmails > 0) {
-				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-email'.($isDev ? ' --dev ' : ' ').$nbRunOfEmails;
-				$nbRunOfEmails--;
-			}
-			$isEmail = false;
+		while ($nbRunOfEmails > 0) {
+			$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-email'.($isDev ? ' --dev ' : ' ').$nbRunOfEmails;
+			$nbRunOfEmails--;
 		}
 
 		// syncs
@@ -130,17 +130,16 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 			->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL 20 SECOND)')])
 			->getSize() / 500) : 0;
 
-		if ($nbRunOfSyncs > 1) {
-			while ($nbRunOfSyncs > 0) {
-				$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-sync'.($isDev ? ' --dev ' : ' ').$nbRunOfSyncs;
-				$nbRunOfSyncs--;
-			}
-			$isSync = false;
+		while ($nbRunOfSyncs > 0) {
+			$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-sync'.($isDev ? ' --dev ' : ' ').$nbRunOfSyncs;
+			$nbRunOfSyncs--;
 		}
+
+		$isEmail = false;
+		$isSync = false;
 	}
 
 	// exécute les threads
-	// s'il y en a pas, c'est qu'on est passé en single thread
 	if (!empty($cmds)) {
 
 		while (!empty($cmds)) {
@@ -171,16 +170,13 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 			}
 		}
 	}
-	else {
-		$isMulti = false;
-	}
 }
 
 
 // mode single thread ou exécution des threads
 if (!$isMulti && !$isFull && $isEmail) {
 
-	if (Mage::getIsDeveloperMode())
+	if ($isDev)
 		Mage::log('run email ('.(($runNumb > 0) ? 'multi threads, nb#'.$runNumb : 'single thread').')', Zend_Log::INFO, 'maillog.log');
 
 	$cron = Mage::getModel('cron/schedule');
@@ -195,7 +191,7 @@ if (!$isMulti && !$isFull && $isEmail) {
 	if (is_file($stop)) {
 		$msg = ($runNumb > 0) ? 'Interrupted by '.$stop.' file (thread nb#'.$runNumb.').' : 'Interrupted by '.$stop.' file.';
 		$results['error'][] = $msg;
-		if (Mage::getIsDeveloperMode())
+		if ($isDev)
 			Mage::log($msg, Zend_Log::INFO, 'maillog.log');
 	}
 
@@ -204,7 +200,7 @@ if (!$isMulti && !$isFull && $isEmail) {
 
 if (!$isMulti && !$isFull && $isSync) {
 
-	if (Mage::getIsDeveloperMode())
+	if ($isDev)
 		Mage::log('run sync ('.(($runNumb > 0) ? 'multi threads, nb#'.$runNumb : 'single thread').')', Zend_Log::INFO, 'maillog.log');
 
 	$cron = Mage::getModel('cron/schedule');
@@ -219,7 +215,7 @@ if (!$isMulti && !$isFull && $isSync) {
 	if (is_file($stop)) {
 		$msg = ($runNumb > 0) ? 'Interrupted by '.$stop.' file (thread nb#'.$runNumb.').' : 'Interrupted by '.$stop.' file.';
 		$results['error'][] = $msg;
-		if (Mage::getIsDeveloperMode())
+		if ($isDev)
 			Mage::log($msg, Zend_Log::INFO, 'maillog.log');
 	}
 
@@ -228,7 +224,7 @@ if (!$isMulti && !$isFull && $isSync) {
 
 if (!$isMulti && $isFull) {
 
-	if (Mage::getIsDeveloperMode())
+	if ($isDev)
 		Mage::log('run full sync ('.(($runNumb > 0) ? 'multi threads, nb#'.$runNumb : 'single thread').')', Zend_Log::INFO, 'maillog.log');
 
 	ini_set('memory_limit', '1G');
@@ -245,7 +241,7 @@ if (!$isMulti && $isFull) {
 	if (is_file($stop)) {
 		$msg = ($runNumb > 0) ? 'Interrupted by '.$stop.' file (thread nb#'.$runNumb.').' : 'Interrupted by '.$stop.' file.';
 		$results['error'][] = $msg;
-		if (Mage::getIsDeveloperMode())
+		if ($isDev)
 			Mage::log($msg, Zend_Log::INFO, 'maillog.log');
 	}
 
@@ -420,5 +416,10 @@ function saveCron(object $cron, array $results, bool $end, bool $full = false) {
 	}
 }
 
+
+// info
+if (empty($runNumb) && $isFull) {
+	echo 'Finished! ',date('c'),"\n";
+}
 
 exit(0);
