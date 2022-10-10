@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/25/11/2021
+ * Updated S/24/09/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -270,7 +270,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 			'X-WSSE: UsernameToken '.
 				'Username="'.Mage::getStoreConfig('maillog_sync/'.$this->_code.'/api_username').'", '.
 				'PasswordDigest="'.$password.'", Nonce="'.$nonce.'", Created="'.$timestamp.'"',
-			$override
+			$override,
 		]);
 
 		$result = curl_exec($ch);

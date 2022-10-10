@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated M/28/09/2021
+ * Updated D/28/08/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -33,7 +33,11 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		if (!empty($email->getId())) {
 			Mage::getSingleton('core/translate')->setLocale(Mage::getStoreConfig('general/locale/code'))->init('adminhtml', true);
-			$this->getResponse()->setBody($email->toHtml($this->getRequest()->getParam('nomark') == '1'));
+			$this->getResponse()
+				->setHttpResponseCode(200)
+				->setHeader('Content-Type', 'text/html; charset=utf-8', true)
+				->setHeader('Cache-Control', 'no-cache, must-revalidate', true)
+				->setBody($email->toHtml($this->getRequest()->getParam('nomark') == '1'));
 		}
 	}
 
@@ -61,49 +65,65 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 					$type = $part->type;
 					$disp = 'attachment; filename="'.$part->filename.'"';
 
-					// affichage pdf dans le navigateur
-					if (($type == 'application/octet-stream') && (mb_substr($part->filename, -4) == '.pdf'))
-						$type = 'application/pdf';
-					if ($type == 'application/pdf')
-						$disp = 'inline; filename="'.$part->filename.'"';
+					if ($type == 'application/x-gzip') {
+						$found = true;
+						$this->getResponse()
+							->setHttpResponseCode(200)
+							->setHeader('Content-Type', $type, true)
+							->setHeader('Content-Disposition', $disp, true)
+							->setHeader('Cache-Control', 'no-cache, must-revalidate', true)
+							->setBody($data);
+					}
+					else {
+						// affichage pdf dans le navigateur
+						if (($type == 'application/octet-stream') && (mb_substr($part->filename, -4) == '.pdf'))
+							$type = 'application/pdf';
+						if ($type == 'application/pdf')
+							$disp = 'inline; filename="'.$part->filename.'"';
 
-					return $this->getResponse()
-						->setHttpResponseCode(200)
-						->setHeader('Content-Type', $type, true)
-						->setHeader('Content-Length', strlen($data)) // surtout pas de mb_strlen
-						->setHeader('Content-Disposition', $disp)
-						->setHeader('Cache-Control', 'no-cache, must-revalidate', true)
-						->setHeader('Last-Modified', date('r'))
-						->setBody($data);
+						// compresse avec gzip le fichier
+						$found = true;
+						$this->getResponse()
+							->setHttpResponseCode(200)
+							->setHeader('Content-Type', $type, true)
+							->setHeader('Content-Disposition', $disp, true)
+							->setHeader('Content-Encoding', 'gzip', true)
+							->setHeader('Cache-Control', 'no-cache, must-revalidate', true)
+							->setBody(gzencode($data, 9));
+					}
 				}
 			}
 		}
 
-		return $this->getResponse()->setHttpResponseCode(404);
+		if (empty($found))
+			$this->getResponse()->setHttpResponseCode(404);
 	}
 
 	public function markAction() {
 
 		Mage::register('turpentine_nocache_flag', true, true);
 
+		// read.gif (image de 1x1 pixel transparente)
+		$data = base64_decode('R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==');
+		$this->getResponse()
+			->setHttpResponseCode(200)
+			->setHeader('Content-Type', 'image/gif', true)
+			->setHeader('Content-Disposition', 'inline; filename="pixel.gif"', true)
+			->setHeader('Cache-Control', 'no-cache, must-revalidate', true)
+			->setBody($data)
+			->sendResponse();
+
+		// marquage
 		$email = Mage::getResourceModel('maillog/email_collection')
 			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
 			->setPageSize(1)
 			->getFirstItem();
 
-		if (!empty($email->getId()) && ($email->getData('status') != 'read'))
-			$email->setData('status', 'read')->save();
-
-		// read.gif (image de 1x1 pixel transparente)
-		$data = base64_decode('R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==');
-
-		$this->getResponse()
-			->setHttpResponseCode(200)
-			->setHeader('Content-Type', 'image/gif', true)
-			->setHeader('Content-Length', strlen($data)) // surtout pas de mb_strlen
-			->setHeader('Content-Disposition', 'inline; filename="pixel.gif"')
-			->setHeader('Cache-Control', 'no-cache, must-revalidate', true)
-			->setHeader('Last-Modified', date('r'))
-			->setBody($data);
+		if (!empty($email->getId()) && ($email->getData('status') != 'read')) {
+			$email->setData('status', 'read');
+			$email->setData('useragent', getenv('HTTP_USER_AGENT'));
+			$email->setData('referer', getenv('HTTP_REFERER'));
+			$email->save();
+		}
 	}
 }

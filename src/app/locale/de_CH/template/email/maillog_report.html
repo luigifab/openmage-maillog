@@ -69,28 +69,24 @@
 						<strong>{{number items.week_total_email}}</strong>
 					</td>
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-						{{if items.week_total_email eq 0}}
-
-						{{else}}
+						{{if items.week_total_email gt 0}}
 							<strong>{{number items.week_percent_sent}} %</strong>
 						{{/if}}
 					</td>
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-						{{if items.week_total_email eq 0}}
-
-						{{else}}
+						{{if items.week_total_email gt 0}}
 							<strong>{{number items.week_percent_read}} %</strong>
 						{{/if}}
 					</td>
 					{{depend sync}}
 						<td style="font-size:12px;">|<br>|</td>
 						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-							<strong>{{number items.week_total_sync}}</strong>
+							{{if items.week_total_sync gt 0}}
+								<strong>{{number items.week_total_sync}}</strong>
+							{{/if}}
 						</td>
 						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-							{{if items.week_total_sync eq 0}}
-
-							{{else}}
+							{{if items.week_total_sync gt 0}}
 								<strong>{{number items.week_percent_sync}} %</strong>
 							{{/if}}
 						</td>
@@ -104,28 +100,24 @@
 						<strong>{{number items.month_total_email}}</strong>
 					</td>
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-						{{if items.month_total_email eq 0}}
-
-						{{else}}
+						{{if items.month_total_email gt 0}}
 							<strong>{{number items.month_percent_sent}} %</strong>
 						{{/if}}
 					</td>
 					<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-						{{if items.month_total_email eq 0}}
-
-						{{else}}
+						{{if items.month_total_email gt 0}}
 							<strong>{{number items.month_percent_read}} %</strong>
 						{{/if}}
 					</td>
 					{{depend sync}}
 						<td style="font-size:12px;">|<br>|</td>
 						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-							<strong>{{number items.month_total_sync}}</strong>
+							{{if items.month_total_sync gt 0}}
+								<strong>{{number items.month_total_sync}}</strong>
+							{{/if}}
 						</td>
 						<td style="padding:2px 5px 3px; line-height:16px; font-size:12px; text-align:left; white-space:nowrap; vertical-align:top;">
-							{{if items.month_total_sync eq 0}}
-
-							{{else}}
+							{{if items.month_total_sync gt 0}}
 								<strong>{{number items.month_percent_sync}} %</strong>
 							{{/if}}
 						</td>

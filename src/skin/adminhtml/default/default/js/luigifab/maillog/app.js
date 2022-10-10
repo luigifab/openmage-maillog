@@ -1,6 +1,6 @@
 /**
  * Created J/03/12/2015
- * Updated D/03/04/2022
+ * Updated L/26/09/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -236,8 +236,17 @@ var maillog = new (function () {
 
 	this.pastePicture = function (elem, ev) {
 
-		var config = JSON.parse((ev.clipboardData || window.clipboardData).getData('text')), idx = 1, root, line;
-		ev.preventDefault();
+		var idx = 1, config, root, line;
+		try {
+			config = JSON.parse((ev.clipboardData || window.clipboardData).getData('text'));
+			ev.preventDefault();
+		}
+		catch (e) {
+			console.error(e);
+			ev.preventDefault();
+			elem.value = '';
+			return;
+		}
 
 		if (elem.classList.contains('cde')) {
 			root = elem.closest('tr');

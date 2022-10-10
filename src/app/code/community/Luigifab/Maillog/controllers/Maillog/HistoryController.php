@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/09/10/2021
+ * Updated D/28/08/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -40,10 +40,12 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 
 	protected function _redirectBack() {
 
-		if ($this->getRequest()->getParam('back') == 'order')
-			$this->_redirect('*/sales_order/view', ['order_id' => $this->getRequest()->getParam('bid'), 'active_tab' => 'maillog_order_grid']);
-		else if ($this->getRequest()->getParam('back') == 'customer')
-			$this->_redirect('*/customer/edit', ['id' => $this->getRequest()->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_customer_grid']);
+		$request = $this->getRequest();
+
+		if ($request->getParam('back') == 'order')
+			$this->_redirect('*/sales_order/view', ['order_id' => $request->getParam('bid'), 'active_tab' => 'maillog_order_grid']);
+		else if ($request->getParam('back') == 'customer')
+			$this->_redirect('*/customer/edit', ['id' => $request->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_customer_grid']);
 		else
 			$this->_redirect('*/*/index');
 	}

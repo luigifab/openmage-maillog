@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/24/06/2022
+ * Updated V/02/09/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -150,11 +150,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		$ignores = array_filter(preg_split('#\s+#', Mage::getStoreConfig('maillog/filters/ignore')));
 		foreach ($ignores as $ignore) {
 			foreach ($emails as $email) {
-				if (mb_stripos($email, $ignore) !== false) {
-					$text = sprintf('STOP! Email address (%s) not allowed by keyword: %s', $email, $ignore);
-					Mage::log($text, Zend_Log::NOTICE, 'maillog.log');
-					return $text;
-				}
+				if (mb_stripos($email, $ignore) !== false)
+					return sprintf('STOP! Email address (%s) not allowed by keyword: %s', $email, $ignore);
 			}
 		}
 
@@ -191,10 +188,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			}
 		}
 
-		if ($msg != 'ok-can-send') {
-			Mage::log($msg, Zend_Log::NOTICE, 'maillog.log');
+		if ($msg != 'ok-can-send')
 			return $msg;
-		}
 
 		// toutes les base_url ne doivent pas contenir
 		$key = 'maillog/filters/notbaseurl';
@@ -229,10 +224,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			}
 		}
 
-		if ($msg != 'ok-can-send') {
-			Mage::log($msg, Zend_Log::NOTICE, 'maillog.log');
+		if ($msg != 'ok-can-send')
 			return $msg;
-		}
 
 		return true;
 	}

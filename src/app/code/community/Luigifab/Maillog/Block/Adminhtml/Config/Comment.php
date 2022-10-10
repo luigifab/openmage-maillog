@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/26/10/2019
- * Updated S/19/02/2022
+ * Updated D/04/09/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -25,7 +25,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 	protected function _getHeaderCommentHtml($element) {
 
 		$comment = $element->getComment();
-		if (empty($comment))
+		if (empty($comment) && (stripos($element->getHtmlId(), 'maillog_sync_') !== false))
 			return '<img src="'.$this->getSkinUrl('images/luigifab/maillog/logo-'.str_replace('maillog_sync_', '', $element->getId()).'.svg').'" alt="" class="maillog logo" />';
 
 		if (stripos($element->getHtmlId(), 'sync') !== false)
@@ -35,6 +35,8 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 			'myvar1' => [['numb' => -2, 'text' => 'hello'], ['numb' => 0, 'text' => 'hello'], ['numb' => 2, 'text' => 'hello']],
 			'myvar2' => ['str1', 'str2'],
 		];
+
+		// debug + exemple en même temps
 		foreach ($vars['myvar1'] as $i => $n) {
 			$t = $n['text'];
 			$n = $n['numb'];
@@ -66,31 +68,37 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 			$vars['myvar1'][$i]['v'] = (mb_stripos($t, '777') === false) ? 'true' : 'false';
 			$vars['myvar1'][$i]['w'] = (mb_stripos($t, $t) !== false) ? 'true' : 'false';
 			$vars['myvar1'][$i]['x'] = (mb_stripos($t, $t) === false) ? 'true' : 'false';
+			$vars['myvar1'][$i]['na'] = (($n > 0) && ($n > -2)) ? 'true' : 'false';
+			$vars['myvar1'][$i]['nb'] = (($n < 0) && ($n < -2)) ? 'true' : 'false';
+			$vars['myvar1'][$i]['nc'] = (($n < 0) || ($n < -2)) ? 'true' : 'false';
+			$vars['myvar1'][$i]['nd'] = (($n > 0) || ($n > -2)) ? 'true' : 'false';
 		}
 
 		return implode("\n", [
 			'<div class="comment maillog">',
 				'<p>'.$comment.'</p>',
 				'<ul lang="en">',
-					'<li>{{foreach something}} ... {{forelse}} ... {{/foreach}}</li>',
-					'<li>{{if something gt/gte/gteq/lt/lte/lteq/eq/neq something/empty}} ... {{elseif ...}} ... {{else}} ... {{/if}}</li>',
-					'<li>{{if something in/nin a,b,c,1,2,3}} ... {{elseif ...}} ... {{else}} ... {{/if}}  (in_array)</li>',
-					'<li>{{if something ct/nct something}} ... {{elseif ...}} ... {{else}} ... {{/if}}  (contains)</li>',
-					'<li>{{ifconfig path="a/b/c"}} ... {{elseconfig}} ... {{/ifconfig}}</li>',
-					'<li>{{helper action="xx/yy::zz"}} | {{helper action="xx/yy::zz" param="abc" marap=$something ifconfig="a/b/c"}}</li>',
-					'<li>{{number something}} | {{number path="a/b/c" nodecimal="true" ifconfig="a/b/c"}}</li>',
-					'<li>{{price something}} | {{price path="a/b/c" nodecimal="true" currency="xyz" store="i" product="i" ifconfig="a/b/c"}}</li>',
-					'<li>{{currency code="xyz"}} | {{currency path="a/b/c" store="i" ifconfig="a/b/c"}}</li>',
-					'<li>{{include template="xyz.html"}} | {{include template="xyz.html" ifconfig="a/b/c"}}</li>',
-					'<li>{{dump something}} | {{dump}}</li>',
-					'<li>{{picture ...}}</li>',
+					'<li><code>{{foreach something}} ... {{forelse}} ... {{/foreach}}</code></li>',
+					'<li><code>{{if something gt/gte/gteq/lt/lte/lteq/eq/neq something/empty}} ... {{elseif ...}} ... {{else}} ... {{/if}}</code></li>',
+					'<li><code>{{if something in/nin a,b,c,1,2,3}} ... {{elseif ...}} ... {{else}} ... {{/if}}  (in_array)</code></li>',
+					'<li><code>{{if something ct/nct something}} ... {{elseif ...}} ... {{else}} ... {{/if}}    (contains)</code></li>',
+					'<li><code>⭐ {{if something operator something && something operator something ...}}        (only " && ")</code></li>',
+					'<li><code>⭐ {{if something operator something || something operator something ...}}        (only " || ")</code></li>',
+					'<li><code>{{ifconfig path="a/b/c"}} ... {{elseconfig}} ... {{/ifconfig}}</code></li>',
+					'<li><code>{{helper action="xx/yy::zz"}} | {{helper action="xx/yy::zz" param="abc" marap=$something ifconfig="a/b/c"}}</code></li>',
+					'<li><code>{{number something}} | {{number path="a/b/c" nodecimal="true" ifconfig="a/b/c"}}</code></li>',
+					'<li><code>{{price something}} | {{price path="a/b/c" nodecimal="true" currency="xyz" store="i" product="i" ifconfig="a/b/c"}}</code></li>',
+					'<li><code>{{currency code="xyz"}} | {{currency path="a/b/c" store="i" ifconfig="a/b/c"}}</code></li>',
+					'<li><code>{{include template="xyz.html"}} | {{include template="xyz.html" ifconfig="a/b/c"}}</code></li>',
+					'<li><code>{{dump something}} | {{dump}}</code></li>',
+					'<li><code>{{picture ...}}</code></li>',
 				'</ul>',
 // foreach
 '<div class="maillogexamples" onclick="this.innerHTML = this.innerHTML.replace(/\s+true\s+=\s+true/g, \' <b>true</b>\').replace(/\s+false\s+=\s+false/g, \' <b>false</b>\'); this.removeAttribute(\'onclick\');">',
 '<pre lang="en">'.trim(str_replace("<span>\n", '<span>', str_replace(['{', '}'], ['{{', '}}'], Mage::getModel('varien/filter_template')->resetVariables($vars)->filter('
 <b>foreach</b>
 {foreach myvar1 = [["numb" => -2, "text" => "hello"], ["numb" => 0, "text" => "hello"], ["numb" => 2, "text" => "hello"]]}
- Z / ... / {if myvar1.numb operator value} true {else} false {/if} (result calculated by _getVariable()) = {var myvar1.z} (result calculated by PHP)
+ l / ... / {if myvar1.xyz operator value} true {else} false {/if} (result calculated by _getVariable()) = {var myvar1.l} (result calculated by PHP)
 {/foreach}
 <span>{{foreach myvar1}}<span>
  A / {if {{var myvar1.numb}} gt  0} / {{if myvar1.numb gt  0}} true  {{else}} false {{/if}} = {{var myvar1.a}}
@@ -117,7 +125,13 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
  V / {if {{var myvar1.text}} nct 777} / {{if myvar1.text nct 777}} true  {{else}} false {{/if}} = {{var myvar1.v}}
  W / {if {{var myvar1.text}} ct  {{var myvar1.text}}} / {{if myvar1.text ct  myvar1.text}} true  {{else}} false {{/if}} = {{var myvar1.w}}
  X / {if {{var myvar1.text}} nct {{var myvar1.text}}} / {{if myvar1.text nct myvar1.text}} true  {{else}} false {{/if}} = {{var myvar1.x}}
-</span>{{/foreach}}</span>{foreach myvar2 = ["str1", "str2"]} Y / {var myvar2} {/foreach}
+ NA / {if {{var myvar1.numb}} gt 0 && {{var myvar1.numb}} gt -2} / {{if myvar1.numb gt 0 && myvar1.numb gt -2}} true {{else}} false {{/if}} = {{var myvar1.na}}
+ NB / {if {{var myvar1.numb}} lt 0 && {{var myvar1.numb}} lt -2} / {{if myvar1.numb lt 0 && myvar1.numb lt -2}} true {{else}} false {{/if}} = {{var myvar1.nb}}
+ NC / {if {{var myvar1.numb}} lt 0 || {{var myvar1.numb}} lt -2} / {{if myvar1.numb lt 0 || myvar1.numb lt -2}} true {{else}} false {{/if}} = {{var myvar1.nc}}
+ ND / {if {{var myvar1.numb}} gt 0 || {{var myvar1.numb}} gt -2} / {{if myvar1.numb gt 0 || myvar1.numb gt -2}} true {{else}} false {{/if}} = {{var myvar1.nd}}
+</span>{{/foreach}}</span>{foreach myvar2 = ["str1", "str2"]}
+ Y / {var myvar2}
+{/foreach}
 <span>{{foreach myvar2}}<span>
  Y / {{var myvar2}}
 </span>{{/foreach}}</span><!--

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated S/30/07/2022
+ * Updated L/26/09/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -121,7 +121,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		Mage::app()->cleanCache();
 		Mage::dispatchEvent('adminhtml_cache_flush_system');
 
-		Mage::getSingleton('adminhtml/session')->addSuccess(str_replace('Magento', 'OpenMage', Mage::helper('adminhtml')->__('The Magento cache storage has been flushed.')));
+		Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('adminhtml')->__('The OpenMage cache storage has been flushed.'));
 	}
 
 
@@ -167,7 +167,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$emails->addFieldToFilter('created_at', [
 				'datetime' => true,
 				'from' => $dates['start']->toString(Zend_Date::RFC_3339),
-				'to'   => $dates['end']->toString(Zend_Date::RFC_3339)
+				'to'   => $dates['end']->toString(Zend_Date::RFC_3339),
 			]);
 			$emails->setOrder('email_id', 'desc');
 
@@ -200,7 +200,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 				'error_list'           => implode('</li><li style="margin:0.8em 0 0.5em;">', $errors),
 				'import_bounces'       => trim(strip_tags($this->getImportStatus('bounces', 'bounces'), '<br> <span>')),
 				'import_unsubscribers' => trim(strip_tags($this->getImportStatus('unsubscribers', 'unsubscribers'), '<br> <span>')),
-				'sync'                 => Mage::getStoreConfigFlag('maillog_sync/general/enabled')
+				'sync'                 => Mage::getStoreConfigFlag('maillog_sync/general/enabled'),
 			];
 
 			// chargement des statistiques des emails et des synchronisations
@@ -215,7 +215,10 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 				for ($i = 2; $i <= 14; $i++) {
 
 					$dates = $this->getDateRange($isWeek ? 'week' : 'month', $i - 1);
-					$where = ['from' => $dates['start']->toString(Zend_Date::RFC_3339), 'to' => $dates['end']->toString(Zend_Date::RFC_3339)];
+					$where = [
+						'from' => $dates['start']->toString(Zend_Date::DATE_SHORT),
+						'to'   => $dates['end']->toString(Zend_Date::DATE_SHORT),
+					];
 
 					// affiche les dates
 					if ($isWeek) {

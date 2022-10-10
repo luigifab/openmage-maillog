@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/24/06/2022
+ * Updated D/04/09/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -63,19 +63,34 @@ abstract class Luigifab_Maillog_Model_Filter {
 		array_shift($match); // $match[0] = tout le groupe = osef
 		$replace = '';
 
-		// $match[1/3/5...] = var cond var   => $value
-		// $match[2/4/6...] = valeur si vrai
-		// $match[...11=last-1] = {{else}}
-		// $match[...12=last] = valeur si faux
+		// $match[1/3/5...]  = var cond var   => $value
+		// $match[2/4/6...]  = valeur si vrai
+		// $match[...last-1] = {{else}}
+		// $match[...last]   = valeur si faux
 		while (count($match) > 0) {
 			$value = array_shift($match);
 			if ($value == '{{else}}') {
 				$replace = array_shift($match);
 				break;
 			}
-			if (!empty($value) && !empty($this->_getVariable($value, ''))) {
-				$replace = array_shift($match);
-				break;
+			if (!empty($value)) {
+				$result = null;
+				if (mb_stripos($value, ' && ') !== false) {
+					$value  = explode(' && ', $value);
+					$result = true;
+					foreach ($value as $subvalue)
+						$result = $result && !empty($this->_getVariable($subvalue, ''));
+				}
+				else if (mb_stripos($value, ' || ') !== false) {
+					$value  = explode(' || ', $value);
+					$result = false;
+					foreach ($value as $subvalue)
+						$result = $result ?: !empty($this->_getVariable($subvalue, ''));
+				}
+				if (($result === true) || (($result === null) && !empty($this->_getVariable($value, '')))) {
+					$replace = array_shift($match);
+					break;
+				}
 			}
 		}
 

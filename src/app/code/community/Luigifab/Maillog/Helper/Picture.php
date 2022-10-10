@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated M/05/07/2022
+ * Updated S/27/08/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -346,7 +346,7 @@ self.addEventListener("resize", maillogdebug);
 		$size = empty($sizes) ? ['w' => 1, 'h' => 1] : end($sizes);
 		//$html = str_replace(' src="', ' src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="', $html);
 		// https://css-tricks.com/preventing-content-reflow-from-lazy-loaded-images/
-		$html = str_replace(' src="', ' src="data:image/svg+xml;base64,'.base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="'.$size['w'].'px" height="'.$size['h'].'"></svg>').'" data-src="', $html);
+		$html = str_replace(' src="', ' src="data:image/svg+xml;base64,'.base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="'.$size['w'].'" height="'.$size['h'].'"></svg>').'" data-src="', $html);
 		$html = str_replace(' srcset="', ' data-srcset="', $html); */
 
 		return $html;

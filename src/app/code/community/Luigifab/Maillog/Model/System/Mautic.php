@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/23/09/2021
- * Updated V/24/06/2022
+ * Updated J/29/09/2022
  *
  * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -106,11 +106,14 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 							if (in_array($region, $this->_regions[$country])) {
 								$fields[$system] = $region;
 							}
-							else {
+							else if (!empty($region)) {
 								$region = transliterator_transliterate('Any-Latin; Latin-ASCII; [^\u001F-\u007f] remove', $region);
 								if ($object->getData('country_id') == 'RU')
 									$region = str_replace('skaa', 'skaya', $region);
 								$fields[$system] = in_array($region, $this->_regions[$country]) ? $region : '';
+							}
+							else {
+								$fields[$system] = '';
 							}
 						}
 					}
@@ -155,7 +158,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 						// 2016-02-26T10:31:11+00:00
 						// 2016-02-26 10:32:28
 						$fields[$system] = $object->getData($code);
-						if (preg_match('#^\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}#', $fields[$system]) === 1)
+						if (!empty($fields[$system]) && (preg_match('#^\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}#', $fields[$system]) === 1))
 							$fields[$system] = date('Y-m-d H:i:s', strtotime($fields[$system]));
 					}
 				}
@@ -263,7 +266,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 			'Accept: application/json',
 			'Content-Type: application/json; charset="utf-8"',
 			'Authorization: Basic '.base64_encode(Mage::getStoreConfig('maillog_sync/'.$this->_code.'/api_username').':'.Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/'.$this->_code.'/api_password'))),
-			$override
+			$override,
 		]);
 
 		$result = curl_exec($ch);
