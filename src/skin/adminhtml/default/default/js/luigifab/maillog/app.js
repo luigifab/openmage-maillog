@@ -1,12 +1,12 @@
 /**
  * Created J/03/12/2015
- * Updated L/26/09/2022
+ * Updated M/11/10/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -234,38 +234,39 @@ var maillog = new (function () {
 		}
 	};
 
-	this.pastePicture = function (elem, ev) {
+	this.pastePicture = function (elem, ev, jsonOnly) {
 
 		var idx = 1, config, root, line;
+		jsonOnly = jsonOnly === true;
+
 		try {
 			config = JSON.parse((ev.clipboardData || window.clipboardData).getData('text'));
 			ev.preventDefault();
 		}
 		catch (e) {
-			console.error(e);
-			ev.preventDefault();
-			elem.value = '';
+			if (jsonOnly) {
+				console.error(e);
+				ev.preventDefault();
+				elem.value = '';
+			}
 			return;
 		}
 
-		if (elem.classList.contains('cde')) {
+		// soit c'est collé dans l'input du tfoot (on cherche donc le bon input.cde)
+		elem.closest('table').querySelectorAll('input.cde').forEach(function (input) {
+			if (input.value == config.c)
+				root = input.closest('tr');
+		});
+
+		// soit c'est collé dans un des input.cde du tbody
+		if (!root && elem.classList.contains('cde'))
 			root = elem.closest('tr');
-			if (!confirm(Translator.translate('Are you sure?') + ' (paste/replace picture)'))
-				return;
-		}
-		else {
-			elem.closest('table').querySelectorAll('input.cde').forEach(function (input) {
-				if (input.value == config.c)
-					root = input.closest('tr');
-			});
-			if (root) {
-				if (!confirm(Translator.translate('Are you sure?') + ' (paste/replace picture ' + config.c + ')'))
-					return;
-			}
-			else {
-				root = this.addPicture(document.querySelector('button.add.picture'));
-			}
-		}
+
+		// soit c'est un ajout, soit c'est un remplacement
+		if (!root)
+			root = this.addPicture(document.querySelector('button.add.picture'));
+		else if (!confirm(Translator.translate('Are you sure?') + ' (paste/replace picture ' + config.c + ')'))
+			return;
 
 		root.querySelector('input.cde').value = config.c;
 		root.querySelector('input.cmt').value = config.d;

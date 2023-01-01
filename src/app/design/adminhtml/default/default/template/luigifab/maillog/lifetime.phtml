@@ -1,13 +1,13 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated L/28/03/2022
+ * Updated S/03/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -20,9 +20,10 @@
  * GNU General Public License (GPL) for more details.
  */
 
-$help   = $this->helper('maillog');
-$config = $this->getData('config');
-$types  = $this->getData('types');
+$help    = $this->helper('maillog');
+$element = $this->getData('element');
+$config  = $this->getData('config');
+$types   = $this->getData('types');
 
 $titleFirst   = $help->escapeEntities($this->__('Emails content and attachments'), true);
 $titleSecond  = $help->escapeEntities($this->__('All emails data'), true);
@@ -33,13 +34,20 @@ $bgColor = Mage::getStoreConfig('maillog/general/default_bgcolor');
 $ttColor = Mage::getStoreConfig('maillog/general/default_ttcolor');
 ?>
 
-<tr id="<?php echo $this->getHtmlId() ?>_head">
-	<td class="label" colspan="2"><?php echo $this->getLabel() ?></td>
-	<td class="scope-label"><?php echo $this->getScopeLabel() ?></td>
+<tr id="row_<?php echo $element->getHtmlId() ?>_head">
+	<td class="label" colspan="2">
+		<?php echo $element->getLabel() ?>
+	</td>
+	<td class="scope-label">
+		<?php echo $element->getScopeLabel() // global ?>
+	</td>
 	<td></td>
+	<?php if (!empty($element->getPath())): // PR 2774 ?>
+		<td></td>
+	<?php endif ?>
 </tr>
-<tr id="<?php echo $this->getHtmlId() ?>">
-	<td colspan="4">
+<tr id="row_<?php echo $element->getHtmlId() ?>">
+	<td colspan="<?php echo empty($element->getPath()) ? 4 : 5 // PR 2774 ?>">
 		<ul id="lifetimeConfig">
 			<?php foreach ($types as $type):
 				if ($type == '--')

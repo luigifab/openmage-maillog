@@ -1,13 +1,13 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated D/26/06/2022
+ * Updated S/03/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -58,7 +58,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		// pour le champ id client
 		// avec un petit hack pour ne pas perdre la configuration lorsque le système est HS
-		if (stripos($element->getHtmlId(), 'mapping_customerid_field') !== false) {
+		if (str_contains($element->getHtmlId(), 'mapping_customerid_field')) {
 
 			$options['customerid'][] = ['value' => '', 'label' => '-- ('.count($fields).')'];
 
@@ -80,7 +80,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		// pour le champ a) système
 		// liste vide lorsque le système est HS
-		if (stripos($element->getHtmlId(), 'mapping_system') !== false) {
+		if (str_contains($element->getHtmlId(), 'mapping_system')) {
 
 			$options['system'][] = ['value' => '', 'label' => '-- ('.count($fields).')'];
 
@@ -93,7 +93,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 					$options['system'][] = ['value' => $field['id'], 'label' => $this->getOptionLabel($field)];
 			}
 
-			$element->setValues($options['system']);
+			$element->unsPath()->setValues($options['system']);
 
 			$search[]  = 'name="'.$element->getName().'"';
 			$replace[] = '';
@@ -104,7 +104,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		// pour le champ b) openmage
 		// liste jamais vide puisque ce sont les attributs clients
-		if (stripos($element->getHtmlId(), 'mapping_openmage') !== false) {
+		if (str_contains($element->getHtmlId(), 'mapping_openmage')) {
 
 			$customerAttributes = Mage::getModel('customer/entity_attribute_collection')->setOrder('attribute_code', 'asc');
 			$addressAttributes  = Mage::getModel('customer/entity_address_attribute_collection')->setOrder('attribute_code', 'asc');
@@ -196,7 +196,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 				}
 			}
 
-			$element->setValues($options['core']);
+			$element->unsPath()->setValues($options['core']);
 
 			$search[]  = 'name="'.$element->getName().'"';
 			$replace[] = '';

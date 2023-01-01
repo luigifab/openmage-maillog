@@ -1,13 +1,13 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/02/09/2022
+ * Updated D/11/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -114,7 +114,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			$user = $action->getFullActionName();
 		// frontend
 		else
-			$user = sprintf('frontend %d', Mage::app()->getStore()->getData('code'));
+			$user = sprintf('frontend %s', Mage::app()->getStore()->getData('code'));
 
 		return $user;
 	}
@@ -245,7 +245,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			->setMailSubject($mail->getSubject())
 			->setMailContent($parts);
 
-		//echo $email->setId(9999999)->toHtml(true); exit(0);
+		//exit($email->setId(9999999)->toHtml(true));
 		if ($email->isResetPassword())
 			$email->sendNow(true);
 		else

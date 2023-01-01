@@ -1,13 +1,13 @@
 <?php
 /**
  * Created J/09/05/2019
- * Updated L/28/03/2022
+ * Updated D/11/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -20,15 +20,16 @@
  * GNU General Public License (GPL) for more details.
  */
 
-$help   = $this->helper('maillog');
-$config = $this->getData('config');
+$help    = $this->helper('maillog');
+$element = $this->getData('element');
+$config  = $this->getData('config');
 
 $titleCode = $help->escapeEntities($this->__('Code'));
 $titleDesc = $help->escapeEntities($this->__('Description'));
 ?>
 
-<tr id="<?php echo $this->getHtmlId() ?>" class="grid">
-	<td colspan="4">
+<tr id="row_<?php echo $element->getHtmlId() ?>" class="grid">
+	<td colspan="<?php echo empty($element->getPath()) ? 4 : 5 // PR 2774 ?>">
 		<table cellspacing="0" class="data border data-table" id="pictureConfig">
 			<thead>
 				<tr class="headings">
@@ -42,7 +43,7 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 						<button type="button" class="scalable add picture" onclick="maillog.addPicture(this);">
 							<span><?php echo $this->__('Add') ?></span>
 						</button>
-						<input type="text" class="input-text" placeholder="<?php echo $help->escapeEntities($this->__('Paste (if code already exist, data will be updated)')) ?>" onpaste="maillog.pastePicture(this, event);" />
+						<input type="text" class="input-text" placeholder="<?php echo $help->escapeEntities($this->__('Paste (if code already exist, data will be updated)')) ?>" onpaste="maillog.pastePicture(this, event, true);" />
 					</td>
 				</tr>
 			</tfoot>
@@ -278,9 +279,9 @@ $titleDesc = $help->escapeEntities($this->__('Description'));
 	</td>
 </tr>
 <?php // debug ?>
-<?php if (!empty($this->getRequest()->getParam('test'))): ?>
+<?php if (Mage::getIsDeveloperMode()): ?>
 	<tr>
-		<td colspan="4">
+		<td colspan="<?php echo empty($element->getPath()) ? 4 : 5 // PR 2774 ?>">
 			<pre style="padding:0.5em; white-space:pre-wrap; background-color:beige;">
 <b>[ product file ]</b>
 <?php echo str_replace(['picture', Mage::getBaseUrl('media'), '605003.jpg'], ['<b>picture</b>', '.../', '<b>605003.jpg</b>'], htmlspecialchars(

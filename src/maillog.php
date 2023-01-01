@@ -1,13 +1,13 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated S/30/07/2022
+ * Updated M/06/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -36,19 +36,19 @@ if (in_array('--help', $argv) || in_array('-h', $argv)) {
 	echo 'Usage: maillog.sh (crontab every minute) or maillog.php (cli)',"\n";
 	echo 'Without arguments, sends all pending emails, and performs all pending synchronizations.',"\n";
 	echo "\n";
-	echo ' --help -h        this screen',"\n";
+	echo ' --help -h        display this screen',"\n";
 	echo ' --dev            enable developer mode',"\n";
 	echo ' --only-email     send only pending emails',"\n";
 	echo ' --only-sync      perform only pending synchronizations',"\n";
-	echo ' --multi          enable multi threads max(1, nbOfCpu-2) (500 emails/syncs per thread)',"\n";
-	echo ' --all-customers  synchronize all customers in multi threads (5000 customers per thread)',"\n";
+	echo ' --multi          enable multi threads max(1,nbOfCpu-2) (500 emails/syncs per thread)',"\n";
+	echo ' --all-customers  synchronize all customers (5000 customers per thread)',"\n";
 	echo "\n";
 	echo 'For example to sync all customers:',"\n";
 	echo ' nice -n 15 su - www-data -s /bin/bash -c \'php .../maillog.php --all-customers\'',"\n";
 	exit(0);
 }
 
-$isDev   = isset($_SERVER['MAGE_IS_DEVELOPER_MODE']) || in_array('--dev', $argv);
+$isDev   = !empty($_SERVER['MAGE_IS_DEVELOPER_MODE']) || !empty($_ENV['MAGE_IS_DEVELOPER_MODE']) || in_array('--dev', $argv);
 $isEmail = !in_array('--only-sync', $argv);
 $isSync  = !in_array('--only-email', $argv);
 $isMulti = in_array('--multi', $argv);
@@ -91,6 +91,8 @@ if (empty($runNumb) && $isFull) {
 
 
 // mode multi threads
+// UPDATE luigifab_maillog_sync SET status = "pending";
+// DELETE FROM cron_schedule WHERE job_code like "maillog_cron%";
 if (empty($runNumb) && ($isMulti || $isFull)) {
 
 	exec('nproc', $core);
@@ -101,10 +103,16 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 	if ($isFull) {
 
 		// syncs
-		$nbRunOfSyncs = Mage::getResourceModel('customer/customer_collection')->getSize();
-		$nbRunOfSyncs = ceil(Mage::getResourceModel('customer/customer_collection')->getSize() / (($nbRunOfSyncs > 5000) ? 5000 : 500));
+		$nbRunOfSyncs = ceil(Mage::getResourceModel('customer/customer_collection')
+			->getSize() / 5000);
+
 		while ($nbRunOfSyncs > 0) {
-			$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --all-customers'.($isDev ? ' --dev ' : ' ').$nbRunOfSyncs;
+			$cmds[] = sprintf('%s %s/%s --all-customers %s %d',
+				escapeshellcmd(PHP_BINARY),
+				getcwd(), basename($argv[0]),
+				$isDev ? '--dev' : '',
+				$nbRunOfSyncs
+			);
 			$nbRunOfSyncs--;
 		}
 
@@ -120,7 +128,12 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 			->getSize() / 500) : 0;
 
 		while ($nbRunOfEmails > 0) {
-			$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-email'.($isDev ? ' --dev ' : ' ').$nbRunOfEmails;
+			$cmds[] = sprintf('%s %s/%s --only-email %s %d',
+				escapeshellcmd(PHP_BINARY),
+				getcwd(), basename($argv[0]),
+				$isDev ? '--dev' : '',
+				$nbRunOfEmails
+			);
 			$nbRunOfEmails--;
 		}
 
@@ -131,12 +144,17 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 			->getSize() / 500) : 0;
 
 		while ($nbRunOfSyncs > 0) {
-			$cmds[] = PHP_BINARY.' '.getcwd().'/'.basename($argv[0]).' --only-sync'.($isDev ? ' --dev ' : ' ').$nbRunOfSyncs;
+			$cmds[] = sprintf('%s %s/%s --only-sync %s %d',
+				escapeshellcmd(PHP_BINARY),
+				getcwd(), basename($argv[0]),
+				$isDev ? '--dev' : '',
+				$nbRunOfSyncs
+			);
 			$nbRunOfSyncs--;
 		}
 
 		$isEmail = false;
-		$isSync = false;
+		$isSync  = false;
 	}
 
 	// exécute les threads
@@ -147,8 +165,7 @@ if (empty($runNumb) && ($isMulti || $isFull)) {
 			if (is_file($stop))
 				break;
 
-			$pids[] = exec($cmd = array_shift($cmds).' >/dev/null 2>&1 & echo $!');
-			//echo $cmd,"\n";
+			$pids[] = exec(array_shift($cmds).' >/dev/null 2>&1 & echo $!');
 			while (count($pids) >= $core) {
 				sleep(10);
 				foreach ($pids as $key => $pid) {
@@ -252,8 +269,8 @@ if (!$isMulti && $isFull) {
 // action
 function sendEmails(object $cron, int $page) {
 
-	$results = ['success' => [], 'error' => []];
 	$count   = 0;
+	$results = ['success' => [], 'error' => []];
 	$stop    = Mage::getBaseDir('var').'/maillog.stop';
 	$emails  = Mage::getResourceModel('maillog/email_collection')
 		->addFieldToFilter('status', 'pending')
@@ -290,8 +307,8 @@ function sendEmails(object $cron, int $page) {
 
 function sendSyncs(object $cron, int $page) {
 
-	$results = ['success' => [], 'error' => []];
 	$count   = 0;
+	$results = ['success' => [], 'error' => []];
 	$stop    = Mage::getBaseDir('var').'/maillog.stop';
 	$syncs   = Mage::getResourceModel('maillog/sync_collection')
 		->addFieldToFilter('status', 'pending')
@@ -341,11 +358,12 @@ function fullSync(object $cron, int $page) {
 	$systems    = array_keys(Mage::helper('maillog')->getSystem());
 	$customer   = Mage::getModel('customer/customer');
 	$attributes = ['default_shipping', 'default_billing'];
+
 	foreach ($systems as $system)
 		$attributes = array_merge($attributes, Mage::helper('maillog')->getSystem($system)->mapFields($customer, 'customer', true));
 
-	$results   = ['success' => [], 'error' => []];
 	$count     = 0;
+	$results   = ['success' => [], 'error' => []];
 	$stop      = Mage::getBaseDir('var').'/maillog.stop';
 	$customers = Mage::getResourceModel('customer/customer_collection')
 		->addAttributeToSelect($attributes)

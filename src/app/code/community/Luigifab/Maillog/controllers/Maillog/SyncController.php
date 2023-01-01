@@ -1,13 +1,13 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/05/10/2021
+ * Updated S/19/11/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -31,9 +31,8 @@ class Luigifab_Maillog_Maillog_SyncController extends Mage_Adminhtml_Controller_
 	}
 
 	public function loadLayout($ids = null, $generateBlocks = true, $generateXml = true) {
-		$this->_title($this->__('Tools'))->_title($this->__('Customers synchronization'));
 		parent::loadLayout($ids, $generateBlocks, $generateXml);
-		$this->_setActiveMenu('tools/maillog_sync');
+		$this->_title($this->__('Tools'))->_title($this->__('Customers synchronization'))->_setActiveMenu('tools/maillog_sync');
 		return $this;
 	}
 

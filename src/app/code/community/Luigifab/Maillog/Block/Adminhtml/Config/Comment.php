@@ -1,13 +1,13 @@
 <?php
 /**
  * Created S/26/10/2019
- * Updated D/04/09/2022
+ * Updated D/06/11/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -25,10 +25,10 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 	protected function _getHeaderCommentHtml($element) {
 
 		$comment = $element->getComment();
-		if (empty($comment) && (stripos($element->getHtmlId(), 'maillog_sync_') !== false))
+		if (empty($comment) && str_contains($element->getHtmlId(), 'maillog_sync_'))
 			return '<img src="'.$this->getSkinUrl('images/luigifab/maillog/logo-'.str_replace('maillog_sync_', '', $element->getId()).'.svg').'" alt="" class="maillog logo" />';
 
-		if (stripos($element->getHtmlId(), 'sync') !== false)
+		if (str_contains($element->getHtmlId(), 'sync'))
 			return implode("\n", ['<div class="comment maillog">', $comment, '</div>']);
 
 		$vars = [

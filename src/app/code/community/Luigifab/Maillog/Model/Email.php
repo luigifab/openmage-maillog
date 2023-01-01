@@ -1,13 +1,13 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/30/07/2022
+ * Updated D/11/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -271,7 +271,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				mb_strlen($subject) +                                  // utilise le sujet original
 				mb_strlen($body) +                                     // utilise la nouvelle version encodée du contenu
 				mb_strlen($heads) +                                    // utilise les entêtes originaux (où presque)
-				mb_strlen($this->getData('mail_parameters'))           // utilise les paramètres originaux
+				mb_strlen((string) $this->getData('mail_parameters'))  // utilise les paramètres originaux
 			);
 
 			// action
@@ -313,7 +313,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-					curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+					curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
 					curl_setopt($ch, CURLOPT_TIMEOUT, 50);
 					curl_setopt($ch, CURLOPT_MAIL_FROM, $from);
 					curl_setopt($ch, CURLOPT_MAIL_RCPT, $recpts);
@@ -339,7 +339,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 						$subject,                                  // version originale
 						$body,
 						$heads,                                    // version originale (où presque)
-						$this->getData('mail_parameters')          // version originale
+						(string) $this->getData('mail_parameters') // version originale
 					);
 				}
 
@@ -370,31 +370,34 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		$body = $this->getData('mail_body');
 		$head = null;
 
-		if (($pos = mb_stripos($body, '<head')) !== false) {
-			$head = mb_substr($body, $pos);
-			$head = mb_substr($head, mb_strpos($head, '>') + 1);
-			$head = mb_substr($head, 0, mb_stripos($head, '</head>'));
-			$head = preg_replace('#<title>.*</title>#s', '', $head);
-		}
+		if (!empty($body)) {
 
-		if (($pos = mb_stripos($body, '<body')) !== false) {
-			$body = mb_substr($body, $pos);
-			$body = mb_substr($body, mb_strpos($body, '>') + 1);
-			$body = mb_substr($body, 0, mb_stripos($body, '</body>'));
-		}
-		else if ((mb_stripos($body, '</p>') === false) && (mb_stripos($body, '</td>') === false) && (mb_stripos($body, '</div>') === false)) {
-			$body = '<pre>'.$body.'</pre>';
-		}
+			if (($pos = mb_stripos($body, '<head')) !== false) {
+				$head = mb_substr($body, $pos);
+				$head = mb_substr($head, mb_strpos($head, '>') + 1);
+				$head = mb_substr($head, 0, mb_stripos($head, '</head>'));
+				$head = preg_replace('#<title>.*</title>#s', '', $head);
+			}
 
-		// suppression de l'éventuelle image de marquage
-		// lorsque l'administrateur visualise l'email en ligne
-		if ($noMark && (mb_stripos($body, 'maillog/view/mark') !== false))
-			$body = preg_replace('#[\-\s]*<img[^>]+maillog/view/mark[^>]+>[\-\s]*#', ' ', $body);
+			if (($pos = mb_stripos($body, '<body')) !== false) {
+				$body = mb_substr($body, $pos);
+				$body = mb_substr($body, mb_strpos($body, '>') + 1);
+				$body = mb_substr($body, 0, mb_stripos($body, '</body>'));
+			}
+			else if ((mb_stripos($body, '</p>') === false) && (mb_stripos($body, '</td>') === false) && (mb_stripos($body, '</div>') === false)) {
+				$body = '<pre>'.$body.'</pre>';
+			}
 
-		// suppression de l'éventuel lien voir la version en ligne
-		// lorsque le client (et non l'administrateur) visualise son email en ligne
-		if (!$noMark && (mb_stripos($body, 'maillog/view/index') !== false))
-			$body = preg_replace('#[\-\s]*<a[^>]+maillog/view/index.+</a>[\-\s]*#', ' ', $body);
+			// suppression de l'éventuelle image de marquage
+			// lorsque l'administrateur visualise l'email en ligne
+			if ($noMark && (mb_stripos($body, 'maillog/view/mark') !== false))
+				$body = preg_replace('#[\-\s]*<img[^>]+maillog/view/mark[^>]+>[\-\s]*#', ' ', $body);
+
+			// suppression de l'éventuel lien voir la version en ligne
+			// lorsque le client (et non l'administrateur) visualise son email en ligne
+			if (!$noMark && (mb_stripos($body, 'maillog/view/index') !== false))
+				$body = preg_replace('#[\-\s]*<a[^>]+maillog/view/index.+</a>[\-\s]*#', ' ', $body);
+		}
 
 		return Mage::getBlockSingleton('core/template')
 			->setTemplate('luigifab/maillog/email.phtml')

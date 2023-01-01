@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated L/13/09/2021
+ * Updated J/22/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -90,6 +90,40 @@
 							</config>
 						</children>
 					</system>
+					<sales>
+						<children>
+							<order>
+								<children>
+									<actions translate="title">
+										<title>Actions</title>
+										<children>
+											<maillog translate="title">
+												<title>Transactional emails</title>
+												<sort_order>103065</sort_order>
+											</maillog>
+										</children>
+									</actions>
+								</children>
+							</order>
+						</children>
+					</sales>
+					<customer>
+						<children>
+							<manage>
+								<children>
+									<actions translate="title">
+										<title>Actions</title>
+										<children>
+											<maillog translate="title">
+												<title>Transactional emails</title>
+												<sort_order>103065</sort_order>
+											</maillog>
+										</children>
+									</actions>
+								</children>
+							</manage>
+						</children>
+					</customer>
 				</children>
 			</admin>
 		</resources>

@@ -1,13 +1,13 @@
 <?php
 /**
  * Created J/24/08/2017
- * Updated S/19/02/2021
+ * Updated L/26/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -26,10 +26,9 @@ class Luigifab_Maillog_Model_Source_Bounce extends Mage_Eav_Model_Entity_Attribu
 
 		if (empty($this->_options)) {
 
-			// pour les valeurs voir aussi
-			// self::getBounceIds() et
-			// Luigifab_Maillog_Model_Observer::bouncesFileImport() et
-			// Luigifab_Maillog_Model_Observer::updateCustomersDatabase()
+			// @see self::getBounceIds()
+			// @see Luigifab_Maillog_Model_Observer::bouncesFileImport()
+			// @see Luigifab_Maillog_Model_Observer::updateCustomersDatabase()
 			$help = Mage::helper('maillog');
 			$this->_options = [
 				['value' => 0, 'label' => Mage::helper('adminhtml')->__('No')],
@@ -45,7 +44,7 @@ class Luigifab_Maillog_Model_Source_Bounce extends Mage_Eav_Model_Entity_Attribu
 
 	public function isBounce($data) {
 
-		if (mb_stripos($data, '@') !== false) {
+		if (!empty($data) && (mb_stripos($data, '@') !== false)) {
 
 			$email = (mb_stripos($data, ',') === false)  ? $data : explode(',', $data);
 			$email = is_array($email) ? array_shift($email) : $email;

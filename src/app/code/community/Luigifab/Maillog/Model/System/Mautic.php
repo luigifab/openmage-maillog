@@ -1,13 +1,13 @@
 <?php
 /**
  * Created J/23/09/2021
- * Updated J/29/09/2022
+ * Updated L/14/11/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -100,7 +100,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 						$region  = $object->getData('region');
 
 						if (empty($this->_regions))
-							$this->_regions = json_decode(file_get_contents(Mage::getModuleDir('etc', 'Luigifab_Maillog').'/mautic-regions.json'), true);
+							$this->_regions = @json_decode(file_get_contents(Mage::getModuleDir('etc', 'Luigifab_Maillog').'/mautic-regions.json'), true);
 
 						if (isset($this->_regions[$country])) {
 							if (in_array($region, $this->_regions[$country])) {
@@ -145,7 +145,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 				}
 				else if ($isCustomer && ($code == 'store_id')) {
 					$value = $object->getStoreId();
-					$fields[$system] = substr(Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $value), 0, 2);
+					$fields[$system] = substr(Mage::getStoreConfig('general/locale/code', $value), 0, 2);
 				}
 				else if ($isCustomer && ($code == 'dob') && $hasData) {
 					$fields[$system] = date('Y-m-d', strtotime($object->getData('dob')));
@@ -200,7 +200,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 		// dans les entêtes il pourrait y avoir "report-to: {"endp..."
 		if (($pos = mb_stripos($data, "\n{")) !== false) {
 
-			$json = json_decode(mb_substr($data, $pos + 1), true);
+			$json = @json_decode(mb_substr($data, $pos + 1), true);
 			$json = empty($json['data']) ? $json : $json['data'];
 
 			if ($forHistory) {

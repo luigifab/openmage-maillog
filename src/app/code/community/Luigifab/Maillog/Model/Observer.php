@@ -1,13 +1,13 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated L/26/09/2022
+ * Updated V/02/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -216,8 +216,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 					$dates = $this->getDateRange($isWeek ? 'week' : 'month', $i - 1);
 					$where = [
-						'from' => $dates['start']->toString(Zend_Date::DATE_SHORT),
-						'to'   => $dates['end']->toString(Zend_Date::DATE_SHORT),
+						'datetime' => true,
+						'from' => $dates['start']->toString(Zend_Date::RFC_3339),
+						'to'   => $dates['end']->toString(Zend_Date::RFC_3339),
 					];
 
 					// affiche les dates
@@ -256,8 +257,6 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	}
 
 	protected function calcNumber(array $where, object $collection, $status1 = null, $status2 = null) {
-
-		$where['datetime'] = true;
 
 		if (!empty($where['gteq'])) {
 			$gteq = ['gteq' => $where['gteq']];
@@ -475,13 +474,16 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	}
 
 	// EVENT newsletter_subscriber_save_before (adminhtml)
-	// génère le store_id de l'abonné lors de l'enregistrement d'un abonné
-	// se base sur le store_id du client
+	// met à jour le store_id de l'abonné lors de l'enregistrement d'un abonné (se base sur le store_id du client)
+	// met à jour change_status_at qui ne semble pas fonctionner non plus
 	// actif même si le module n'est pas activé
 	public function setSubscriberStoreId(Varien_Event_Observer $observer) {
 
 		$subscriber = $observer->getData('subscriber');
 		$customer   = Mage::registry('current_customer');
+
+		if ($subscriber->getIsStatusChanged())
+			$subscriber->setChangeStatusAt(date('Y-m-d H:i:s'));
 
 		if (is_object($customer) && ($subscriber->getStoreId() != $customer->getStoreId()))
 			$subscriber->setData('store_id', $customer->getStoreId());
@@ -934,9 +936,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$skipdir = $folder.'skip/'.$date->toString('YMM').'/';
 
 		if (!is_dir($donedir))
-			mkdir($donedir, 0755, true);
+			@mkdir($donedir, 0755, true);
 		if (!is_dir($skipdir))
-			mkdir($skipdir, 0755, true);
+			@mkdir($skipdir, 0755, true);
 
 		// déplace et compresse le fichier traité
 		$name = $date->toString('YMMdd-HHmmss').'.'.$type;
@@ -994,7 +996,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$diff['finished_at'] = date('Y-m-d H:i:s');
 
 		if (!is_dir($folder))
-			mkdir($folder, 0755, true);
+			@mkdir($folder, 0755, true);
 
 		file_put_contents($folder.'status.dat', json_encode($diff));
 	}

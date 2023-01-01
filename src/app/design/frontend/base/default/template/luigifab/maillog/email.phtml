@@ -1,13 +1,13 @@
 <?php
 /**
  * Created L/18/01/2021
- * Updated M/28/09/2021
+ * Updated J/03/11/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -46,7 +46,7 @@ $email = $this->getData('email');
 		padding:0 4em 0 58px; min-height:60px;
 		background:url("<?php echo $this->getSkinUrl('images/luigifab/maillog/humanity-mail.svg') ?>") no-repeat left center;
 	}
-	body > ul.attachments li select { padding:5px; font-size:0.7rem; border:1px solid gray; background:transparent; }
+	body > ul.attachments li select { margin:2px 0; padding:5px; font-size:0.7rem; border:1px solid gray; background:transparent; }
 	body > ul.attachments li a { text-decoration:underline; color:<?php echo $ttColor ?>; }
 	body > ul.attachments li a[type] {
 		display:flex; flex-direction:column; justify-content:center; padding:0 1.7em 0 50px; min-height:60px;
@@ -71,6 +71,7 @@ $email = $this->getData('email');
 	<?php if (!empty($subject)): ?>
 		<ul class="attachments">
 			<li>
+				<strong class="subject"><?php echo $this->__('Subject: %s', $subject) ?></strong>
 				<?php if (!empty(Mage::registry('maillog_preview')) && !empty($name = $this->getRequest()->getParam('file'))):
 					$base    = $this->helper('core/url')->getCurrentUrl();
 					$current = Mage::app()->getStore()->getId();
@@ -121,15 +122,14 @@ $email = $this->getData('email');
 						</select>
 					</label>
 				<?php else: ?>
-					<strong class="subject"><?php echo $this->__('Subject: %s', $subject) ?></strong>
 					<?php if (!in_array($email->getData('sent_at'), ['', '0000-00-00 00:00:00', null])): ?>
 						<span><?php echo $this->__('Sent At: %s', Mage::getSingleton('core/locale')->date($email->getData('sent_at'))->toString(Zend_Date::DATETIME_FULL)) ?></span>
 					<?php endif ?>
 					<?php if (!empty($sender = $email->getData('mail_sender'))): ?>
 						<span><?php echo $this->__('Sender: %s', $help->getHumanEmailAddress($sender)) ?></span>
 					<?php endif ?>
-					<span><?php echo $this->__('<a %s>Print</a> this email only if necessary.', 'href="javascript:self.print();"') ?></span>
 				<?php endif ?>
+				<span><?php echo $this->__('<a %s>Print</a> this email only if necessary.', 'href="javascript:self.print();"') ?></span>
 			</li>
 			<?php foreach ($email->getEmailParts() as $key => $part):
 				$size = rtrim(chunk_split(str_replace("\n", '', $part->getContent())));

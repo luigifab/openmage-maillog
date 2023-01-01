@@ -1,13 +1,13 @@
 <?php
 /**
  * Created M/28/09/2021
- * Updated J/16/12/2021
+ * Updated S/03/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -20,15 +20,12 @@
  * GNU General Public License (GPL) for more details.
  */
 
-$config = $this->getData('config');
+$config  = $this->getData('config');
+$element = $this->getData('element');
 ?>
 
-</tbody>
-</table>
-
-<table cellspacing="0" class="form-list">
-<tr id="<?php echo $this->getHtmlId() ?>">
-	<td class="label" colspan="2">
+<tr id="row_<?php echo $element->getHtmlId() ?>">
+	<td class="label" colspan="<?php echo (empty($element->getPath()) ? 4 : 5) - 1 // PR 2774 ?>">
 		<table cellspacing="0" class="data border mauticrating">
 			<tr>
 				<th>Rating</th>
@@ -106,6 +103,5 @@ $config = $this->getData('config');
 			</tr>
 		</table>
 	</td>
-	<td class="scope-label"><?php echo $this->getScopeLabel() ?></td>
-	<td></td>
+	<td class="scope-label"><?php echo $element->getScopeLabel() // global ?></td>
 </tr>

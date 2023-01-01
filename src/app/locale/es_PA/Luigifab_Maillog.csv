@@ -85,7 +85,7 @@
 "Approximate size: %s","Tamaño aproximado: %s"
 "Sender: %s","Expeditor: %s"
 "Recipient(s): %s","Destinatario(s): %s"
-"Action / Request / Response *","Acción / Pedido / Respuesta *"
+"Action / Request / Response","Acción / Pedido / Respuesta"
 "Synchronized At","Sincronizado el"
 "Running","En proceso"
 " Success","Terminada"

@@ -1,13 +1,13 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/20/05/2022
+ * Updated D/11/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -21,6 +21,8 @@
  */
 
 class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block_Widget_Grid {
+
+	protected $_backUrl = [];
 
 	public function __construct() {
 
@@ -66,7 +68,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		if (is_object($order = Mage::registry('current_order'))) {
 			//$collection->addFieldToFilter('mail_recipients', ['like' => '%'.$order->getData('customer_email').'%']);
 			$collection->addFieldToFilterWithMatch('mail_recipients', $order->getData('customer_email'));
-			// non car on veut pouvoir enlever ce filtre depuis le back-office
+			// non, car on veut pouvoir enlever ce filtre depuis le back-office
 			//$collection->addFieldToFilter('mail_subject', ['like' => '%'.$order->getData('increment_id').'%']);
 			//$collection->addFieldToFilterWithMatch('mail_subject', $order->getData('increment_id'));
 		}
@@ -97,7 +99,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 	protected function _prepareColumns() {
 
-		if (!empty($this->getRequest()->getParam('test'))) {
+		if (Mage::getIsDeveloperMode() && !empty($this->getRequest()->getParam('test'))) {
 			$this->addColumn('choice', [
 				'header_css_class' => 'a-center',
 				'index'      => 'email_id',
@@ -137,13 +139,13 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		]);
 
 		$this->addColumn('mail_recipients', [
-			'header'    => $this->__('Recipient(s)').' *',
+			'header'    => '[??] '.$this->__('Recipient(s)'),
 			'index'     => 'mail_recipients',
 			'frame_callback' => [$this, 'decorateRecipients'],
 		]);
 
 		$this->addColumn('mail_subject', [
-			'header'    => $this->__('Subject').' *',
+			'header'    => '[??] '.$this->__('Subject'),
 			'index'     => 'mail_subject',
 			'frame_callback' => [$this, 'decorateSubject'],
 		]);
@@ -211,9 +213,9 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'actions'   => [
 				[
 					'caption' => $this->__('View'),
-					'url'     => (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) ?
-						['base' => '*/maillog_history/view/back/'.$this->_backUrl['back'].'/bid/'.$this->_backUrl['bid']] :
-						['base' => '*/maillog_history/view'],
+					'url'     => empty($this->_backUrl) ? // embed tab
+						['base' => '*/maillog_history/view'] :
+						['base' => '*/maillog_history/view/back/'.$this->_backUrl['back'].'/bid/'.$this->_backUrl['bid']],
 					'field'   => 'id',
 				],
 			],
@@ -224,8 +226,8 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'is_system' => true,
 		]);
 
-		// embed tab (filtrage des colonnes)
-		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
+		// embed tab (ou pas), filtrage des colonnes
+		if (!empty($this->_backUrl)) {
 			unset($this->_columns['type'], $this->_columns['mail_recipients'], $this->_columns['size']);
 		}
 		else {
@@ -244,8 +246,10 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 
 	public function getChoices(bool $onlyIds = false) {
+
 		if (is_array($this->getRequest()->getPost('choice')))
 			return $this->getRequest()->getPost('choice');
+
 		return $onlyIds ? [67667] : [67667 => ['position' => 5]];
 	}
 
@@ -267,7 +271,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	public function getGridUrl() {
 
 		// embed tab
-		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
+		if (!empty($this->_backUrl)) {
 			$query = empty($query = getenv('QUERY_STRING')) ? '' : '?'.$query;
 			return $this->getUrl('*/maillog_history/index', $this->_backUrl).$query;
 		}
@@ -278,8 +282,9 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	public function getRowUrl($row) {
 
 		// embed tab
-		if (!empty(Mage::registry('current_order')) || !empty(Mage::registry('current_customer'))) {
-			$params = array_merge($this->_backUrl, ['id' => $row->getId()]);
+		if (!empty($this->_backUrl)) {
+			$params = $this->_backUrl;
+			$params['id'] = $row->getId();
 			return empty($this->getRequest()->getParam('test')) ? $this->getUrl('*/maillog_history/view', $params) : false;
 		}
 
@@ -313,6 +318,15 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 
 
 	protected function _toHtml() {
-		return str_replace('class="data', 'class="adminhtml-maillog-history data', parent::_toHtml());
+
+		$reader = Mage::getSingleton('core/resource')->getConnection('core_read');
+		$min    = $reader->fetchOne('SELECT variable_value FROM information_schema.global_variables WHERE variable_name LIKE "ft_min_word_len"');
+		$max    = $reader->fetchOne('SELECT variable_value FROM information_schema.global_variables WHERE variable_name LIKE "ft_max_word_len"');
+
+		return str_replace(
+			['class="data', '[??] '],
+			['class="adminhtml-maillog-history data', '<span style="opacity:0.6;" title="'.$this->helper('maillog')->escapeEntities($this->__('Warning! Full-text search (one or more words, words length: %d to %d). Complete words only (for example, you can search domain or domain.org and not domai). Separate words by a space.', $min, $max), true).'">[?]</span> '],
+			parent::_toHtml()
+		);
 	}
 }

@@ -1,13 +1,13 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/28/08/2022
+ * Updated J/22/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -35,6 +35,13 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 	}
 
 	protected function _isAllowed() {
+
+		if ($this->getRequest()->getParam('back') == 'order')
+			return Mage::getSingleton('admin/session')->isAllowed('sales/order/actions/maillog');
+
+		if ($this->getRequest()->getParam('back') == 'customer')
+			return Mage::getSingleton('admin/session')->isAllowed('customer/manage/actions/maillog');
+
 		return Mage::getSingleton('admin/session')->isAllowed('tools/maillog');
 	}
 
@@ -55,9 +62,8 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 	}
 
 	public function loadLayout($ids = null, $generateBlocks = true, $generateXml = true) {
-		$this->_title($this->__('Tools'))->_title($this->__('Transactional emails'));
 		parent::loadLayout($ids, $generateBlocks, $generateXml);
-		$this->_setActiveMenu('tools/maillog');
+		$this->_title($this->__('Tools'))->_title($this->__('Transactional emails'))->_setActiveMenu('tools/maillog');
 		return $this;
 	}
 

@@ -1,13 +1,13 @@
 <?php
 /**
  * Created M/21/01/2020
- * Updated V/24/06/2022
+ * Updated M/06/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -41,6 +41,9 @@ abstract class Luigifab_Maillog_Model_System implements Luigifab_Maillog_Model_I
 	}
 
 	public function checkResponse($data) {
+
+		if (empty($data))
+			return false;
 
 		return (mb_stripos($data, 'HTTP/1.0 2') === 0) || (mb_stripos($data, 'HTTP/1.1 2') === 0) ||
 			(mb_stripos($data, 'HTTP/2 2') === 0) || (mb_stripos($data, 'HTTP/3 2') === 0);

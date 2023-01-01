@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated J/18/06/2020
+ * Updated M/06/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -46,10 +46,10 @@
 		<reference name="customer_edit_tabs">
 			<action method="addTab" ifconfig="maillog/general/enabled">
 				<name>maillog_customer_grid</name>
-				<block>maillog/adminhtml_tab</block>
+				<block>maillog/adminhtml_embedtab</block>
 			</action>
 		</reference>
-		<update handle="adminhtml_maillog_embedtab" />
+		<update handle="adminhtml_maillog_history_embedtab" ifconfig="maillog/general/enabled" />
 	</adminhtml_customer_edit>
 
 	<adminhtml_sales_order_view>
@@ -63,14 +63,14 @@
 		<reference name="sales_order_tabs">
 			<action method="addTab" ifconfig="maillog/general/enabled">
 				<name>maillog_order_grid</name>
-				<block>maillog/adminhtml_tab</block>
+				<block>maillog/adminhtml_embedtab</block>
 			</action>
 		</reference>
-		<update handle="adminhtml_maillog_embedtab" />
+		<update handle="adminhtml_maillog_history_embedtab" ifconfig="maillog/general/enabled" />
 	</adminhtml_sales_order_view>
 
-	<adminhtml_maillog_embedtab>
-		<block type="core/text_list" name="adminhtml_maillog_embedtab">
+	<adminhtml_maillog_history_embedtab>
+		<block type="adminhtml/text_list" name="adminhtml_maillog_history_embedtab">
 			<block type="adminhtml/template" name="maillog_customer_grid_info" template="luigifab/maillog/customer.phtml" />
 			<block type="maillog/adminhtml_history_grid" name="maillog_history_grid" />
 			<block type="adminhtml/widget_grid_serializer" name="maillog_history_grid_serializer">
@@ -85,7 +85,7 @@
 				</action>
 			</block>
 		</block>
-	</adminhtml_maillog_embedtab>
+	</adminhtml_maillog_history_embedtab>
 
 	<adminhtml_maillog_history_index>
 		<reference name="head">

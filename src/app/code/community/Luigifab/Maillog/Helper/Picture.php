@@ -1,13 +1,13 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated S/27/08/2022
+ * Updated V/02/12/2022
  *
- * Copyright 2015-2022 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
- * Copyright 2020-2022 | Fabrice Creuzot <fabrice~cellublue~com>
- * https://www.luigifab.fr/openmage/maillog
+ * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/openmage-maillog
  *
  * This program is free software, you can redistribute it or modify
  * it under the terms of the GNU General Public License (GPL) as published
@@ -21,6 +21,15 @@
  */
 
 class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
+
+	// singleton
+	protected $_pictureConfig;
+	protected $_configFontSize;
+	protected $_configShowImageSize;
+	protected $_configWidthHeight;
+	protected $_configCreateWebp;
+	protected $_cacheTags;
+
 
 	public function getTag(array $params) {
 
@@ -170,7 +179,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		if (empty($this->_cacheTags)) {
 			$this->_cacheTags = Mage::app()->useCache('block_html') ? @json_decode(Mage::app()->loadCache('maillog_tags'), true) : null;
 			if (empty($this->_cacheTags) || !is_array($this->_cacheTags))
-				$this->_cacheTags = ['date' => date('Y-m-d H:i:s \U\T\C')];
+				$this->_cacheTags = ['date' => date('c')];
 		}
 
 		$attrs = $this->createHtmlAttributes($params, $sizes);
@@ -286,7 +295,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		foreach ($params as $key => $param) {
 			if (!is_numeric($key) && !in_array($key, ['code', 'file', 'helper', 'attribute', 'product', 'category']))
-				$attrs[] = $key.'="'.str_replace('"', '', $param).'"';
+				$attrs[] = $key.'="'.str_replace('"', '', (string) $param).'"';
 		}
 
 		return $attrs;
