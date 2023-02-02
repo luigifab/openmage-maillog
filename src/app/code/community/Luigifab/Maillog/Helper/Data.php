@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/11/12/2022
+ * Updated J/05/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -66,7 +66,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 	}
 
 	public function getNumber($value, array $options = []) {
-		$options['locale'] = Mage::getSingleton('core/translate')->getLocale();
+		$options['locale'] = Mage::getSingleton('core/locale')->getLocaleCode();
 		return Zend_Locale_Format::toNumber($value, $options);
 	}
 

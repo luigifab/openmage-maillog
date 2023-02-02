@@ -1,6 +1,6 @@
 /**
  * Created J/03/12/2015
- * Updated M/11/10/2022
+ * Updated W/18/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -139,10 +139,20 @@ var maillog = new (function () {
 		elem = elem.closest('li, tr');
 		elem.querySelectorAll('select, input').forEach(function (input) {
 
-			if (input.nodeName == 'SELECT')
+			if (input.nodeName === 'SELECT') {
 				input.selectedIndex = input.querySelector('option[selected]').index;
-			else
+			}
+			else if (input.color) {
+				input.value = input.defaultValue.toUpperCase();
+				input.color.importColor();
+			}
+			else if (input.jscolor) {
+				input.value = input.defaultValue.toUpperCase();
+				input.jscolor.fromString(input.value);
+			}
+			else {
 				input.value = input.defaultValue;
+			}
 
 			if (input.classList.contains('h') && (input = input.closest('li').querySelector('div.rt')))
 				this.ratioPicture(input);
@@ -155,8 +165,20 @@ var maillog = new (function () {
 		elem = elem.parentNode;
 		elem.querySelectorAll('select')[0].selectedIndex = 0;
 		elem.querySelectorAll('select')[1].selectedIndex = 0;
-		elem.querySelectorAll('input')[0].value = bg.toLowerCase();
-		elem.querySelectorAll('input')[1].value = tt.toLowerCase();
+
+		var input = elem.querySelectorAll('input')[0];
+		input.value = bg.toUpperCase();
+		if (input.color)
+			input.color.importColor();
+		else
+			input.jscolor.fromString(input.value);
+
+		input = elem.querySelectorAll('input')[1];
+		input.value = tt.toUpperCase();
+		if (input.color)
+			input.color.importColor();
+		else
+			input.jscolor.fromString(input.value);
 	};
 
 	this.removeLifetime = function (elem) {

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated J/22/12/2022
+ * Updated S/14/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -29,7 +29,7 @@ class Luigifab_Maillog_Block_Adminhtml_Embedtab extends Mage_Adminhtml_Block_Abs
 	}
 
 	public function getTabTitle() {
-		return null;
+		return '';
 	}
 
 	public function isHidden() {

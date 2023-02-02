@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/14/08/2022
- * Updated L/26/12/2022
+ * Updated M/24/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -37,7 +37,6 @@ try {
 	if (!$this->getConnection()->tableColumnExists($table, 'useragent'))
 		$this->run('ALTER TABLE '.$table.' ADD COLUMN useragent varchar(255) NULL DEFAULT NULL');
 
-	$table = $this->getTable('maillog/email');
 	if (!$this->getConnection()->tableColumnExists($table, 'referer'))
 		$this->run('ALTER TABLE '.$table.' ADD COLUMN referer varchar(255) NULL DEFAULT NULL');
 }

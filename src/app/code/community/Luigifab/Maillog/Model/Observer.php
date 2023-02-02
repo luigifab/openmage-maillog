@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated V/02/12/2022
+ * Updated J/05/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -338,7 +338,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 	protected function getEmailUrl(string $url, array $params = []) {
 
-		if (Mage::getStoreConfigFlag(Mage_Core_Model_Store::XML_PATH_USE_REWRITES))
+		if (Mage::getStoreConfigFlag('web/seo/use_rewrites'))
 			return preg_replace('#/[^/]+\.php\d*/#', '/', Mage::helper('adminhtml')->getUrl($url, $params));
 		else
 			return preg_replace('#/[^/]+\.php(\d*)/#', '/index.php$1/', Mage::helper('adminhtml')->getUrl($url, $params));

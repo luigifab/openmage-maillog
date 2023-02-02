@@ -1,6 +1,6 @@
 /**
  * Created D/22/03/2015
- * Updated J/26/05/2022
+ * Updated S/07/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -81,13 +81,8 @@ textarea.maillogsync { margin-left:-206px; width:480px !important; }
 .maillogexamples pre > span { display:block; column-count:3; -moz-column-count:3; -webkit-column-count:3; }
 
 #lifetimeConfig li:hover { background-color:#DEDEDE; }
-#lifetimeConfig span { display:inline-block; padding:0 5px; width:197px; text-align:right;}
-#lifetimeConfig input {
-	margin-right:5px; width:60px; height:17px; cursor:pointer; border:0;
-	appearance:none; -moz-appearance:none; -webkit-appearance:none;
-}
-
-#lifetimeConfig input::-webkit-color-swatch-wrapper { padding:0; }
+#lifetimeConfig span { display:inline-block; padding:0 5px; width:197px; text-align:right; }
+#lifetimeConfig input { margin-right:5px; padding-left:40px; width:60px; height:15px; cursor:pointer; }
 #lifetimeConfig select { margin-right:5px; width:136px; }
 
 #pictureConfig { margin:10px 0 15px; }

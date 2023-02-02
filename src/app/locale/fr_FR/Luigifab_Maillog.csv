@@ -71,7 +71,7 @@
 "Create also webp images","Créer aussi des images webp"
 "In addition to jpg/gif/png images, works with: Firefox 65+, Chrome 32+, Opera 19+, Edge 18+, Safari 14+.","En plus des images jpg/gif/png, fonctionne avec : Firefox 65+, Chrome 32+, Opera 19+, Edge 18+, Safari 14+."
 "Add width and height attributes on img and source tags","Ajouter les attributs width et height sur les balises img et source"
-"On <b>source</b> tag, works with: Chrome 90+, Opera 76+, Edge 90+.","Sur la balise <b>source</b>, fonctionne avec : Chrome 90+, Opera 76+, Edge 90+."
+"On <b>source</b> tag, works with: Firefox 108+, Chrome 90+, Opera 76+, Edge 90+, Safari 15+.","Sur la balise <b>source</b>, fonctionne avec : Firefox 108+, Chrome 90+, Opera 76+, Edge 90+, Safari 15+."
 "Confirmation request email","Email de demande de confirmation"
 "Subscription confirmation email","Email de confirmation d'abonnement"
 "Unsubscription confirmation email","Email de confirmation de désabonnement"

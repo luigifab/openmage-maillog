@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/26/10/2019
- * Updated D/06/11/2022
+ * Updated M/24/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -26,7 +26,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 
 		$comment = $element->getComment();
 		if (empty($comment) && str_contains($element->getHtmlId(), 'maillog_sync_'))
-			return '<img src="'.$this->getSkinUrl('images/luigifab/maillog/logo-'.str_replace('maillog_sync_', '', $element->getId()).'.svg').'" alt="" class="maillog logo" />';
+			return '<img src="'.$this->getSkinUrl('images/luigifab/maillog/logo-'.str_replace('maillog_sync_', '', $element->getHtmlId()).'.svg').'" alt="" class="maillog logo" />';
 
 		if (str_contains($element->getHtmlId(), 'sync'))
 			return implode("\n", ['<div class="comment maillog">', $comment, '</div>']);

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/11/12/2022
+ * Updated S/07/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -163,7 +163,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 	protected function getColors() {
 
-		$config = @unserialize(Mage::getStoreConfig('maillog/general/special_config'), ['allowed_classes' => ['Zend_Mime_Part']]);
+		$config = @unserialize(Mage::getStoreConfig('maillog/general/special_config'), ['allowed_classes' => false]);
 		if (!empty($config) && is_array($config)) {
 
 			foreach ($config as $key => $value) {
@@ -418,7 +418,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 		$url = preg_replace('#\?SID=.+$#', '', $store->getUrl('maillog/view/'.$action, $params));
 
-		if (Mage::getStoreConfigFlag(Mage_Core_Model_Store::XML_PATH_USE_REWRITES, $store->getId()))
+		if (Mage::getStoreConfigFlag('web/seo/use_rewrites', $store))
 			$url = preg_replace('#/[^/]+\.php\d*/#', '/', $url);
 		else
 			$url = preg_replace('#/[^/]+\.php(\d*)/#', '/index.php$1/', $url);
