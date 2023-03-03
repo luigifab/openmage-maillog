@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated V/24/06/2022
+ * Updated L/27/02/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -369,11 +369,11 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 						'SUM(main_table.base_tax_amount * main_table.base_to_global_rate)';
 
 				if ($this->inArray('average_days_between_orders', $values))
-					$columns['average_days'] = // https://dba.stackexchange.com/a/164826
-						'CASE WHEN COUNT(*) > 1
-							THEN ABS(DATEDIFF(MIN(main_table.created_at), MAX(main_table.created_at)) / (COUNT(*) - 1))
-							ELSE 0
-						END';
+					$columns['average_days'] = new Zend_Db_Expr( // https://dba.stackexchange.com/a/164826
+						'CASE WHEN COUNT(*) > 1'.
+						' THEN ABS(DATEDIFF(MIN(main_table.created_at), MAX(main_table.created_at)) / (COUNT(*) - 1)) '.
+						' ELSE 0 '.
+						'END');
 
 				if (!empty($columns)) {
 

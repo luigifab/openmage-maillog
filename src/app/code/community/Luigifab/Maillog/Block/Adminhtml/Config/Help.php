@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/24/06/2022
+ * Updated L/27/02/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -66,9 +66,19 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 
 	protected function checkChanges() {
 
-		$zend = file_get_contents(BP.'/lib/Zend/Mail/Transport/Sendmail.php');
-		if (!str_contains($zend, 'return Mage::helper(\'maillog\')->sendMail($this, $this->_mail, $this->_parts);'))
-			return 'lib/Zend/Mail/Transport/Sendmail.php';
+		$file = 'lib/Zend/Mail/Transport/Sendmail.php';
+		if (is_file(BP.'/'.$file)) {
+			$zend = file_get_contents(BP.'/'.$file);
+			if (!str_contains($zend, 'return Mage::helper(\'maillog\')->sendMail($this, $this->_mail, $this->_parts);'))
+				return $file;
+		}
+
+		$file = 'vendor/shardj/zf1-future/library/Zend/Mail/Transport/Sendmail.php';
+		if (is_file(BP.'/../'.$file)) {
+			$zend = file_get_contents(BP.'/../'.$file);
+			if (!str_contains($zend, 'return Mage::helper(\'maillog\')->sendMail($this, $this->_mail, $this->_parts);'))
+				return $file;
+		}
 
 		$varien = file_get_contents(BP.'/lib/Varien/Filter/Template.php');
 		if (!str_contains($varien, 'Luigifab_Maillog_Model_Filter'))
