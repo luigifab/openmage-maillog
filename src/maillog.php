@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated M/06/12/2022
+ * Updated J/02/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -32,7 +32,7 @@ if (is_file('maintenance.flag') || is_file('upgrade.flag'))
 if (is_file('app/bootstrap.php'))
 	require_once('app/bootstrap.php');
 
-if (in_array('--help', $argv) || in_array('-h', $argv)) {
+if (in_array('help', $argv) || in_array('--help', $argv) || in_array('-h', $argv)) {
 	echo 'Usage: maillog.sh (crontab every minute) or maillog.php (cli)',"\n";
 	echo 'Without arguments, sends all pending emails, and performs all pending synchronizations.',"\n";
 	echo "\n";
@@ -290,7 +290,9 @@ function sendEmails(object $cron, int $page) {
 			$results['success'][] = 'email:'.$email->getId();
 		}
 		catch (Throwable $t) {
-			$email->setData('status', 'error')->save();
+			$email->setData('status', 'error');
+			$email->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
+			$email->save();
 			$results['error'][] = 'email:'.$email->getId().' '.$t->getMessage();
 			if (Mage::getIsDeveloperMode())
 				Mage::logException($t);
@@ -336,7 +338,9 @@ function sendSyncs(object $cron, int $page) {
 			}
 		}
 		catch (Throwable $t) {
-			$sync->setData('status', 'error')->save();
+			$sync->setData('status', 'error');
+			$sync->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
+			$sync->save();
 			$results['error'][] = 'sync:'.$sync->getId().' '.$t->getMessage();
 			if (Mage::getIsDeveloperMode())
 				Mage::logException($t);
@@ -392,7 +396,9 @@ function fullSync(object $cron, int $page) {
 				$results['success'][] = 'sync:'.$sync->getId();
 			}
 			catch (Throwable $t) {
-				$sync->setData('status', 'error')->save();
+				$sync->setData('status', 'error');
+				$sync->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
+				$sync->save();
 				$results['error'][] = 'sync:'.$sync->getId().' '.$t->getMessage();
 				if (Mage::getIsDeveloperMode())
 					Mage::logException($t);

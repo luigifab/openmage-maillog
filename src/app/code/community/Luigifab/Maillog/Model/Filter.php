@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/02/12/2022
+ * Updated M/24/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -245,6 +245,9 @@ abstract class Luigifab_Maillog_Model_Filter {
 
 		if (empty($value))
 			return $value;
+
+		Mage::unregister('maillog_last_emailvars');
+		Mage::register('maillog_last_emailvars', $this->_templateVars);
 
 		foreach ([
 			'/{{include\s*(.*?)}}/si' => 'includefileDirective',

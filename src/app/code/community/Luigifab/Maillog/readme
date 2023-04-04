@@ -21,8 +21,10 @@ Rewrite
 - global | model | newsletter_resource/subscriber | maillog/rewrite_subscriberres
 Event
 - adminhtml | adminhtml_customer_prepare_save                        | maillog/observer::setCustomerStoreId
+- adminhtml | adminhtml_init_system_config                           | maillog/observer::hideConfig
 - adminhtml | admin_system_config_changed_section_maillog            | maillog/observer::updateConfig
 - adminhtml | admin_system_config_changed_section_maillog_directives | maillog/observer::clearCache
+- adminhtml | admin_system_config_changed_section_maillog_sync       | maillog/observer::clearConfig
 - adminhtml | admin_system_config_changed_section_maillog_sync       | maillog/observer::updateConfig
 - adminhtml | newsletter_subscriber_save_before                      | maillog/observer::setSubscriberStoreId
 - frontend  | customer_address_save_after                            | maillog/observer::addressSaveSync
@@ -110,6 +112,9 @@ Files and directories
 - skin/frontend/base/default/images/luigifab/maillog/
 - maillog.php
 - maillog.sh
+Depends (with php exec)
+- rm -rf
+- also used: nproc, ps aux | grep
 
 
 Translations in de-DE (deutsch/Deutschland) by:

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/22/12/2022
+ * Updated M/24/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -115,7 +115,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 				if (empty($id = $this->getRequest()->getParam('id')) || !is_numeric($id))
 					Mage::throwException($this->__('The <em>%s</em> field is a required field.', 'id'));
 
-				Mage::getModel('maillog/email')->load($id)->setData('status', 'pending')->save();
+				Mage::getModel('maillog/email')->load($id)->setData('status', 'pending')->setData('exception', null)->save();
 				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Email number %d will be resent.', $id));
 			}
 		}

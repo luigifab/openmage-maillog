@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated V/02/12/2022
+ * Updated V/27/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -28,6 +28,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 	protected $_configShowImageSize;
 	protected $_configWidthHeight;
 	protected $_configCreateWebp;
+	protected $_configDecoding;
 	protected $_cacheTags;
 
 
@@ -115,6 +116,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 			$this->_configShowImageSize = Mage::getStoreConfigFlag('maillog_directives/general/show_image_size');
 			$this->_configWidthHeight   = Mage::getStoreConfigFlag('maillog_directives/general/picture_width_height');
 			$this->_configCreateWebp    = Mage::getStoreConfigFlag('maillog_directives/general/picture_create_webp');
+			$this->_configDecoding      = Mage::getStoreConfig('maillog_directives/general/picture_decoding');
 
 			// config des tags (avec mise en cache)
 			$config = Mage::app()->useCache('config') ? @json_decode(Mage::app()->loadCache('maillog_config'), true) : null;
@@ -213,9 +215,13 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 		$file = $params['file'];
 		$tags = ['<picture>'];
 
+		// https://www.js-craft.io/blog/what-does-the-html-image-decoding-async-attribute-do-and-how-can-it-help-us-to-improve-performance/
+		if (!empty($this->_configDecoding))
+			$attrs[] = 'decoding="'.$this->_configDecoding.'"';
+
 		if (str_ends_with($file, '.svg')) {
 			$size   = (array) end($sizes); // (yes)
-			$tags[] = '<img src="'.$help->init($object, $attribute, $file)->resize($size['w'], $size['h']).'" width="'.$size['w'].'" height="'.$size['h'].'" '.implode(' ', $attrs).' />';
+			$tags[] = '<img src="'.$help->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 1)).'" width="'.$size['w'].'" height="'.$size['h'].'" '.implode(' ', $attrs).' />';
 		}
 		else {
 			$total = count($sizes);
@@ -237,8 +243,8 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 				foreach ($sizes as $breakpoint => $size) {
 					$srcs = [
-						(string) $help->init($object, $attribute, $file, true, true)->resize($size['w'] * 1, $size['h'] * 1),
-						(string) $help->init($object, $attribute, $file, true, true)->resize($size['w'] * 2, $size['h'] * 2)
+						(string) $help->init($object, $attribute, $file, true, true)->resize(...$this->getSize($size['w'], $size['h'], 1)),
+						(string) $help->init($object, $attribute, $file, true, true)->resize(...$this->getSize($size['w'], $size['h'], 2)),
 					];
 					// width et height
 					$wh = $this->_configWidthHeight ? ' width="'.$size['w'].'" height="'.$size['h'].'"' : '';
@@ -248,23 +254,23 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 					// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
 					if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
 						$rem    = empty($rem) ? 0 : $rem;
-						$tags[] = '<source data-dbg="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(min-width:'.$rem.'rem)" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+						$tags[] = '<source media="(min-width:'.$rem.'rem)" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 					}
 					else {
 						$rem    = round($breakpoint / $this->_configFontSize, 1);
-						$tags[] = '<source data-dbg="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'" media="(max-width:'.$rem.'rem)" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+						$tags[] = '<source media="(max-width:'.$rem.'rem)" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 					}
 				}
 
 				if ($total == 1)
-					$tags[] = '<source data-dbg="'.$size['w'].'/'.($size['w'] * 2).'" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+					$tags[] = '<source type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 			}
 
 			// source (jpg jpeg gif png webp)
 			foreach ($sizes as $breakpoint => $size) {
 				$srcs = [
-					(string) $help->init($object, $attribute, $file)->resize($size['w'] * 1, $size['h'] * 1),
-					(string) $help->init($object, $attribute, $file)->resize($size['w'] * 2, $size['h'] * 2)
+					(string) $help->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 1)),
+					(string) $help->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 2))
 				];
 				// width et height
 				$wh = $this->_configWidthHeight ? ' width="'.$size['w'].'" height="'.$size['h'].'"' : '';
@@ -274,19 +280,29 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 				// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
 				if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
 					$rem    = empty($rem) ? 0 : $rem;
-					$tags[] = '<source data-dbg="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'"'.$mime.' media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+					$tags[] = '<source'.$mime.' media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 				}
 				else {
 					$rem    = round($breakpoint / $this->_configFontSize, 1);
-					$tags[] = '<source data-dbg="'.$breakpoint.' '.$size['w'].'/'.($size['w'] * 2).'"'.$mime.' media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+					$tags[] = '<source'.$mime.' media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 				}
 			}
 
-			$tags[] = '<img data-dbg="'.$size['w'].'/'.($size['w'] * 2).'" src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x"'.$wh.' '.implode(' ', $attrs).' />';
+			$tags[] = '<img src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x"'.$wh.' '.implode(' ', $attrs).' />';
 		}
 
 		$tags[] = '</picture>';
 		return $tags;
+	}
+
+	protected function getSize($width, $height, $coeff) {
+
+		if (empty($width))
+			return [null, $height * $coeff];
+		if (empty($height))
+			return [$width * $coeff, null];
+
+		return [$width * $coeff, $height * $coeff];
 	}
 
 	protected function createHtmlAttributes(array $params, array $sizes) {

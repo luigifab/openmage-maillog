@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated D/06/11/2022
+ * Updated V/10/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -22,14 +22,20 @@
 
 class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Block_System_Config_Form_Field {
 
+	protected static $_cache;
+
 	public function render(Varien_Data_Form_Element_Abstract $element) {
+
+		if (empty(self::$_cache)) {
+			self::$_cache = Mage::getModel('core/config')->loadBase()->loadModules()->loadDb();
+			self::$_cache = self::$_cache->getXpath('/config/global/template/email/*');
+		}
 
 		$html  = [];
 		$codes = [];
-		$nodes = Mage::getModel('core/config')->loadBase()->loadModules()->loadDb();
-		$nodes = $nodes->getXpath('/config/global/template/email/*');
 		$text  = str_contains($element->getHtmlId(), '_text');
 
+		$nodes = self::$_cache;
 		foreach ($nodes as $node) {
 			$type = strtolower((string) $node->type);
 			if ((!$text && ($type == 'html')) || ($text && ($type == 'text'))) {
@@ -39,13 +45,13 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 			}
 		}
 
-		ksort($codes);
 		$store = $this->getRequest()->getParam('store');
 		$store = empty($store) ? Mage::app()->getDefaultStoreView()->getId() : Mage::app()->getStore($store)->getId();
 		$separ = null;
 		$start = false;
 		$end   = false;
 
+		ksort($codes);
 		foreach ($codes as $code => [$label, $file]) {
 
 			$base = explode('_', $code);

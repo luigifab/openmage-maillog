@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/05/01/2023
+ * Updated S/18/02/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -232,20 +232,25 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 	public function sendMail(object $zend, object $mail, $parts) {
 
+		$vars = Mage::registry('maillog_last_emailvars');
+		$storeId = (!empty($vars['store']) && is_object($vars['store'])) ? $vars['store']->getId() : Mage::app()->getStore()->getId();
+
 		$heads = $mail->getHeaders();
 		$email = Mage::getModel('maillog/email')
+			->setData('store_id', $storeId)
 			->setData('created_at', date('Y-m-d H:i:s'))
 			->setData('status', 'pending')
-			->setData('mail_header', $zend->header)
 			->setData('mail_parameters', $zend->parameters)
 			->setData('encoded_mail_recipients', $zend->recipients)
 			->setData('encoded_mail_subject', $mail->getSubject())
+			->setMailHeader($zend->header)
 			->setMailSender(empty($heads['From'][0]) ? Mage::getStoreConfig('trans_email/ident_general/email') : $heads['From'][0])
 			->setMailRecipients($zend->recipients)
 			->setMailSubject($mail->getSubject())
-			->setMailContent($parts);
+			->setMailContent($vars, $parts);
 
 		//exit($email->setId(9999999)->toHtml(true));
+		// isResetPassword via setMailContent
 		if ($email->isResetPassword())
 			$email->sendNow(true);
 		else
@@ -253,6 +258,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 		Mage::unregister('maillog_last_emailid');
 		Mage::register('maillog_last_emailid', $email->getId());
+
+		return $this;
 	}
 
 	public function sendSync(object $object, string $type, string $key, string $action) {
@@ -331,6 +338,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 					}
 				}
 
+				$sync->setData('store_id', Mage::app()->getStore()->getId());
 				$sync->setData('created_at', date('Y-m-d H:i:s'));
 				$sync->setData('status', 'pending');
 				$sync->setData('action', $actionKey);
@@ -342,6 +350,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 			if ((PHP_SAPI != 'cli') && Mage::app()->getStore()->isAdmin() && Mage::getSingleton('admin/session')->isLoggedIn())
 				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Customer data will be synchronized (%s).', $email));
 		}
+
+		return $this;
 	}
 
 
@@ -415,7 +425,6 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				->addFieldToFilter('status', 'running')
 				->setPageSize(1)
 				->getFirstItem();
-
 
 			if (!empty($cron->getId())) {
 				if ((time() - strtotime($cron->getData('executed_at'))) > 3600) {

@@ -1,7 +1,7 @@
 <?php
 /**
- * Created M/23/11/2021
- * Updated V/03/02/2023
+ * Created M/24/01/2023
+ * Updated M/24/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -20,29 +20,15 @@
  * GNU General Public License (GPL) for more details.
  */
 
-// prevent multiple execution
-$lock = Mage::getModel('index/process')->setId('maillog_setup');
-if ($lock->isLocked())
-	Mage::throwException('Please wait, upgrade is already in progress...');
+class Luigifab_Maillog_Block_Adminhtml_Config_Link extends Mage_Adminhtml_Block_System_Config_Form_Field {
 
-$lock->lockAndBlock();
-$this->startSetup();
+	public function render(Varien_Data_Form_Element_Abstract $element) {
+		$element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue()->unsPath();
+		return parent::render($element);
+	}
 
-// ignore user abort and time limit
-ignore_user_abort(true);
-set_time_limit(0);
-
-try {
-	$this->run('ALTER TABLE '.$this->getTable('maillog/email').'
-		ADD FULLTEXT mail_recipients (mail_recipients),
-		ADD FULLTEXT mail_subject (mail_subject)');
-}
-catch (Throwable $t) {
-	if (stripos($t->getMessage(), 'Duplicate key name') === false) {
-		$lock->unlock();
-		Mage::throwException($t);
+	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
+		$section = str_replace('maillog_general_', '', $element->getHtmlId());
+		return sprintf('<a href="%s" id="%s">%s</a>', $this->getUrl('*/*/*', ['section' => $section]), $element->getHtmlId(), $this->__('View'));
 	}
 }
-
-$this->endSetup();
-$lock->unlock();

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated L/27/02/2023
+ * Updated V/03/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -33,7 +33,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 	// action
 	public function updateNow($entity = null) {
 
-		$now = time();
+		$start = time();
 		if (empty($this->getId()))
 			Mage::throwException('You must load a sync before trying to sync it.');
 
@@ -41,13 +41,14 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3           : 4 email
 		$info = explode(':', $this->getData('action'));
 
+		$this->setData('exception', null);
+		$this->setData('status', 'running');
+		$this->save();
+
 		try {
 			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
 			if (!($system instanceof Luigifab_Maillog_Model_Interface))
-				Mage::throwException('Unknown system: '.get_class($system).'.');
-
-			$this->setData('status', 'running');
-			$this->save();
+				Mage::throwException(sprintf('Unknown system (%s) for sync %d.', get_class($system), $this->getId()));
 
 			// chargement des objets du client
 			if ($info[1] == 'customer') {
@@ -88,7 +89,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$object   = $this->initSpecialObject($customer, $system->getMapping());
 			}
 			else {
-				Mage::throwException('Unknown object_type ('.$info[1] .').');
+				Mage::throwException(sprintf('Unknown object_type (%s) for sync %d.', $info[1], $this->getId()));
 			}
 
 			// action
@@ -103,19 +104,19 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			$data += $system->mapFields($object, 'special');
 
 			if ($allow !== true) {
-				$this->setData('duration', time() - $now);
-				$this->setData('response', $allow);
-				$this->saveAllData($system, $data);
+				if (is_string($allow))
+					$this->setData('exception', $allow);
+				$this->saveAllData($system, $start, $data);
 			}
 			else {
 				$result = $system->updateCustomer($data);
-				$this->setData('duration', time() - $now);
-				$this->saveAllData($system, $data, $result);
+				$this->saveAllData($system, $start, $data, $result);
 			}
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
-			$this->saveAllData($system, $data ?? null, $t->getMessage());
+			$this->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
+			$this->saveAllData($system, $start, $data ?? null);
 		}
 
 		return empty($data) ? null : $data;
@@ -123,7 +124,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 	public function deleteNow($entity = null) {
 
-		$now = time();
+		$start = time();
 		if (empty($this->getId()))
 			Mage::throwException('You must load a sync before trying to sync it.');
 
@@ -131,13 +132,14 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3           : 4 email
 		$info = explode(':', $this->getData('action'));
 
+		$this->setData('exception', null);
+		$this->setData('status', 'running');
+		$this->save();
+
 		try {
 			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
 			if (!($system instanceof Luigifab_Maillog_Model_Interface))
-				Mage::throwException('Unknown system: '.get_class($system).'.');
-
-			$this->setData('status', 'running');
-			$this->save();
+				Mage::throwException(sprintf('Unknown system (%s) for sync %d.', get_class($system), $this->getId()));
 
 			// simule un client
 			if ($info[1] == 'customer') {
@@ -151,7 +153,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$customer->setData('email', $info[4]);
 			}
 			else {
-				Mage::throwException('Unknown object_type ('.$info[1] .').');
+				Mage::throwException(sprintf('Unknown object_type (%s) for sync %d.', $info[1], $this->getId()));
 			}
 
 			// action
@@ -159,19 +161,19 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 			$data  = $system->mapFields($customer, 'customer');
 
 			if ($allow !== true) {
-				$this->setData('duration', time() - $now);
-				$this->setData('response', $allow);
-				$this->saveAllData($system, $data);
+				if (is_string($allow))
+					$this->setData('exception', $allow);
+				$this->saveAllData($system, $start, $data);
 			}
 			else {
 				$result = $system->deleteCustomer($data);
-				$this->setData('duration', time() - $now);
-				$this->saveAllData($system, $data, $result);
+				$this->saveAllData($system, $start, $data, $result);
 			}
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
-			$this->saveAllData($system, $data ?? null, $t->getMessage());
+			$this->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
+			$this->saveAllData($system, $start, $data ?? null);
 		}
 
 		return empty($data) ? null : $data;
@@ -479,7 +481,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		return $asString ? trim(implode($inline)) : $inline;
 	}
 
-	public function saveAllData(object $system, $request = null, $response = null) {
+	public function saveAllData(object $system, int $start, $request = null, $response = null) {
 
 		if (!empty($request)) {
 
@@ -508,7 +510,8 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		}
 
 		$this->setData('sync_at', date('Y-m-d H:i:s'));
-		$this->setData('status', empty($status) ? 'notsync' : $status);
+		$this->setData('status', empty($this->getData('exception')) ? (empty($status) ? 'notsync' : $status) : 'error');
+		$this->setData('duration', time() - $start);
 		$this->save();
 	}
 }

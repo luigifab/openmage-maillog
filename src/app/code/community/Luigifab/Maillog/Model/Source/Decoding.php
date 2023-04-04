@@ -1,6 +1,6 @@
 <?php
 /**
- * Created D/12/06/2016
+ * Created V/27/01/2023
  * Updated V/27/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
@@ -20,7 +20,7 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class Luigifab_Maillog_Model_Source_Lifetime {
+class Luigifab_Maillog_Model_Source_Decoding {
 
 	protected $_options;
 
@@ -29,16 +29,10 @@ class Luigifab_Maillog_Model_Source_Lifetime {
 		if (empty($this->_options)) {
 			$help = Mage::helper('maillog');
 			$this->_options = [
-				['value' => 0, 'label' => '--'],
-				['value' => 5 * 24 * 60,  'label' => $help->__('%d days', 5)], // 5+
-				['value' => 7 * 24 * 60,  'label' => $help->__('%d days', 7)], // 5+
-				['value' => 14 * 24 * 60, 'label' => $help->_('%d days (%d weeks)',  14, 2)], // 2-4
-				['value' => 28 * 24 * 60, 'label' => $help->_('%d days (%d weeks)',  28, 4)], // 2-4
-				// translate.php                         ->__('%d days (%d weeks)')           // 5+
-				['value' => 31 * 24 * 60, 'label' => $help->__('%d days (%d month)', 31, 1)], // 1
-				['value' => 62 * 24 * 60, 'label' => $help->_('%d days (%d months)', 62, 2)], // 2-4
-				['value' => 93 * 24 * 60, 'label' => $help->_('%d days (%d months)', 93, 3)]  // 2-4
-				// translate.php                         ->__('%d days (%d months)')          // 5+
+				['value' => 0, 'label' => Mage::helper('adminhtml')->__('No')],
+				['value' => 'sync',  'label' => $help->__('Yes - %s', 'sync')],
+				['value' => 'async', 'label' => $help->__('Yes - %s', 'async')],
+				['value' => 'auto',  'label' => $help->__('Yes - %s', 'auto')],
 			];
 		}
 

@@ -1,7 +1,7 @@
 <?php
 /**
- * Created M/23/11/2021
- * Updated V/03/02/2023
+ * Created M/24/01/2023
+ * Updated J/02/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -33,15 +33,21 @@ ignore_user_abort(true);
 set_time_limit(0);
 
 try {
-	$this->run('ALTER TABLE '.$this->getTable('maillog/email').'
-		ADD FULLTEXT mail_recipients (mail_recipients),
-		ADD FULLTEXT mail_subject (mail_subject)');
+	$table = $this->getTable('maillog/email');
+	if (!$this->getConnection()->tableColumnExists($table, 'exception'))
+		$this->run('ALTER TABLE '.$table.' ADD COLUMN exception varchar(999) NULL DEFAULT NULL');
+	if (!$this->getConnection()->tableColumnExists($table, 'store_id'))
+		$this->run('ALTER TABLE '.$table.' ADD COLUMN store_id smallint(5) unsigned DEFAULT 0 AFTER status');
+
+	$table = $this->getTable('maillog/sync');
+	if (!$this->getConnection()->tableColumnExists($table, 'exception'))
+		$this->run('ALTER TABLE '.$table.' ADD COLUMN exception varchar(999) NULL DEFAULT NULL');
+	if (!$this->getConnection()->tableColumnExists($table, 'store_id'))
+		$this->run('ALTER TABLE '.$table.' ADD COLUMN store_id smallint(5) unsigned DEFAULT 0 AFTER status');
 }
 catch (Throwable $t) {
-	if (stripos($t->getMessage(), 'Duplicate key name') === false) {
-		$lock->unlock();
-		Mage::throwException($t);
-	}
+	$lock->unlock();
+	Mage::throwException($t);
 }
 
 $this->endSetup();

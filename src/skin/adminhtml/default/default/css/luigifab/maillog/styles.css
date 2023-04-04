@@ -1,6 +1,6 @@
 /**
  * Created D/22/03/2015
- * Updated S/07/01/2023
+ * Updated J/02/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -42,18 +42,23 @@ body.adminhtml-maillog-history-view div.content ul {
 body.adminhtml-maillog-history-view div.content li strong { height:auto; line-height:16px; }
 body.adminhtml-maillog-history-view .maillog-status { display:inline-block; margin:0 0.5em; width:13em; vertical-align:text-bottom; }
 
+body.adminhtml-maillog-history-view div.content pre {
+	display:block; margin:1em auto; padding:0.7em 1em; width:calc(100% - 4em); overflow:hidden; white-space:pre-wrap;
+	border-radius:1em; border:1px solid #DDD; background-color:#FFD9D9;
+}
+
 body.adminhtml-maillog-history-view div.content iframe {
 	display:block; margin:1em auto; width:calc(100% - 2em); min-height:26em; overflow:hidden;
 	border-radius:1em; border:1px solid #DDD; color:white;
 }
 
-/* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/sync/index &&& */
-body.adminhtml-maillog-sync-index table.data div.details {
-	margin-top:-1px; column-count:2; -moz-column-count:2; -webkit-column-count:2;
-	font-size:10px; line-height:13px; word-wrap:anywhere;
-}
+/* &&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/history/index &&& */
+body.adminhtml-maillog-history-index div.etype { max-width:100px; overflow:hidden; text-overflow:ellipsis; }
 
-body.adminhtml-maillog-sync-index table.data div.details:last-child { margin-bottom:5px; }
+/* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/sync/index &&& */
+body.adminhtml-maillog-sync-index table.data td div.data { column-count:2; -moz-column-count:2; -webkit-column-count:2; word-wrap:anywhere; }
+body.adminhtml-maillog-sync-index table.data td div.details { font-size:10px; line-height:13px; }
+body.adminhtml-maillog-sync-index table.data td div.details:last-child { margin-bottom:5px; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& system/config &&& */
 img.logo.maillog {
@@ -81,7 +86,7 @@ textarea.maillogsync { margin-left:-206px; width:480px !important; }
 .maillogexamples pre > span { display:block; column-count:3; -moz-column-count:3; -webkit-column-count:3; }
 
 #lifetimeConfig li:hover { background-color:#DEDEDE; }
-#lifetimeConfig span { display:inline-block; padding:0 5px; width:197px; text-align:right; }
+#lifetimeConfig span { display:inline-block; padding:0 5px; width:197px; text-align:right; overflow:hidden; vertical-align:middle; text-overflow:ellipsis; }
 #lifetimeConfig input { margin-right:5px; padding-left:40px; width:60px; height:15px; cursor:pointer; }
 #lifetimeConfig select { margin-right:5px; width:136px; }
 

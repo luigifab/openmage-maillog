@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated J/05/01/2023
+ * Updated M/14/02/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -118,10 +118,106 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	// EVENT admin_system_config_changed_section_maillog_directives (adminhtml)
 	public function clearCache(Varien_Event_Observer $observer) {
 
+		if (Mage::getStoreConfigFlag('maillog_directives/general/remove_unused_sizes')) {
+
+			$dirSizes = [];
+			$dirs = glob(Mage::getBaseDir('media').'/catalog/product/cache/*/*x*');
+			foreach ($dirs as $dir) {
+				$name = explode('x', basename($dir));
+				if ((count($name) == 2) && is_numeric($name[0]) && (is_numeric($name[1]) || empty($name[1])))
+					$dirSizes[implode('x', $name)][] = $dir;
+			}
+
+			$dirs = glob(Mage::getBaseDir('media').'/catalog/category/cache/*x*');
+			foreach ($dirs as $dir) {
+				$name = explode('x', basename($dir));
+				if ((count($name) == 2) && is_numeric($name[0]) && (is_numeric($name[1]) || empty($name[1])))
+					$dirSizes[implode('x', $name)][] = $dir;
+			}
+
+			$dirs = glob(Mage::getBaseDir('media').'/wysiwyg/cache/*x*');
+			foreach ($dirs as $dir) {
+				$name = explode('x', basename($dir));
+				if ((count($name) == 2) && is_numeric($name[0]) && (is_numeric($name[1]) || empty($name[1])))
+					$dirSizes[implode('x', $name)][] = $dir;
+			}
+
+			$newSizes = [];
+			$config = @unserialize(Mage::getStoreConfig('maillog_directives/general/special_config'), ['allowed_classes' => false]);
+			$config = is_array($config) ? $config : [];
+			foreach ($config as $values) {
+				foreach ($values as $sizes) {
+					if (is_array($sizes)) {
+						if (empty($sizes['w'])) {
+							$newSizes[] = 'x'.$sizes['h'];
+							$newSizes[] = 'x'.($sizes['h'] * 2);
+						}
+						else if (empty($sizes['h'])) {
+							$newSizes[] = $sizes['w'].'x';
+							$newSizes[] = ($sizes['w'] * 2).'x';
+						}
+						else {
+							$newSizes[] = $sizes['w'].'x'.$sizes['h'];
+							$newSizes[] = ($sizes['w'] * 2).'x'.($sizes['h'] * 2);
+						}
+					}
+				}
+			}
+
+			// array_diff retourne un tableau contenant toutes les entités du premier tableau qui ne sont présentes dans aucun autres tableaux
+			$deleteSizes = array_diff(array_keys($dirSizes), $newSizes);
+			$help = Mage::helper('maillog');
+
+			foreach ($deleteSizes as $deleteSize) {
+				if (!empty($dirSizes[$deleteSize])) {
+					$cmd = 'rm -rf '.implode(' ', array_map('escapeshellarg', $dirSizes[$deleteSize]));
+					Mage::log($cmd, Zend_Log::DEBUG, 'maillog.log');
+					exec($cmd);
+					Mage::getSingleton('adminhtml/session')->addNotice($help->__('Directories for unused size %s was removed.', $deleteSize));
+				}
+			}
+		}
+
 		Mage::app()->cleanCache();
 		Mage::dispatchEvent('adminhtml_cache_flush_system');
-
 		Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('adminhtml')->__('The OpenMage cache storage has been flushed.'));
+	}
+
+	// EVENT admin_system_config_changed_section_maillog_sync (adminhtml)
+	public function clearConfig(Varien_Event_Observer $observer) {
+
+		$database = Mage::getSingleton('core/resource');
+		$writer   = $database->getConnection('core_write');
+		$table    = $database->getTableName('core_config_data');
+		$codes    = array_keys(Mage::getConfig()->getNode('global/models/maillog/adaptators')->asArray());
+
+		foreach ($codes as $code) {
+			if (Mage::getStoreConfigFlag('maillog_sync/general/remove_'.$code)) {
+				$writer->query('DELETE FROM '.$table.' WHERE path LIKE "maillog_sync/'.$code.'/%" AND path NOT LIKE "maillog_sync/'.$code.'/enabled"');
+				$writer->query('DELETE FROM '.$table.' WHERE path LIKE "maillog_sync/'.$code.'/enabled" AND scope_id != 0');
+				Mage::getModel('core/config')->saveConfig('maillog_sync/'.$code.'/enabled', '0');
+			}
+		}
+
+		Mage::getConfig()->reinit(); // très important
+	}
+
+	// EVENT adminhtml_init_system_config (adminhtml)
+	public function hideConfig(Varien_Event_Observer $observer) {
+
+		if (Mage::app()->getRequest()->getParam('section') == 'maillog_sync') {
+
+			$nodes = $observer->getData('config')->getNode('sections/maillog_sync/groups')->children();
+			$codes = array_keys(Mage::getConfig()->getNode('global/models/maillog/adaptators')->asArray());
+
+			foreach ($codes as $code) {
+				if (!empty($nodes->{$code}) && Mage::getStoreConfigFlag('maillog_sync/general/remove_'.$code)) {
+					$nodes->{$code}->show_in_default = 0;
+					$nodes->{$code}->show_in_website = 0;
+					$nodes->{$code}->show_in_store = 0;
+				}
+			}
+		}
 	}
 
 
@@ -727,7 +823,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 	}
 
 	// 1 exception - le fichier n'est pas en utf-8
-	// lecture du fichier à importer en supprimant l'éventuel marqueur bom (en fonction de la configuration)
+	// lecture du fichier à importer en supprimant l'éventuel marqueur BOM
 	// mise à jour de la base de données (ne touche pas à ce qui ne change pas - ajoute/supprime/modifie)
 	// déplace et compresse les fichiers (base/done/skip)
 	// enregistre le log final

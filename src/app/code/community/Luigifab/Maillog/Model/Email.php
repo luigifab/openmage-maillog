@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/07/01/2023
+ * Updated L/03/04/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -23,11 +23,16 @@
 class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 	protected $_eventPrefix = 'maillog_email';
+	protected $_isResetPassword = false;
 
 	public function _construct() {
 		$this->_init('maillog/email');
 	}
 
+
+	public function getStoreId() {
+		return (int) $this->getData('store_id');
+	}
 
 	public function getSubject() {
 		return Mage::helper('maillog')->escapeEntities($this->getData('mail_subject'));
@@ -39,6 +44,22 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		return empty($parts) ? [] : $parts;
 	}
 
+
+	public function setMailHeader($heads) {
+
+		$storeId = $this->getStoreId();
+
+		// Return-Path
+		$value = Mage::getStoreConfig('system/smtp/return_path_email', $storeId);
+		if (!empty($value) && Mage::getStoreConfigFlag('system/smtp/set_return_path', $storeId))
+			$heads .= "\r\n".'Return-Path: <'.$value.'>';
+
+		// Reply-To
+		if (!empty($value = Mage::getStoreConfig('system/smtp/reply_to_email', $storeId)))
+			$heads .= "\r\n".'Reply-To: <'.$value.'>';
+
+		return $this->setData('mail_header', $heads);
+	}
 
 	public function setMailSender($data, bool $decode = true) {
 		return $this->setData('mail_sender', $decode ? iconv_mime_decode($data, 0, 'utf-8') : $data);
@@ -55,12 +76,12 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		return $this->setData('mail_subject', trim($decode ? iconv_mime_decode($data, 0, 'utf-8') : $data));
 	}
 
-	public function setMailContent($parts) {
+	public function setMailContent($vars, $parts) {
 
+		$storeId = $this->getStoreId();
 		$this->setData('uniqid', mb_substr(sha1(time().$this->getData('mail_recipients').$this->getData('mail_subject')), 0, 30));
 
-		// récupération des données du mail
-		// $parts[0]->getContent() = $zend->body si le mail n'a pas de pièce jointe
+		// $parts[0]->getContent() = $zend->body lorsque le mail n'a pas de pièce jointe
 		if (empty($parts) || is_string($parts)) {
 			$body  = $parts;
 			$parts = [];
@@ -77,25 +98,30 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			if (mb_stripos($body, '<!--@vars') !== false)
 				$body = mb_substr($body, mb_stripos($body, '-->') + 3);
 
+			if (mb_stripos($body, '/customer/account/resetpassword/') !== false)
+				$this->_isResetPassword = true;
+			else if (mb_stripos($body, '/index/resetpassword/') !== false)
+				$this->_isResetPassword = true;
+
 			// recherche et remplace <!-- maillog / maillog --> par rien
 			if ((mb_stripos($body, '<!-- maillog') !== false) && (mb_stripos($body, 'maillog -->') !== false)) {
 				$body = preg_replace('#\s*<!-- maillog\s*#', ' ', $body);
 				$body = preg_replace('#\s*maillog -->\s*#', ' ', $body);
 			}
 
-			// minifie le code HTML en fonction de la configuration
-			// recherche et remplace #online# #online#storeId# #readimg# par leur valeurs uniquement si c'est un mail au format HTML
+			// minifie le code HTML
+			// recherche et remplace #online# #online#storeId# #readimg# par leur valeurs si c'est un mail au format HTML
 			if ((mb_stripos($body, '</p>') !== false) || (mb_stripos($body, '</td>') !== false) || (mb_stripos($body, '</div>') !== false)) {
 
-				$minify = Mage::getStoreConfig('maillog/general/minify');
+				$minify = Mage::getStoreConfig('maillog/general/minify', $storeId);
 				if (($minify == 1) && class_exists('tidy', false) && extension_loaded('tidy'))
 					$body = $this->cleanWithTidy($body);
 				else if ($minify == 2)
 					$body = preg_replace(["#(?:\n+[\t ]*)+#", "#[\t ]+#"], ["\n", ' '], $body);
 
 				if (mb_stripos($body, '#online#') !== false)
-					$body = preg_replace_callback('/#online#(\d{0,5})/', function ($matches) {
-						return $this->getEmbedUrl('index', empty($matches[1]) ? [] : ['_store' => (int) $matches[1]]);
+					$body = preg_replace_callback('/#online#(\d{0,5})/', function ($matches) use ($storeId) {
+						return $this->getEmbedUrl('index', empty($matches[1]) ? ['_store' => $storeId] : ['_store' => (int) $matches[1]]);
 					}, $body);
 
 				if (mb_stripos($body, '#readimg#') !== false)
@@ -107,12 +133,74 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				$body = str_replace('#uniqid#', $this->getData('uniqid'), $body);
 
 			// recherche et remplace #mailid# par rien
+			// permet de trier les emails par Type
 			if (mb_stripos($body, '#mailid#') !== false) {
 				$mailid = mb_substr($body, mb_stripos($body, '#mailid#'));
 				$mailid = mb_substr($mailid, strlen('#mailid#'));
 				$mailid = mb_substr($mailid, 0, mb_stripos($mailid, '#'));
 				$body = str_replace('#mailid#'.$mailid.'#', '', $body);
 				$this->setData('type', trim($mailid));
+			}
+			else if (!empty($vars['this']) && is_object($vars['this'])) {
+				$tid = $vars['this']->getTemplateId();
+				if (is_numeric($tid)) {
+					$mailid = $tid;
+				}
+				else {
+					$mailid = Mage::getConfig()->getNode('global/template/email/'.$vars['this']->getTemplateId().'/file');
+					$mailid = pathinfo((string) $mailid, PATHINFO_FILENAME);
+				}
+				$this->setData('type', $mailid);
+			}
+
+			// auto login
+			// recherche et remplace les liens si un client est trouvé
+			if (!empty($storeId) && !empty($vars) && Mage::getStoreConfigFlag('maillog/login_whitout_password/enabled', $storeId)) {
+
+				foreach ($vars as $name => $data) {
+					if (is_object($data)) {
+						// object
+						if ($name == 'customer') {
+							$customer = $data;
+							break;
+						}
+						// method
+						if (method_exists($data, 'getCustomer')) {
+							$customer = $data->getCustomer();
+							break;
+						}
+						if (method_exists($data, 'getCustomerId')) {
+							$customer = Mage::getModel('customer/customer')->load($data->getCustomerId());
+							break;
+						}
+						// dynamic
+						$test = $data->getCustomer();
+						if ($test instanceof Mage_Customer_Model_Customer) {
+							$customer = $test;
+							break;
+						}
+						$test = $data->getCustomerId();
+						if (!empty($test)) {
+							$customer = Mage::getModel('customer/customer')->load($test);
+							break;
+						}
+					}
+				}
+
+				if (isset($customer)) {
+
+					if (empty($customer->getData('email')) || empty($customer->getData('password_hash')))
+						$customer->load($customer->getId());
+
+					$baseUrl = Mage::app()->getStore($storeId)->getBaseUrl('web');
+					$helper  = Mage::helper('core');
+					$customerKey = $customer->getId().'/sum/'.substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15);
+
+					$body = preg_replace_callback('#(<a[^>]+)href="'.$baseUrl.'([^"]+)"#', function ($matches) use ($helper, $baseUrl, $storeId, $customerKey) {
+						$url = $helper->urlEncode(str_replace($baseUrl, '', $matches[2]));
+						return $matches[1].'href="'.$this->getEmbedUrl('elink', ['_store' => $storeId, 'lnk' => $url, 'cid' => $customerKey]).'" rel="nofollow"';
+					}, $body);
+				}
 			}
 		}
 
@@ -191,41 +279,37 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 	}
 
 	public function isResetPassword() {
-
-		if (mb_stripos($this->getData('mail_body'), '/customer/account/resetpassword/') !== false)
-			return true;
-
-		if (mb_stripos($this->getData('mail_body'), '/index/resetpassword/') !== false)
-			return true;
-
-		return false;
+		return $this->_isResetPassword;
 	}
 
 	public function sendNow(bool $sendAndSave = false) {
 
-		$now = time();
+		$start = time();
+		$storeId = $this->getStoreId();
 		if (!$sendAndSave && empty($this->getId()))
 			Mage::throwException('You must load an email before trying to send it.');
 
-		try {
-			$this->setData('status', 'sending');
-			$this->save();
+		$this->setData('exception', null);
+		$this->setData('status', 'sending');
+		$this->save();
 
+		try {
 			$heads = str_replace(["\n", "\r\n\n"], ["\r\n", "\r\n"], $this->getData('mail_header'));
 			$recpt = $this->getData('mail_recipients');
-			$allow = (!empty($recpt) && Mage::getStoreConfigFlag('maillog/general/send')) ? Mage::helper('maillog')->canSend($recpt) : false;
+			$allow = (!empty($recpt) && Mage::getStoreConfigFlag('maillog/general/send', $storeId)) ?
+				Mage::helper('maillog')->canSend($recpt) : false;
 
 			// modifie les entêtes
 			$heads .= "\r\n".'X-Maillog: '.$this->getData('uniqid');
 
-			$encoding = Mage::getStoreConfig('maillog/general/encoding');
+			$encoding = Mage::getStoreConfig('maillog/general/encoding', $storeId);
 			if ($encoding != 'quoted-printable')
 				$heads = str_replace('Content-Transfer-Encoding: quoted-printable', 'Content-Transfer-Encoding: '.$encoding, $heads);
 
 			$subject = $this->getData('encoded_mail_subject');
 			//if ((mb_substr($subject, 0, 2) != '=?') || (mb_substr($subject, 0, 2) != '?=')) {
 			//	//if ($encoding == 'quoted-printable')
-			//		//$subject = '=?utf-8?Q?'.quoted_printable_encode($subject).'?=';
+			//	//	$subject = '=?utf-8?Q?'.quoted_printable_encode($subject).'?=';
 			//	$subject = '=?utf-8?B?'.base64_encode($subject).'?=';
 			//}
 
@@ -276,19 +360,20 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 			// action
 			if (empty($subject) || ($allow !== true) || empty($content) || Mage::getSingleton('maillog/source_bounce')->isBounce($recpt)) {
+				if (is_string($allow))
+					$this->setData('exception', $allow);
 				$this->setData('status', $allow ? 'bounce' : 'notsent');
-				$this->setData('duration', time() - $now);
-				$this->save();
+				$this->setData('duration', time() - $start);
 			}
 			else {
 				// SMTP personnalisé avec CURL ou MAIL standard
-				if (Mage::getStoreConfigFlag('maillog/general/smtp_enabled')) {
+				if (Mage::getStoreConfigFlag('maillog/general/smtp_enabled', $storeId)) {
 
 					$heads = 'To: '.$recpt."\r\n".$heads;
 
 					// 550, 5.7.1, delivery not authorized: message missing a valid messageId header are not accepted (gmail)
 					// https://stackoverflow.com/q/14483861
-					if (!empty($domain = Mage::getStoreConfig('maillog/general/smtp_domain')))
+					if (!empty($domain = Mage::getStoreConfig('maillog/general/smtp_domain', $storeId)))
 						$heads .= "\r\n".'Message-ID: <'.time().'-'.$this->getData('uniqid').'@'.$domain.'>';
 
 					// recherche l'email de l'expéditeur et des destinataires
@@ -305,10 +390,10 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					rewind($fp);
 
 					$ch = curl_init();
-					curl_setopt($ch, CURLOPT_URL, Mage::getStoreConfig('maillog/general/smtp_url'));
-					if (!empty($user = Mage::getStoreConfig('maillog/general/smtp_username')))
+					curl_setopt($ch, CURLOPT_URL, Mage::getStoreConfig('maillog/general/smtp_url', $storeId));
+					if (!empty($user = Mage::getStoreConfig('maillog/general/smtp_username', $storeId)))
 						curl_setopt($ch, CURLOPT_USERNAME, $user);
-					if (!empty($pass = Mage::getStoreConfig('maillog/general/smtp_password')))
+					if (!empty($pass = Mage::getStoreConfig('maillog/general/smtp_password', $storeId)))
 						curl_setopt($ch, CURLOPT_PASSWORD, Mage::helper('core')->decrypt($pass));
 					curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -346,17 +431,18 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				if (in_array($this->getData('sent_at'), ['', '0000-00-00 00:00:00', null]))
 					$this->setData('sent_at', date('Y-m-d H:i:s'));
 				if (!is_bool($result))
-					Mage::throwException($result);
+					Mage::throwException(sprintf('Error for email %d: %s', $this->getId(), $result));
 
 				$this->setData('status', ($result === true) ? 'sent' : 'error');
 			}
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
+			$this->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
 			$this->setData('status', 'error');
 		}
 
-		$this->setData('duration', time() - $now);
+		$this->setData('duration', time() - $start);
 		$this->save();
 	}
 
@@ -366,7 +452,6 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		if (empty($this->getId()))
 			Mage::throwException('You must load an email before trying to display it.');
 
-		// génération du code HTML
 		$body = $this->getData('mail_body');
 		$head = null;
 
@@ -410,15 +495,12 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 	public function getEmbedUrl(string $action, array $params = []) {
 
-		$store  = is_object(Mage::getDesign()->getStore()) ? Mage::getDesign()->getStore() : Mage::app()->getStore();
 		$params = array_merge(['_secure' => false, 'key' => $this->getData('uniqid')], $params);
-
 		if (empty($params['_store']) || Mage::app()->getStore()->isAdmin())
 			$params['_store'] = Mage::app()->getDefaultStoreView()->getId();
 
-		$url = preg_replace('#\?SID=.+$#', '', $store->getUrl('maillog/view/'.$action, $params));
-
-		if (Mage::getStoreConfigFlag('web/seo/use_rewrites', $store))
+		$url = preg_replace('#\?SID=.+$#', '', Mage::app()->getStore($params['_store'])->getUrl('maillog/view/'.$action, $params));
+		if (Mage::getStoreConfigFlag('web/seo/use_rewrites', $params['_store']))
 			$url = preg_replace('#/[^/]+\.php\d*/#', '/', $url);
 		else
 			$url = preg_replace('#/[^/]+\.php(\d*)/#', '/index.php$1/', $url);

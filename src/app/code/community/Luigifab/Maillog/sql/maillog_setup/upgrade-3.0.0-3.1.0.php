@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/28/12/2016
- * Updated L/26/12/2022
+ * Updated V/03/02/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -36,7 +36,7 @@ try {
 	// ajoute et modifie des colonnes
 	$table = $this->getTable('maillog/email');
 	if (!$this->getConnection()->tableColumnExists($table, 'mail_sender'))
-		$this->run('ALTER TABLE '.$table.' ADD COLUMN mail_sender varchar(255) NOT NULL DEFAULT ""');
+		$this->run('ALTER TABLE '.$table.' ADD COLUMN mail_sender varchar(255) NOT NULL DEFAULT "" AFTER encoded_mail_subject');
 	if (!$this->getConnection()->tableColumnExists($table, 'deleted'))
 		$this->run('ALTER TABLE '.$table.' ADD COLUMN deleted tinyint(1) unsigned NOT NULL DEFAULT 0');
 

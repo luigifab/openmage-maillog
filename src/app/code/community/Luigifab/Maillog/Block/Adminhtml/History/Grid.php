@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/11/12/2022
+ * Updated V/10/02/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -136,6 +136,7 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 			'options'   => $this->helper('maillog')->getAllTypes(),
 			'align'     => 'center',
 			'width'     => '100px',
+			'frame_callback' => [$this, 'decorateType'],
 		]);
 
 		$this->addColumn('mail_recipients', [
@@ -312,6 +313,10 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 		return $this->helper('maillog')->getHumanEmailAddress($row->getData('mail_recipients'));
 	}
 
+	public function decorateType($value, $row, $column, $isExport) {
+		return $isExport ? $value : '<div class="etype" title="'.$value.'">'.$value.'</div>';
+	}
+
 	public function decorateSubject($value, $row, $column, $isExport) {
 		return $row->getSubject();
 	}
@@ -320,12 +325,20 @@ class Luigifab_Maillog_Block_Adminhtml_History_Grid extends Mage_Adminhtml_Block
 	protected function _toHtml() {
 
 		$reader = Mage::getSingleton('core/resource')->getConnection('core_read');
-		$min    = $reader->fetchOne('SELECT variable_value FROM information_schema.global_variables WHERE variable_name LIKE "ft_min_word_len"');
-		$max    = $reader->fetchOne('SELECT variable_value FROM information_schema.global_variables WHERE variable_name LIKE "ft_max_word_len"');
+		$min = (int) $reader->fetchOne(
+			$reader->select()
+				->from('information_schema.global_variables', 'variable_value')
+				->where('variable_name LIKE ?', 'ft_min_word_len')
+		);
+		$max = (int) $reader->fetchOne(
+			$reader->select()
+				->from('information_schema.global_variables', 'variable_value')
+				->where('variable_name LIKE ?', 'ft_max_word_len')
+		);
 
 		return str_replace(
 			['class="data', '[??] '],
-			['class="adminhtml-maillog-history data', '<span style="opacity:0.6;" title="'.$this->helper('maillog')->escapeEntities($this->__('Warning! Full-text search (one or more words, words length: %d to %d). Complete words only (for example, you can search domain or domain.org and not domai). Separate words by a space.', $min, $max), true).'">[?]</span> '],
+			['class="adminhtml-maillog-history data', '<span style="opacity:0.7;" title="'.$this->helper('maillog')->escapeEntities($this->__('Warning! Full-text search (one or more words, words length: %d to %d). Complete words only (for example, you can search domain or domain.org and not domai). Separate words by a space.', $min, $max), true).'">[?]</span> '],
 			parent::_toHtml()
 		);
 	}

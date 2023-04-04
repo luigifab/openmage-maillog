@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated S/07/01/2023
+ * Updated V/10/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -30,6 +30,26 @@ $titleSecond  = $help->escapeEntities($this->__('All emails data'), true);
 $titleBgColor = $help->escapeEntities($this->__('Background color'), true);
 $titleTtColor = $help->escapeEntities($this->__('Text color'), true);
 
+$textReset   = $this->__('Reset');
+$textDefault = $this->__('Default');
+
+$textTimes = [];
+for ($i = 1; $i <= 18; $i++) {
+	if ($i == 1)
+		$textTimes[$i] = $this->__('%d month', $i);  // 1
+	else if ($i <= 4)
+		$textTimes[$i] = $help->_('%d months', $i);  // 2-4
+	else
+		$textTimes[$i] = $this->__('%d months', $i); // 5+
+}
+for ($i = 2 * 12; $i <= 8 * 12; $i += 12) {
+	$j = $i / 12;
+	if ($j <= 4)
+		$textTimes[$i] = $help->_('%d years', $j);  // 2-4
+	else
+		$textTimes[$i] = $this->__('%d years', $j); // 5+
+}
+
 $bgColor = Mage::getStoreConfig('maillog/general/default_bgcolor');
 $ttColor = Mage::getStoreConfig('maillog/general/default_ttcolor');
 ?>
@@ -54,7 +74,7 @@ $ttColor = Mage::getStoreConfig('maillog/general/default_ttcolor');
 					continue;
 			?>
 				<li>
-					<span>
+					<span title="<?php echo $type ?>">
 						<?php echo in_array($type, ['without', 'all']) ? $this->__('<b>'.$type.'</b>') : $type ?>
 						<?php //$this->__('<b>without</b>') translate.php ?>
 						<?php //$this->__('<b>all</b>')     translate.php ?>
@@ -69,32 +89,16 @@ $ttColor = Mage::getStoreConfig('maillog/general/default_ttcolor');
 						<?php endif ?>
 						<?php for ($i = 1; $i <= 18; $i++): ?>
 							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
-								<option value="<?php echo $i ?>" selected="selected">
-									<?php if ($i == 1): ?>
-										<?php echo $this->__('%d month', $i) // 1 ?>
-									<?php else: ?>
-										<?php echo ($i <= 4) ? $help->_('%d months', $i) : $this->__('%d months', $i) // 2-4 ou 5+ ?>
-									<?php endif ?>
-								</option>
+								<option value="<?php echo $i ?>" selected="selected"><?php echo $textTimes[$i] ?></option>
 							<?php else: ?>
-								<option value="<?php echo $i ?>">
-									<?php if ($i == 1): ?>
-										<?php echo $this->__('%d month', $i) // 1 ?>
-									<?php else: ?>
-										<?php echo ($i <= 4) ? $help->_('%d months', $i) : $this->__('%d months', $i) // 2-4 ou 5+ ?>
-									<?php endif ?>
-								</option>
+								<option value="<?php echo $i ?>"><?php echo $textTimes[$i] ?></option>
 							<?php endif ?>
 						<?php endfor ?>
-						<?php for ($i = 2 * 12; $i <= 8 * 12; $i += 12): $j = $i / 12; ?>
+						<?php for ($i = 2 * 12; $i <= 8 * 12; $i += 12): ?>
 							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
-								<option value="<?php echo $i ?>" selected="selected">
-									<?php echo ($j <= 4) ? $help->_('%d years', $j) : $this->__('%d years', $j) // 2-4 ou 5+ ?>
-								</option>
+								<option value="<?php echo $i ?>" selected="selected"><?php echo $textTimes[$i] ?></option>
 							<?php else: ?>
-								<option value="<?php echo $i ?>">
-									<?php echo ($j <= 4) ? $help->_('%d years', $j) : $this->__('%d years', $j) // 2-4 ou 5+ ?>
-								</option>
+								<option value="<?php echo $i ?>"><?php echo $textTimes[$i] ?></option>
 							<?php endif ?>
 						<?php endfor ?>
 					</select>
@@ -108,32 +112,16 @@ $ttColor = Mage::getStoreConfig('maillog/general/default_ttcolor');
 						<?php endif ?>
 						<?php for ($i = 1; $i <= 18; $i++): ?>
 							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
-								<option value="<?php echo $i ?>" selected="selected">
-									<?php if ($i == 1): ?>
-										<?php echo $this->__('%d month', $i) // 1 ?>
-									<?php else: ?>
-										<?php echo ($i <= 4) ? $help->_('%d months', $i) : $this->__('%d months', $i) // 2-4 ou 5+ ?>
-									<?php endif ?>
-								</option>
+								<option value="<?php echo $i ?>" selected="selected"><?php echo $textTimes[$i] ?></option>
 							<?php else: ?>
-								<option value="<?php echo $i ?>">
-									<?php if ($i == 1): ?>
-										<?php echo $this->__('%d month', $i) // 1 ?>
-									<?php else: ?>
-										<?php echo ($i <= 4) ? $help->_('%d months', $i) : $this->__('%d months', $i) // 2-4 ou 5+ ?>
-									<?php endif ?>
-								</option>
+								<option value="<?php echo $i ?>"><?php echo $textTimes[$i] ?></option>
 							<?php endif ?>
 						<?php endfor ?>
-						<?php for ($i = 2 * 12; $i <= 8 * 12; $i += 12): $j = $i / 12; ?>
+						<?php for ($i = 2 * 12; $i <= 8 * 12; $i += 12): ?>
 							<?php if (!empty($config[$key]) && ($config[$key] == $i)): ?>
-								<option value="<?php echo $i ?>" selected="selected">
-									<?php echo ($j <= 4) ? $help->_('%d years', $j) : $this->__('%d years', $j) // 2-4 ou 5+ ?>
-								</option>
+								<option value="<?php echo $i ?>" selected="selected"><?php echo $textTimes[$i] ?></option>
 							<?php else: ?>
-								<option value="<?php echo $i ?>">
-									<?php echo ($j <= 4) ? $help->_('%d years', $j) : $this->__('%d years', $j) // 2-4 ou 5+ ?>
-								</option>
+								<option value="<?php echo $i ?>"><?php echo $textTimes[$i] ?></option>
 							<?php endif ?>
 						<?php endfor ?>
 					</select>
@@ -149,16 +137,16 @@ $ttColor = Mage::getStoreConfig('maillog/general/default_ttcolor');
 						class="color {hash:true} input-text" />
 
 					<button type="button" class="slink reset" onclick="maillog.resetValues(this);">
-						<?php echo $this->__('Reset') ?>
+						<?php echo $textReset //$this->__('Reset') ?>
 					</button>
 					<button type="button" class="slink default" onclick="maillog.defaultLifetime(this, '<?php echo $bgColor ?>', '<?php echo $ttColor ?>');">
-						<?php echo $this->__('Default') ?>
+						<?php echo $textDefault //$this->__('Default') ?>
 					</button>
 
 					<?php if (!empty($canDelete)): ?>
 						<input type="hidden" name="groups[general][fields][special_config][value][<?php echo $key ?>_delete]" value="0" />
 						<button type="button" class="slink" onclick="maillog.removeLifetime(this);">
-							<?php echo $this->__('Delete') ?>
+							<?php echo empty($textDelete) ? $textDelete = $this->__('Delete') : $textDelete ?>
 						</button>
 					<?php endif ?>
 					<?php if ($type == 'all') { $canDelete = true; } // tout ce qui est après all est supprimable ?>

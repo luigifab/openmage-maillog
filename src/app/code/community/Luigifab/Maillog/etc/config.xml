@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated J/02/03/2023
+ * Updated V/10/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -23,7 +23,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>5.7.2</version>
+			<version>5.8.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -164,6 +164,15 @@
 				</args>
 			</maillog>
 		</routers>
+		<translate>
+			<modules>
+				<Luigifab_Maillog>
+					<files>
+						<default>Luigifab_Maillog.csv</default>
+					</files>
+				</Luigifab_Maillog>
+			</modules>
+		</translate>
 	</frontend>
 	<admin>
 		<routers>
@@ -202,6 +211,22 @@
 					</maillog>
 				</observers>
 			</admin_system_config_changed_section_maillog_directives>
+			<admin_system_config_changed_section_maillog_sync>
+				<observers>
+					<maillog_clearconfig>
+						<class>maillog/observer</class>
+						<method>clearConfig</method>
+					</maillog_clearconfig>
+				</observers>
+			</admin_system_config_changed_section_maillog_sync>
+			<adminhtml_init_system_config>
+				<observers>
+					<maillog>
+						<class>maillog/observer</class>
+						<method>hideConfig</method>
+					</maillog>
+				</observers>
+			</adminhtml_init_system_config>
 			<adminhtml_customer_prepare_save>
 				<observers>
 					<maillog>

@@ -28,7 +28,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 		if (empty($comment) && str_contains($element->getHtmlId(), 'maillog_sync_'))
 			return '<img src="'.$this->getSkinUrl('images/luigifab/maillog/logo-'.str_replace('maillog_sync_', '', $element->getHtmlId()).'.svg').'" alt="" class="maillog logo" />';
 
-		if (str_contains($element->getHtmlId(), 'sync'))
+		if (!str_contains($element->getHtmlId(), 'directive'))
 			return implode("\n", ['<div class="comment maillog">', $comment, '</div>']);
 
 		$vars = [
@@ -159,7 +159,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
  B / {currency path="currency/options/base"} / <em>{{currency path="currency/options/base"}}</em>
 ')))).'</pre>',
 '</div>',
-		'</div>' // div class comment
+			'</div>' // div class comment
 		]);
 	}
 }

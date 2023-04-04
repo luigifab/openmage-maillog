@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/05/04/2015
- * Updated D/13/10/2019
+ * Updated M/24/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -49,10 +49,10 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 				}
 			}
 
-			if (!empty($params->getIsPlain()))
-				$mailer->setBodyText($this->getData('message_body'));
-			else
+			if (empty($params->getIsPlain()))
 				$mailer->setBodyHTML($this->getData('message_body'));
+			else
+				$mailer->setBodyText($this->getData('message_body'));
 
 			$mailer->setSubject('=?utf-8?B?'.base64_encode($params->getSubject()).'?=');
 			$mailer->setFrom($params->getFromEmail(), $params->getFromName());

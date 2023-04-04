@@ -1,6 +1,6 @@
 /**
  * Created J/03/12/2015
- * Updated W/18/01/2023
+ * Updated V/27/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -222,9 +222,9 @@ var maillog = new (function () {
 	this.ratioPicture = function (elem) {
 
 		// https://stackoverflow.com/a/11832950/2980105
-		var root = elem.closest('li'), w = root.querySelector('input.w').value, h = root.querySelector('input.h').value;
-		root.querySelector('div.rt').innerHTML = (w && h) ?
-			(Math.round((parseInt(w, 10) / parseInt(h, 10) + (Number.EPSILON ? Number.EPSILON : 0)) * 100) / 100).toLocaleString() : '';
+		var root = elem.closest('li'), w = parseInt(root.querySelector('input.w').value, 10), h = parseInt(root.querySelector('input.h').value, 10);
+		root.querySelector('div.rt').innerHTML = (isNaN(w) || isNaN(h) || (w == 0) || (h == 0)) ? '' :
+			(Math.round((w / h + (Number.EPSILON ? Number.EPSILON : 0)) * 100) / 100).toLocaleString();
 	};
 
 	this.copyPicture = function (elem, json) {

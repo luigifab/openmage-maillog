@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/24/01/2023
+ * Updated J/02/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -57,6 +57,7 @@ try {
 		CREATE TABLE '.$this->getTable('maillog/email').' (
 			email_id                int(11) unsigned     NOT NULL AUTO_INCREMENT,
 			status                  enum("pending","sent","error","read","notsent","bounce","sending") NOT NULL DEFAULT "pending",
+			store_id                smallint(5) unsigned DEFAULT 0,
 			created_at              datetime             NULL DEFAULT NULL,
 			sent_at                 datetime             NULL DEFAULT NULL,
 			duration                int(4)               NOT NULL DEFAULT -1,
@@ -75,6 +76,7 @@ try {
 			deleted                 tinyint(1) unsigned  NOT NULL DEFAULT 0,
 			useragent               varchar(255)         NULL DEFAULT NULL,
 			referer                 varchar(255)         NULL DEFAULT NULL,
+			exception               varchar(999)         NULL DEFAULT NULL,
 			PRIMARY KEY (email_id),
 			KEY uniqid (uniqid),
 			FULLTEXT mail_recipients (mail_recipients),
@@ -84,6 +86,7 @@ try {
 		CREATE TABLE '.$this->getTable('maillog/sync').' (
 			sync_id                 int(11) unsigned     NOT NULL AUTO_INCREMENT,
 			status                  enum("pending","success","error","running","notsync") NOT NULL DEFAULT "pending",
+			store_id                smallint(5) unsigned DEFAULT 0,
 			created_at              datetime             NULL DEFAULT NULL,
 			sync_at                 datetime             NULL DEFAULT NULL,
 			duration                int(4)               NOT NULL DEFAULT -1,
@@ -92,6 +95,7 @@ try {
 			action                  varchar(250)         NULL DEFAULT NULL,
 			request                 text                 NULL DEFAULT NULL,
 			response                text                 NULL DEFAULT NULL,
+			exception               varchar(999)         NULL DEFAULT NULL,
 			PRIMARY KEY (sync_id)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	');

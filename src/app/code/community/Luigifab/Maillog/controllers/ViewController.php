@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated J/03/11/2022
+ * Updated V/31/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -29,13 +29,12 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 	public function indexAction() {
 
-		$email = Mage::getResourceModel('maillog/email_collection')
-			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageSize(1)
-			->getFirstItem();
+		$email = Mage::getModel('maillog/email')->load($this->getRequest()->getParam('key', 0), 'uniqid');
 
-		if (!empty($email->getId())) {
-			Mage::getSingleton('core/translate')->setLocale(Mage::getStoreConfig('general/locale/code'))->init('adminhtml', true);
+		if (empty($email->getId())) {
+			$this->getResponse()->setHttpResponseCode(404);
+		}
+		else {
 			$this->getResponse()
 				->setHttpResponseCode(200)
 				->setHeader('Content-Type', 'text/html; charset=utf-8', true)
@@ -46,16 +45,12 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 	public function downloadAction() {
 
-		$email = Mage::getResourceModel('maillog/email_collection')
-			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageSize(1)
-			->getFirstItem();
+		$email = Mage::getModel('maillog/email')->load($this->getRequest()->getParam('key', 0), 'uniqid');
+		$nb = (int) $this->getRequest()->getParam('part', 0);
 
 		if (!empty($email->getId()) && !empty($email->getData('mail_parts'))) {
 
 			$parts = $email->getEmailParts();
-			$nb    = (int) $this->getRequest()->getParam('part', 0);
-
 			foreach ($parts as $key => $part) {
 
 				if ($key == $nb) {
@@ -113,16 +108,91 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 			->sendResponse();
 
 		// marquage
-		$email = Mage::getResourceModel('maillog/email_collection')
-			->addFieldToFilter('uniqid', $this->getRequest()->getParam('key', 0))
-			->setPageSize(1)
-			->getFirstItem();
+		$email = Mage::getModel('maillog/email')->load($this->getRequest()->getParam('key', 0), 'uniqid');
+		$this->markEmail($email);
+	}
 
-		if (!empty($email->getId()) && ($email->getData('status') != 'read')) {
-			$email->setData('status', 'read');
-			$email->setData('useragent', getenv('HTTP_USER_AGENT'));
-			$email->setData('referer', getenv('HTTP_REFERER'));
-			$email->save();
+	public function elinkAction() {
+
+		$email = Mage::getModel('maillog/email')->load($this->getRequest()->getParam('key', 0), 'uniqid');
+		$link  = $this->getRequest()->getParam('lnk', 0);
+
+		if (empty($link)) {
+			$url = Mage::getBaseUrl();
+			$this->getResponse()
+				->setHttpResponseCode(302)
+				->setHeader('Location', $url, true)
+				->sendResponse();
+		}
+		else if (empty($email->getId())) {
+			// redirige même si l'email n'existe plus
+			// Warning: Header may not contain more than a single header, new line detected Zend/Controller/Response/Abstract.php on line 363
+			$url = Mage::getBaseUrl('web').Mage::helper('core')->urlDecode($link);
+			Zend_Uri::setConfig(['allow_unwise' => true]);
+			if (!Zend_Uri::check($url)) {
+				Mage::log(sprintf('Invalid decoded link (%s %s) for email #%d (%s)', $link, $url, $email->getId(), getenv('HTTP_USER_AGENT')), Zend_Log::WARN, 'maillog.log');
+				$url = Mage::getBaseUrl();
+			}
+
+			$this->getResponse()
+				->setHttpResponseCode(302)
+				->setHeader('Location', $url, true)
+				->sendResponse();
+		}
+		else {
+			$cid = $this->getRequest()->getParam('cid', 0);
+			$key = $this->getRequest()->getParam('sum', 0);
+
+			// auto login
+			// l'email existe, le client existe, le hash est toujours bon, le hash vient bien de l'email
+			if (!empty($cid) && !empty($key) && Mage::getStoreConfigFlag('maillog/login_whitout_password/enabled')) {
+
+				$session = Mage::getSingleton('customer/session');
+				if ($session->getCustomerId() != $cid)
+					$session->logout();
+
+				$customer = Mage::getModel('customer/customer')->load($cid);
+				if (!empty($customer->getId())) {
+					$sum = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15);
+					if (($key == $sum) && (mb_stripos($email->getData('mail_body'), $cid.'/sum/'.$sum) !== false)) {
+						$session->setCustomerAsLoggedIn($customer);
+						$session->setData('maillog_auto_loginin', 1);
+					}
+				}
+			}
+
+			// redirection
+			// Warning: Header may not contain more than a single header, new line detected Zend/Controller/Response/Abstract.php on line 363
+			$url = Mage::getBaseUrl('web').Mage::helper('core')->urlDecode($link);
+			Zend_Uri::setConfig(['allow_unwise' => true]);
+			if (!Zend_Uri::check($url)) {
+				Mage::log(sprintf('Invalid decoded link (%s %s) for email #%d (%s)', $link, $url, $email->getId(), getenv('HTTP_USER_AGENT')), Zend_Log::WARN, 'maillog.log');
+				$url = Mage::getBaseUrl();
+			}
+
+			$this->getResponse()
+				->setHttpResponseCode(302)
+				->setHeader('Location', $url, true)
+				->sendResponse();
+
+			// marquage
+			$this->markEmail($email);
+		}
+	}
+
+	protected function markEmail($email) {
+
+		if (!empty($email->getData('sent_at')) && ($email->getData('status') != 'read')) {
+
+			// ignore par exemple : Sendinblue/1.0 (redirection-images 1.81.56; +https://sendinblue.com)
+			$userAgent = getenv('HTTP_USER_AGENT');
+			if (empty($userAgent) || ((stripos($userAgent, 'Sendinblue') === false) && (stripos($userAgent, 'redirection') === false))) {
+
+				$email->setData('status', 'read');
+				$email->setData('useragent', $userAgent);
+				$email->setData('referer', getenv('HTTP_REFERER'));
+				$email->save();
+			}
 		}
 	}
 }

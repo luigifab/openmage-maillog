@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated J/03/11/2022
+ * Updated V/10/03/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -108,10 +108,9 @@ class Luigifab_Maillog_Maillog_PreviewController extends Mage_Adminhtml_Controll
 
 		$email = Mage::getModel('maillog/email')
 			->setMailSubject($template->getProcessedTemplateSubject($vars), false)
-			->setMailContent($template->getProcessedTemplate($vars))
+			->setMailContent($vars, $template->getProcessedTemplate($vars))
 			->setId(9999999);
 
-		Mage::getSingleton('core/translate')->setLocale($locale)->init('adminhtml', true);
 		$this->getResponse()->setBody($email->toHtml(true));
 	}
 }

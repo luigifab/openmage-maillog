@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated D/13/11/2022
+ * Updated M/24/01/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -138,14 +138,17 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 				empty($duration = $this->helper('maillog')->getHumanDuration($row->getData('duration'))) ? '' : '(duration <em>'.$duration.'</em>)');
 
 		if (!empty($data = $row->getData('request')))
-			$text .= ' <em>== request ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
+			$text .= ' <em>== request ==</em> <div class="details data">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
 
 		if (!empty($data = $row->getData('response'))) {
-			if (mb_stripos($data, 'STOP! ') === 0)
-				$text .= ' <em>== response ==</em> <br />'.nl2br($this->helper('maillog')->escapeEntities($data));
+			if (mb_stripos($data, 'STOP! ') === 0) // old way < 5.8.0 @todo
+				$text .= ' <em>== exception ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
 			else
-				$text .= ' <em>== response ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
+				$text .= ' <em>== response ==</em> <div class="details data">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
 		}
+
+		if (!empty($data = $row->getData('exception')))
+			$text .= ' <em>== exception ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
 
 		return '<div lang="mul">'.$text.'</div>';
 	}
@@ -154,7 +157,7 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 	protected function _toHtml() {
 		return str_replace(
 			['class="data', '[??] '],
-			['class="adminhtml-maillog-history data', '<span style="opacity:0.6;" title="'.$this->helper('maillog')->escapeEntities($this->__('Search for one or more words in action or request or response. Separate words by a space.'), true).'">[?]</span> '],
+			['class="adminhtml-maillog-history data', '<span style="opacity:0.7;" title="'.$this->helper('maillog')->escapeEntities($this->__('Search for one or more words in action or request or response. Separate words by a space.'), true).'">[?]</span> '],
 			parent::_toHtml()
 		);
 	}
