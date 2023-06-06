@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/18/02/2023
+ * Updated V/14/04/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -167,7 +167,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				// vérifie les domaines
 				// si on trouve pas un domaine, c'est qu'il y a un problème
 				$canSend  = true;
-				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
+				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds(); // with admin
 				foreach ($storeIds as $storeId) {
 					$baseUrl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
 					$baseUrl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);
@@ -203,7 +203,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				// vérifie les domaines
 				// si on trouve un domaine, c'est qu'il y a un problème
 				$canSend  = true;
-				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
+				$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds(); // with admin
 				foreach ($storeIds as $storeId) {
 					$baseUrl1 = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
 					$baseUrl2 = Mage::getStoreConfig('web/secure/base_url', $storeId);

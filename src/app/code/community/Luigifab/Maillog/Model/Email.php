@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated L/03/04/2023
+ * Updated J/01/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -192,13 +192,20 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					if (empty($customer->getData('email')) || empty($customer->getData('password_hash')))
 						$customer->load($customer->getId());
 
-					$baseUrl = Mage::app()->getStore($storeId)->getBaseUrl('web');
 					$helper  = Mage::helper('core');
-					$customerKey = $customer->getId().'/sum/'.substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15);
+					$baseUrl = Mage::app()->getStore($storeId)->getBaseUrl('web');
+					$customerId  = $customer->getId();
+					$customerKey = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15);
 
-					$body = preg_replace_callback('#(<a[^>]+)href="'.$baseUrl.'([^"]+)"#', function ($matches) use ($helper, $baseUrl, $storeId, $customerKey) {
-						$url = $helper->urlEncode(str_replace($baseUrl, '', $matches[2]));
-						return $matches[1].'href="'.$this->getEmbedUrl('elink', ['_store' => $storeId, 'lnk' => $url, 'cid' => $customerKey]).'" rel="nofollow"';
+					$body = preg_replace_callback('#(<a[^>]+)href="'.$baseUrl.'([^"]+)"#', function ($matches) use (
+						$helper, $baseUrl, $storeId, $customerId, $customerKey
+					) {
+						return $matches[1].'href="'.$this->getEmbedUrl('elink', [
+							'_store' => $storeId,
+							'cid' => $customerId,
+							'sum' => $customerKey,
+							'lnk' => $helper->urlEncode(str_replace($baseUrl, '', $matches[2])),
+						]).'" rel="nofollow"';
 					}, $body);
 				}
 			}

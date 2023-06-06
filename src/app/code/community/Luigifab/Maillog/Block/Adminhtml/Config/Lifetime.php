@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated S/03/12/2022
+ * Updated S/29/04/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -33,12 +33,13 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Lifetime extends Mage_Adminhtml_Bl
 			// ajoute les types configurés ayant disparus
 			foreach ($config as $key => $value) {
 				$type = mb_substr($key, 0, mb_strpos($key, '_'));
-				if (!in_array($type, $types) && !in_array($type, ['without', 'all']))
-					$types[] = $type;
+				if (!in_array($type, $types) && !in_array($type, ['all', 'without']))
+					$types[$type] = $type;
 			}
 		}
 
-		array_push($types, 'without', 'all');
+		unset($types['--']);
+		$types[] = 'all'; // or default
 
 		$this->setData('element', $element);
 		$this->setData('config', $config);

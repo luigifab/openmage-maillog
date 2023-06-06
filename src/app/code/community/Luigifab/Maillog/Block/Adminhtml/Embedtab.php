@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated S/14/01/2023
+ * Updated V/12/05/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -38,11 +38,11 @@ class Luigifab_Maillog_Block_Adminhtml_Embedtab extends Mage_Adminhtml_Block_Abs
 
 	public function canShowTab() {
 
-		if (is_object(Mage::registry('current_order')) && !empty(Mage::registry('current_order')->getId()))
-			return Mage::getSingleton('admin/session')->isAllowed('sales/order/actions/maillog');
+		if (is_object($order = Mage::registry('current_order')))
+			return empty($order->getId()) ? false : Mage::getSingleton('admin/session')->isAllowed('sales/order/actions/maillog');
 
-		if (is_object(Mage::registry('current_customer')) && !empty(Mage::registry('current_customer')->getId()))
-			return Mage::getSingleton('admin/session')->isAllowed('customer/manage/actions/maillog');
+		if (is_object($customer = Mage::registry('current_customer')))
+			return empty($customer->getId()) ? false : Mage::getSingleton('admin/session')->isAllowed('customer/manage/actions/maillog');
 
 		return Mage::getSingleton('admin/session')->isAllowed('tools/maillog');
 	}

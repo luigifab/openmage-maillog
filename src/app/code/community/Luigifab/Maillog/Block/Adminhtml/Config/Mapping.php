@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated S/03/12/2022
+ * Updated J/01/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -109,8 +109,9 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$customerAttributes = Mage::getModel('customer/entity_attribute_collection')->setOrder('attribute_code', 'asc');
 			$addressAttributes  = Mage::getModel('customer/entity_address_attribute_collection')->setOrder('attribute_code', 'asc');
 
-			$options['core'][] = ['value' => '', 'label' => '-- ('.(count($customerAttributes) + count($addressAttributes)).')'];
+			$options['core'][] = ['value' => '', 'label' => '--'];
 			$options['core'][] = ['value' => 'entity_id'];
+			$options['core'][] = ['value' => 'customer_login_key'];
 
 			foreach ($customerAttributes as $attribute) {
 				$options['core'][] = ['value' => $attribute->getData('attribute_code')];
@@ -188,7 +189,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			}
 
 			foreach ($options['core'] as $i => $option) {
-				if (!empty($option['value'])) {
+				if (is_numeric($i) && !empty($option['value'])) {
 					if ($this->inArray($option['value'], $values))
 						$options['core'][$i]['label'] = $this->getOptionLabel(['id' => $option['value']], 'has:');
 					else
@@ -196,6 +197,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 				}
 			}
 
+			$options['core'][0]['label'] = '-- ('.(count($options['core']) - 1).')';
 			$element->unsPath()->setValues($options['core']);
 
 			$search[]  = 'name="'.$element->getName().'"';

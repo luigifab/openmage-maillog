@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/25/08/2018
- * Updated J/02/03/2023
+ * Updated V/19/05/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -20,13 +20,12 @@
  * GNU General Public License (GPL) for more details.
  */
 
-if (PHP_SAPI != 'cli')
-	exit(-1);
-
 chdir(dirname($argv[0])); // root
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+if (PHP_SAPI != 'cli')
+	exit(-1);
 if (is_file('maintenance.flag') || is_file('upgrade.flag'))
 	exit(0);
 if (is_file('app/bootstrap.php'))

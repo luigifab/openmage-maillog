@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated V/03/03/2023
+ * Updated J/01/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -191,6 +191,12 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 			$database = Mage::getSingleton('core/resource');
 			$reader   = $database->getConnection('core_read');
+
+			// customer_login_key (auto login)
+			if ($this->inArray('customer_login_key', $values) && !empty($sum = $customer->getData('password_hash'))) {
+				$sum = substr(md5($customer->getId().$customer->getData('email').$sum), 15);
+				$object->setData('customer_login_key', $sum);
+			}
 
 			// customer_group_code (lecture express depuis la base de données)
 			if ($this->inArray('group_name', $values)) {

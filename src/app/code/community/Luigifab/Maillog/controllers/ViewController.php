@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated V/31/03/2023
+ * Updated J/01/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -125,12 +125,13 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 				->sendResponse();
 		}
 		else if (empty($email->getId())) {
+
 			// redirige même si l'email n'existe plus
 			// Warning: Header may not contain more than a single header, new line detected Zend/Controller/Response/Abstract.php on line 363
 			$url = Mage::getBaseUrl('web').Mage::helper('core')->urlDecode($link);
 			Zend_Uri::setConfig(['allow_unwise' => true]);
 			if (!Zend_Uri::check($url)) {
-				Mage::log(sprintf('Invalid decoded link (%s %s) for email #%d (%s)', $link, $url, $email->getId(), getenv('HTTP_USER_AGENT')), Zend_Log::WARN, 'maillog.log');
+				//Mage::log(sprintf('Invalid decoded link (%s %s) for email #%d (%s)', $link, $url, $email->getId(), getenv('HTTP_USER_AGENT')), Zend_Log::WARN, 'maillog.log');
 				$url = Mage::getBaseUrl();
 			}
 
@@ -156,7 +157,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 					$sum = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15);
 					if (($key == $sum) && (mb_stripos($email->getData('mail_body'), $cid.'/sum/'.$sum) !== false)) {
 						$session->setCustomerAsLoggedIn($customer);
-						$session->setData('maillog_auto_loginin', 1);
+						$session->setData('maillog_auto_login', 1);
 					}
 				}
 			}
@@ -166,7 +167,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 			$url = Mage::getBaseUrl('web').Mage::helper('core')->urlDecode($link);
 			Zend_Uri::setConfig(['allow_unwise' => true]);
 			if (!Zend_Uri::check($url)) {
-				Mage::log(sprintf('Invalid decoded link (%s %s) for email #%d (%s)', $link, $url, $email->getId(), getenv('HTTP_USER_AGENT')), Zend_Log::WARN, 'maillog.log');
+				//Mage::log(sprintf('Invalid decoded link (%s %s) for email #%d (%s)', $link, $url, $email->getId(), getenv('HTTP_USER_AGENT')), Zend_Log::WARN, 'maillog.log');
 				$url = Mage::getBaseUrl();
 			}
 
@@ -184,10 +185,25 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		if (!empty($email->getData('sent_at')) && ($email->getData('status') != 'read')) {
 
-			// ignore par exemple : Sendinblue/1.0 (redirection-images 1.81.56; +https://sendinblue.com)
+			// Sendinblue/1.0 (redirection-images 1.81.56; +https://sendinblue.com)
+			// Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm
+			// Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)
+			// Mozilla/5.0 (Windows NT 5.1; rv:11.0) Gecko Firefox/11.0 (via ggpht.com GoogleImageProxy)
+			// YahooMailProxy; https://help.yahoo.com/kb/yahoo-mail-proxy-SLN28749.html
+			// Mozilla/5.0 (Windows NT 5.1; rv:11.0) Gecko Firefox/11.0 (via WP.pl WPImageProxy)
+			// Mozilla/5.0 SeznamEmailProxy/1.0.5
+			// @todo https://github.com/fabiomb/is_bot ?
 			$userAgent = getenv('HTTP_USER_AGENT');
-			if (empty($userAgent) || ((stripos($userAgent, 'Sendinblue') === false) && (stripos($userAgent, 'redirection') === false))) {
-
+			if (empty($userAgent) || (
+				($userAgent != 'Mozilla/5.0') &&
+				(stripos($userAgent, 'sendinblue.com') === false) &&
+				(stripos($userAgent, 'bing.com/bingbot') === false) &&
+				(stripos($userAgent, 'yandex.com/bots') === false) &&
+				(stripos($userAgent, 'GoogleImageProxy') === false) &&
+				(stripos($userAgent, 'YahooMailProxy') === false) &&
+				(stripos($userAgent, 'WPImageProxy') === false) &&
+				(stripos($userAgent, 'SeznamEmailProxy') === false)
+			)) {
 				$email->setData('status', 'read');
 				$email->setData('useragent', $userAgent);
 				$email->setData('referer', getenv('HTTP_REFERER'));

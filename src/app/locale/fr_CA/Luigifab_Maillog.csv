@@ -170,7 +170,6 @@
 "%d months","%d mois"
 " %d years","%d années"
 "%d years","%d années"
-"<b>without</b>","<b>sans</b>"
 "<b>all</b>","<b>tous</b>"
 "Copy","Copier"
 "Breakpoint / Size (<em>width</em> x <em>height</em>, use 0 for <em>null</em>) / Ratio","<span lang=""en"">Breakpoint</span> / Taille (<em>largeur</em> x <em>hauteur</em>, utiliser 0 pour <em>null</em>) / Ratio"

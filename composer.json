@@ -23,20 +23,25 @@
         },
         {
             "type": "other",
+            "url": "https://fr.tipeee.com/luigifab"
+        },
+        {
+            "type": "other",
             "url": "https://ekwateur.fr/?parrain=EKW001147103"
         }
     ],
     "require": {
         "php": ">=7.2.0",
-        "openmage/magento-lts": ">=19.4.0",
+        "openmage/magento-lts": ">=19.4.0 || main-dev || next-dev",
         "symfony/polyfill-php80": "*",
-        "ext-mbstring": "*",
-        "ext-json": "*",
         "ext-curl": "*",
+        "ext-fileinfo": "*",
+        "ext-iconv": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
         "ext-soap": "*",
-        "ext-zlib": "*",
-        "ext-iconv": "*"
-    },
+        "ext-zlib": "*"
+	},
     "replace": {
         "aschroder/smtp_pro": "*",
         "openmage-module-fostering/aschroder_smtppro": "*",

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated M/14/02/2023
+ * Updated S/29/04/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -620,6 +620,8 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 		$config = @unserialize(Mage::getStoreConfig('maillog/general/special_config'), ['allowed_classes' => false]);
 		if (!empty($config) && is_array($config)) {
 
+			//   $key = $type_$action
+			// action = data (Emails content and attachments) or all (All emails data)
 			foreach ($config as $key => $months) {
 
 				if (is_numeric($months) && ($months >= 1)) {
@@ -628,12 +630,19 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					$type   = mb_substr($key, 0, $cut);
 					$action = mb_substr($key, $cut + 1);
 
+					// @deprecated
+					if ($type == 'without')
+						continue;
+
 					$emails = Mage::getResourceModel('maillog/email_collection')
 						->addFieldToFilter('deleted', ['neq' => 1])
 						->addFieldToFilter('created_at', ['lt' => new Zend_Db_Expr('DATE_SUB(UTC_TIMESTAMP(), INTERVAL '.$months.' MONTH)')]);
 					$emails->getSelect()->reset(Zend_Db_Select::COLUMNS)->columns(['email_id']); // optimisation maximale
 
 					// tous les emails
+					//     type = all
+					// all_data = Emails content and attachments
+					// all_all  = All emails data
 					if ($key == 'all_data') {
 						$emails->addFieldToFilter('deleted', 0);
 						$msg[] = 'Remove content and attachments for '.$type.' emails after '.$months.' months';
@@ -641,17 +650,10 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					else if ($key == 'all_all') {
 						$msg[] = 'Remove ALL data for '.$type.' emails after '.$months.' months';
 					}
-					// les emails sans type
-					else if ($key == 'without_data') {
-						$emails->addFieldToFilter('deleted', 0);
-						$emails->addFieldToFilter('type', '--');
-						$msg[] = 'Remove content and attachments for '.$type.' emails after '.$months.' months';
-					}
-					else if ($key == 'without_all') {
-						$emails->addFieldToFilter('type', '--');
-						$msg[] = 'Remove ALL data for '.$type.' emails after '.$months.' months';
-					}
 					// les emails avec un type
+					//     type = xyz
+					// xyz_data = Emails content and attachments
+					// xyz_all  = All emails data
 					else if ($action == 'data') {
 						$emails->addFieldToFilter('deleted', 0);
 						$emails->addFieldToFilter('type', $type);
@@ -663,7 +665,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 					}
 
 					// action
-					// supprime en partie l'email ou tout l'email
+					// supprime l'email en partie ou entièrement
 					$msg[] = empty($cnt = $emails->getSize()) ? ' → no items to remove' : ' → '.$cnt.' item(s) removed';
 					$msg[] = '';
 
@@ -688,7 +690,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 				}
 			}
 
-			if ($all > 0) {
+			if ($all > 100) {
 				// mysqltuner: can free 8823 MB
 				$database = Mage::getSingleton('core/resource');
 				$database->getConnection('core_write')->query('OPTIMIZE TABLE '.$database->getTableName('luigifab_maillog'));
