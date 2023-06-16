@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated V/27/01/2023
+ * Updated V/09/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -358,8 +358,8 @@ function maillogdebug() {
 		}
 	});
 }
-self.addEventListener("load", maillogdebug);
-self.addEventListener("resize", maillogdebug);
+window.addEventListener("load", maillogdebug);
+window.addEventListener("resize", maillogdebug);
 ';
 	}
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/05/04/2015
- * Updated M/24/01/2023
+ * Updated D/11/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -36,31 +36,25 @@ class Luigifab_Maillog_Model_Rewrite_Queue extends Mage_Core_Model_Email_Queue {
 				Zend_Mail::setDefaultTransport($mailTransport);
 			}
 
-			foreach ($this->getRecipients() as [$email, $name, $type]) {
-				switch ($type) {
-					case self::EMAIL_TYPE_BCC:
-						$mailer->addBcc($email, '=?utf-8?B?'.base64_encode($name).'?=');
-						break;
-					case self::EMAIL_TYPE_TO:
-					case self::EMAIL_TYPE_CC:
-					default:
-						$mailer->addTo($email, '=?utf-8?B?'.base64_encode($name).'?=');
-						break;
-				}
-			}
-
-			if (empty($params->getIsPlain()))
-				$mailer->setBodyHTML($this->getData('message_body'));
-			else
-				$mailer->setBodyText($this->getData('message_body'));
-
 			$mailer->setSubject('=?utf-8?B?'.base64_encode($params->getSubject()).'?=');
 			$mailer->setFrom($params->getFromEmail(), $params->getFromName());
+
+			foreach ($this->getRecipients() as [$email, $name, $type]) {
+				if ($type == self::EMAIL_TYPE_BCC)
+					$mailer->addBcc($email, '=?utf-8?B?'.base64_encode($name).'?=');
+				else
+					$mailer->addTo($email, '=?utf-8?B?'.base64_encode($name).'?=');
+			}
 
 			if (!empty($params->getReplyTo()))
 				$mailer->setReplyTo($params->getReplyTo());
 			if (!empty($params->getReturnTo()))
 				$mailer->setReturnPath($params->getReturnTo());
+
+			if (empty($params->getIsPlain()))
+				$mailer->setBodyHTML($this->getData('message_body'));
+			else
+				$mailer->setBodyText($this->getData('message_body'));
 
 			$mailer->send();
 			return $this;

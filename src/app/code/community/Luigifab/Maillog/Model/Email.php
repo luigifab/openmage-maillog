@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/01/06/2023
+ * Updated J/15/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -296,13 +296,13 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		if (!$sendAndSave && empty($this->getId()))
 			Mage::throwException('You must load an email before trying to send it.');
 
-		$this->setData('exception', null);
 		$this->setData('status', 'sending');
+		$this->setData('exception', null);
 		$this->save();
 
 		try {
-			$heads = str_replace(["\n", "\r\n\n"], ["\r\n", "\r\n"], $this->getData('mail_header'));
-			$recpt = $this->getData('mail_recipients');
+			$heads = str_replace(["\r", "\n"], ['', "\r\n"], $this->getData('mail_header'));
+			$recpt = $this->getData('mail_recipients'); // addTo
 			$allow = (!empty($recpt) && Mage::getStoreConfigFlag('maillog/general/send', $storeId)) ?
 				Mage::helper('maillog')->canSend($recpt) : false;
 
@@ -367,15 +367,16 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 			// action
 			if (empty($subject) || ($allow !== true) || empty($content) || Mage::getSingleton('maillog/source_bounce')->isBounce($recpt)) {
-				if (is_string($allow))
-					$this->setData('exception', $allow);
 				$this->setData('status', $allow ? 'bounce' : 'notsent');
 				$this->setData('duration', time() - $start);
+				if (is_string($allow))
+					$this->setData('exception', $allow);
 			}
 			else {
 				// SMTP personnalisé avec CURL ou MAIL standard
 				if (Mage::getStoreConfigFlag('maillog/general/smtp_enabled', $storeId)) {
 
+					// @todo addBcc addCc
 					$heads = 'To: '.$recpt."\r\n".$heads;
 
 					// 550, 5.7.1, delivery not authorized: message missing a valid messageId header are not accepted (gmail)
@@ -394,6 +395,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					// https://gist.github.com/hdogan/8649cd9c25c75d0ab27e140d5eef5ce2
 					$fp = fopen('php://memory', 'rb+');
 					fwrite($fp, $heads."\r\n".'Subject: '.$subject."\r\n\r\n".$body);
+					//rewind($fp); $stream = stream_get_contents($fp);
 					rewind($fp);
 
 					$ch = curl_init();
@@ -422,7 +424,8 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					fclose($fp);
 
 					//rewind($log);
-					//echo '<pre>',stream_get_contents($log);
+					//Mage::log(stream_get_contents($log));
+					//Mage::log($stream);
 					//fclose($log);
 				}
 				else {
@@ -445,8 +448,8 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
-			$this->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
 			$this->setData('status', 'error');
+			$this->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
 		}
 
 		$this->setData('duration', time() - $start);

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated S/29/04/2023
+ * Updated D/11/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -104,9 +104,9 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 			// email de test
 			if (!empty(Mage::app()->getRequest()->getPost('maillog_email_test')))
-				$this->sendEmailReport();
+				$this->sendEmailReport(null, true);
 			else if (!empty(Mage::app()->getRequest()->getPost('maillog_sync_email_test')))
-				$this->sendEmailReport();
+				$this->sendEmailReport(null, true);
 		}
 		else {
 			$config->delete();
@@ -222,7 +222,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 
 
 	// CRON maillog_send_report
-	public function sendEmailReport($cron = null) {
+	public function sendEmailReport($cron = null, bool $test = false) {
 
 		$oldLocale = Mage::getSingleton('core/translate')->getLocale();
 		$newLocale = Mage::app()->getStore()->isAdmin() ? $oldLocale : Mage::getStoreConfig('general/locale/code');
@@ -343,7 +343,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 				}
 			}
 
-			$this->sendReportToRecipients($locale, $recipients, $vars);
+			$this->sendReportToRecipients($locale, $recipients, $vars, $test);
 		}
 
 		Mage::getSingleton('core/translate')->setLocale($oldLocale)->init('adminhtml', true);
@@ -440,7 +440,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			return preg_replace('#/[^/]+\.php(\d*)/#', '/index.php$1/', Mage::helper('adminhtml')->getUrl($url, $params));
 	}
 
-	protected function sendReportToRecipients(string $locale, array $emails, array $vars = []) {
+	protected function sendReportToRecipients(string $locale, array $emails, array $vars = [], bool $test = false) {
 
 		$vars['config'] = $this->getEmailUrl('adminhtml/system/config');
 		$vars['config'] = mb_substr($vars['config'], 0, mb_strrpos($vars['config'], '/system/config'));
@@ -465,6 +465,7 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$template->loadDefault('maillog_email_template', $locale);
 			$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name'));
 			$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email'));
+			//if ($test) { addCc addBcc } @todo
 			$template->setSentSuccess($template->send($email, null, $vars));
 			//exit($template->getProcessedTemplate($vars));
 

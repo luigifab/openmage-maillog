@@ -41,7 +41,10 @@
         "ext-mbstring": "*",
         "ext-soap": "*",
         "ext-zlib": "*"
-	},
+    },
+    "suggest": {
+        "ext-tidy": "Needed to minify HTML code."
+    },
     "replace": {
         "aschroder/smtp_pro": "*",
         "openmage-module-fostering/aschroder_smtppro": "*",

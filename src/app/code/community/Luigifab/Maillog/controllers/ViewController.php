@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated J/01/06/2023
+ * Updated M/13/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -141,11 +141,10 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 				->sendResponse();
 		}
 		else {
-			$cid = $this->getRequest()->getParam('cid', 0);
-			$key = $this->getRequest()->getParam('sum', 0);
-
 			// auto login
 			// l'email existe, le client existe, le hash est toujours bon, le hash vient bien de l'email
+			$cid = $this->getRequest()->getParam('cid', 0);
+			$key = $this->getRequest()->getParam('sum', 0);
 			if (!empty($cid) && !empty($key) && Mage::getStoreConfigFlag('maillog/login_whitout_password/enabled')) {
 
 				$session = Mage::getSingleton('customer/session');
@@ -153,7 +152,7 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 					$session->logout();
 
 				$customer = Mage::getModel('customer/customer')->load($cid);
-				if (!empty($customer->getId())) {
+				if (!$session->isLoggedIn() && !empty($customer->getId())) {
 					$sum = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15);
 					if (($key == $sum) && (mb_stripos($email->getData('mail_body'), $cid.'/sum/'.$sum) !== false)) {
 						$session->setCustomerAsLoggedIn($customer);
@@ -183,7 +182,12 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 	protected function markEmail($email) {
 
-		if (!empty($email->getData('sent_at')) && ($email->getData('status') != 'read')) {
+		$isNotRead = $email->getData('status') != 'read';
+		$isNotUser = empty($email->getData('useragent'));
+
+		// mark as read with or without userAgent
+		// can mark again if read without userAgent
+		if (($isNotRead || $isNotUser) && !empty($email->getData('sent_at'))) {
 
 			// Sendinblue/1.0 (redirection-images 1.81.56; +https://sendinblue.com)
 			// Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm
@@ -193,8 +197,9 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 			// Mozilla/5.0 (Windows NT 5.1; rv:11.0) Gecko Firefox/11.0 (via WP.pl WPImageProxy)
 			// Mozilla/5.0 SeznamEmailProxy/1.0.5
 			// @todo https://github.com/fabiomb/is_bot ?
+			// @todo https://github.com/OpenMage/magento-lts/pull/3238/files ?
 			$userAgent = getenv('HTTP_USER_AGENT');
-			if (empty($userAgent) || (
+			if ($isNotUser && !empty($userAgent) &&
 				($userAgent != 'Mozilla/5.0') &&
 				(stripos($userAgent, 'sendinblue.com') === false) &&
 				(stripos($userAgent, 'bing.com/bingbot') === false) &&
@@ -203,10 +208,15 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 				(stripos($userAgent, 'YahooMailProxy') === false) &&
 				(stripos($userAgent, 'WPImageProxy') === false) &&
 				(stripos($userAgent, 'SeznamEmailProxy') === false)
-			)) {
-				$email->setData('status', 'read');
+			) {
+				if ($isNotRead)
+					$email->setData('status', 'read');
 				$email->setData('useragent', $userAgent);
 				$email->setData('referer', getenv('HTTP_REFERER'));
+				$email->save();
+			}
+			else if ($isNotRead) {
+				$email->setData('status', 'read');
 				$email->save();
 			}
 		}
