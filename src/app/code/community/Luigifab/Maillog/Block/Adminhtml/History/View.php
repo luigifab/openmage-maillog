@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated D/04/06/2023
+ * Updated V/23/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -48,13 +48,22 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 			'class'   => 'delete',
 		]);
 
-		if (Mage::getStoreConfigFlag('maillog/general/enabled') && Mage::getStoreConfigFlag('maillog/general/send') &&
-		    empty($email->getData('deleted')) && !in_array($email->getData('status'), ['notsent', 'bounce'])) {
-			$this->_addButton('resend', [
-				'label'   => $this->__('Resend email'),
-				'onclick' => "deleteConfirm('".$confirm."', '".$this->getUrl('*/*/resend', $params)."');",
-				'class'   => 'add',
-			]);
+		if (Mage::getStoreConfigFlag('maillog/general/enabled') && Mage::getStoreConfigFlag('maillog/general/send') && empty($email->getData('deleted'))) {
+
+			if ($email->getData('status') == 'pending') {
+				$this->_addButton('send', [
+					'label'   => $this->__('Send email'),
+					'onclick' => "confirmSetLocation('".$confirm."', '".$this->getUrl('*/*/send', $params)."');",
+					'class'   => 'save',
+				]);
+			}
+			else if (!in_array($email->getData('status'), ['notsent', 'bounce'])) {
+				$this->_addButton('send', [
+					'label'   => $this->__('Resend email'),
+					'onclick' => "confirmSetLocation('".$confirm."', '".$this->getUrl('*/*/send', $params)."');",
+					'class'   => 'add',
+				]);
+			}
 		}
 
 		$this->_addButton('view', [

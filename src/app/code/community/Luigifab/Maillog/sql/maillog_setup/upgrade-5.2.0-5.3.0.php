@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/23/11/2021
- * Updated V/03/02/2023
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -38,7 +38,7 @@ try {
 		ADD FULLTEXT mail_subject (mail_subject)');
 }
 catch (Throwable $t) {
-	if (stripos($t->getMessage(), 'Duplicate key name') === false) {
+	if (mb_stripos($t->getMessage(), 'Duplicate key name') === false) {
 		$lock->unlock();
 		Mage::throwException($t);
 	}

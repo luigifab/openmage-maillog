@@ -115,7 +115,7 @@
 "Yes with PHP-TIDY (%s)","Sim com PHP-TIDY (%s)"
 "The <em>%s</em> field is a required field.","O campo <em>%s</em> é um campo obrigatório."
 "Email number %d has been successfully deleted.","O e-mail número %d foi bem apagado."
-"Email number %d will be resent.","O e-mail número %d vai a ser devolvido."
+"Email number %d will be sent again.","O e-mail número %d vai a ser devolvido."
 "Invalid email (hard bounce)","E-mail inválido (hard bounce)"
 "Transactional emails - %s","E-mails de transações - %s"
 "Email address is invalid.","O endereço de e-mail é inválido."

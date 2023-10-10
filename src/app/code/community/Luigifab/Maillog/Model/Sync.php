@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated J/01/06/2023
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -194,7 +194,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 			// customer_login_key (auto login)
 			if ($this->inArray('customer_login_key', $values) && !empty($sum = $customer->getData('password_hash'))) {
-				$sum = substr(md5($customer->getId().$customer->getData('email').$sum), 15);
+				$sum = substr(md5($customer->getId().$customer->getData('email').$sum), 15); // not mb_substr
 				$object->setData('customer_login_key', $sum);
 			}
 
@@ -219,7 +219,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 					->order('log_id desc')
 					->limit(1));
 
-				$object->setData('last_login_date', (strlen($item) > 10) ? $item : $customer->getData('created_at'));
+				$object->setData('last_login_date', (strlen($item) > 10) ? $item : $customer->getData('created_at')); // not mb_strlen
 			}
 
 			// commandes
@@ -461,11 +461,13 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 	}
 
 	protected function inArray($needle, array $haystack, bool $strict = false) {
+
 		// https://stackoverflow.com/a/4128377/2980105
 		foreach ($haystack as $item) {
 			if (($strict ? ($item === $needle) : ($item == $needle)) || (is_array($item) && $this->inArray($needle, $item, $strict)))
 				return true;
 		}
+
 		return false;
 	}
 
@@ -519,5 +521,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		$this->setData('status', empty($this->getData('exception')) ? (empty($status) ? 'notsync' : $status) : 'error');
 		$this->setData('duration', time() - $start);
 		$this->save();
+
+		return $this;
 	}
 }

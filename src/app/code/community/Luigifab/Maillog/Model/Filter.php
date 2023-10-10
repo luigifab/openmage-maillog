@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/24/01/2023
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -180,7 +180,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		if (!is_numeric($number))
 			$replace = '';
 		else if (array_key_exists('currency', $attrs))
-			$replace = Mage::getModel('directory/currency')->load(strtoupper($attrs['currency']))->format($number);
+			$replace = Mage::getModel('directory/currency')->load(strtoupper($attrs['currency']))->format($number); // not mb_strtoupper
 		else
 			$replace = $currency->formatPrice($number);
 
@@ -203,11 +203,11 @@ abstract class Luigifab_Maillog_Model_Filter {
 		if (array_key_exists('ifconfig', $attrs) && !$this->getConfigFlag($attrs['ifconfig'], $store))
 			$currency = null;
 		else if (array_key_exists('path', $attrs))
-			$currency = strtoupper((string) Mage::getStoreConfig($attrs['path'], $store));
+			$currency = strtoupper((string) Mage::getStoreConfig($attrs['path'], $store)); // not mb_strtoupper
 		else if (array_key_exists('config', $attrs))
-			$currency = strtoupper((string) Mage::getStoreConfig($attrs['config'], $store));
+			$currency = strtoupper((string) Mage::getStoreConfig($attrs['config'], $store)); // not mb_strtoupper
 		else
-			$currency = strtoupper($attrs['code']);
+			$currency = strtoupper($attrs['code']); // not mb_strtoupper
 
 		return empty($currency) ? '' : Mage::getSingleton('core/locale')->getTranslation($currency, 'nametocurrency');
 	}
@@ -297,14 +297,13 @@ abstract class Luigifab_Maillog_Model_Filter {
 		}
 
 		if (preg_match_all(Varien_Filter_Template::CONSTRUCTION_PATTERN, $value, $constructions, PREG_SET_ORDER)) {
-			$debug = !empty(Mage::registry('maillog_preview'));
 			foreach ($constructions as $construction) {
 				$callback = [$this, $construction[1].'Directive'];
 				if (is_callable($callback)) {
 					try {
 						$replace = $callback($construction);
-						if (!$debug || !empty($replace) || in_array($construction[1], ['inlinecss', 'block']))
-							$value = str_replace($construction[0], (is_object($replace) || is_array($replace)) ? '' : $replace, $value);
+						$replace = (is_object($replace) || is_array($replace)) ? '' : $replace;
+						$value   = str_replace($construction[0], $replace, $value);
 					}
 					catch (Throwable $t) {
 						if (Mage::getIsDeveloperMode())

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated L/14/11/2022
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -84,7 +84,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		if (empty($this->_fields)) {
 
 			// https://dev.emarsys.com/v2/fields/list-available-fields
-			$result = $this->sendRequest('GET', 'field/translate', substr(Mage::getSingleton('core/locale')->getLocaleCode(), 0, 2));
+			$result = $this->sendRequest('GET', 'field/translate', substr(Mage::getSingleton('core/locale')->getLocaleCode(), 0, 2)); // not mb_substr
 			$fields = [];
 
 			if ($this->checkResponse($result)) {
@@ -146,7 +146,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 					if ($code == 'street')
 						$fields[$system] = implode(', ', $object->getStreet());
 					else
-						$fields[$system] = $object->getStreet(substr($code, -1));
+						$fields[$system] = $object->getStreet(substr($code, -1)); // not mb_substr
 				}
 				else if ($isAddress && ($code == 'country_id')) {
 					$value = $object->getData('country_id');

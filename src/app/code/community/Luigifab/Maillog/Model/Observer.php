@@ -1,7 +1,7 @@
 <?php
 /**
  * Created S/04/04/2015
- * Updated D/11/06/2023
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -465,7 +465,21 @@ class Luigifab_Maillog_Model_Observer extends Luigifab_Maillog_Helper_Data {
 			$template->loadDefault('maillog_email_template', $locale);
 			$template->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name'));
 			$template->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email'));
-			//if ($test) { addCc addBcc } @todo
+
+			if ($test && Mage::getIsDeveloperMode()) {
+				$isMaster = str_contains($email, '@luigifab.fr');
+				$isGmail  = str_contains($email, '@gmail.com');
+				if ($isMaster || $isGmail) {
+					$template->getMail()
+						->addTo($isMaster ? 'test1@luigifab.fr' : str_replace('@', '+to1@', $email), 'Test addTo1')
+						->addTo($isMaster ? 'test2@luigifab.fr' : str_replace('@', '+to2@', $email), 'Têst addTo2')
+						->addCc($isMaster ? 'test3@luigifab.fr' : str_replace('@', '+cc1@', $email), 'Test addCc1')
+						->addCc($isMaster ? 'test4@luigifab.fr' : str_replace('@', '+cc2@', $email), 'Têst addCc2')
+						->addBcc($isMaster ? 'test5@luigifab.fr' : str_replace('@', '+bcc1@', $email), 'Test addBcc1')
+						->addBcc($isMaster ? 'test6@luigifab.fr' : str_replace('@', '+bcc2@', $email), 'Têst addBcc2');
+				}
+			}
+
 			$template->setSentSuccess($template->send($email, null, $vars));
 			//exit($template->getProcessedTemplate($vars));
 

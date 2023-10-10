@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/23/09/2021
- * Updated L/14/11/2022
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -72,8 +72,8 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 
 		foreach ($values as $system => $config) {
 
-			$type   = substr($system, 0, strpos($system, '_'));
-			$system = substr($system, strpos($system, '_') + 1);
+			$type   = substr($system, 0, strpos($system, '_'));  // not mb_substr mb_strpos
+			$system = substr($system, strpos($system, '_') + 1); // not mb_substr mb_strpos
 
 			foreach ($config as $code) {
 
@@ -131,7 +131,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 						$fields[$system] = implode(', ', $object->getStreet());
 					}
 					else {
-						$fields[$system] = $object->getStreet(substr($code, -1));
+						$fields[$system] = $object->getStreet(substr($code, -1)); // not mb_substr
 					}
 				}
 				else if ($code == 'subscriber_status') {
@@ -145,7 +145,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 				}
 				else if ($isCustomer && ($code == 'store_id')) {
 					$value = $object->getStoreId();
-					$fields[$system] = substr(Mage::getStoreConfig('general/locale/code', $value), 0, 2);
+					$fields[$system] = substr(Mage::getStoreConfig('general/locale/code', $value), 0, 2); // not mb_substr
 				}
 				else if ($isCustomer && ($code == 'dob') && $hasData) {
 					$fields[$system] = date('Y-m-d', strtotime($object->getData('dob')));

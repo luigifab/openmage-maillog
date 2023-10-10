@@ -1,7 +1,7 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated M/13/06/2023
+ * Updated M/27/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -46,10 +46,10 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 	public function downloadAction() {
 
 		$email = Mage::getModel('maillog/email')->load($this->getRequest()->getParam('key', 0), 'uniqid');
-		$nb = (int) $this->getRequest()->getParam('part', 0);
 
 		if (!empty($email->getId()) && !empty($email->getData('mail_parts'))) {
 
+			$nb = (int) $this->getRequest()->getParam('part', 0);
 			$parts = $email->getEmailParts();
 			foreach ($parts as $key => $part) {
 
@@ -109,20 +109,21 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 		// marquage
 		$email = Mage::getModel('maillog/email')->load($this->getRequest()->getParam('key', 0), 'uniqid');
-		$this->markEmail($email);
+		if (!empty($email->getId()))
+			$this->markEmail($email);
 	}
 
 	public function elinkAction() {
 
-		$email = Mage::getModel('maillog/email')->load($this->getRequest()->getParam('key', 0), 'uniqid');
-		$link  = $this->getRequest()->getParam('lnk', 0);
+		$request = $this->getRequest();
+		$email   = Mage::getModel('maillog/email')->load($request->getParam('key', 0), 'uniqid');
+		$link    = $request->getParam('lnk', 0);
 
 		if (empty($link)) {
 			$url = Mage::getBaseUrl();
 			$this->getResponse()
 				->setHttpResponseCode(302)
-				->setHeader('Location', $url, true)
-				->sendResponse();
+				->setHeader('Location', $url, true);
 		}
 		else if (empty($email->getId())) {
 
@@ -137,23 +138,23 @@ class Luigifab_Maillog_ViewController extends Mage_Core_Controller_Front_Action 
 
 			$this->getResponse()
 				->setHttpResponseCode(302)
-				->setHeader('Location', $url, true)
-				->sendResponse();
+				->setHeader('Location', $url, true);
 		}
 		else {
 			// auto login
 			// l'email existe, le client existe, le hash est toujours bon, le hash vient bien de l'email
-			$cid = $this->getRequest()->getParam('cid', 0);
-			$key = $this->getRequest()->getParam('sum', 0);
+			$cid = (int) $request->getParam('cid', 0);
+			$key = $request->getParam('sum', 0);
 			if (!empty($cid) && !empty($key) && Mage::getStoreConfigFlag('maillog/login_whitout_password/enabled')) {
 
 				$session = Mage::getSingleton('customer/session');
-				if ($session->getCustomerId() != $cid)
+				$scid    = (int) $session->getCustomerId();
+				if ($scid != $cid)
 					$session->logout();
 
 				$customer = Mage::getModel('customer/customer')->load($cid);
 				if (!$session->isLoggedIn() && !empty($customer->getId())) {
-					$sum = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15);
+					$sum = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15); // not mb_substr
 					if (($key == $sum) && (mb_stripos($email->getData('mail_body'), $cid.'/sum/'.$sum) !== false)) {
 						$session->setCustomerAsLoggedIn($customer);
 						$session->setData('maillog_auto_login', 1);

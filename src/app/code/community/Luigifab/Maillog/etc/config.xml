@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated V/08/06/2023
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -23,7 +23,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>5.8.2</version>
+			<version>5.8.3</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>

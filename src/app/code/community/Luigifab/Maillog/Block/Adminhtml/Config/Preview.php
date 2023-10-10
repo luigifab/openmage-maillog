@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated V/10/03/2023
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -37,7 +37,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 
 		$nodes = self::$_cache;
 		foreach ($nodes as $node) {
-			$type = strtolower((string) $node->type);
+			$type = strtolower((string) $node->type); // not mb_strtolower
 			if ((!$text && ($type == 'html')) || ($text && ($type == 'text'))) {
 				$code = $node->getName();
 				if (!in_array($code, ['design_email_header', 'design_email_footer', 'checkout_payment_failed_template']))

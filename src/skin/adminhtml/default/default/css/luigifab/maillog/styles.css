@@ -1,6 +1,6 @@
 /**
  * Created D/22/03/2015
- * Updated J/02/03/2023
+ * Updated L/02/10/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -97,7 +97,7 @@ textarea.maillogsync { margin-left:-206px; width:480px !important; }
 #pictureConfig tr.letter td { background-color:#F2F2F2 !important; }
 #pictureConfig td.config { padding-bottom:0.5em; }
 #pictureConfig input.cde { display:block; margin-top:0.3em; width:95%; }
-#pictureConfig input.cmt { display:block; margin-top:0.3em; width:95%; color:gray; }
+#pictureConfig input.cmt { display:block; margin-top:0.3em; width:95%; color:#808080; }
 #pictureConfig .validation-advice { position:absolute; display:none; max-width:20em; background-color:white; }
 #pictureConfig .validation-failed { border-color:red; }
 #pictureConfig .validation-failed:hover ~ .validation-advice { display:block; }
@@ -141,5 +141,5 @@ textarea.maillogsync { margin-left:-206px; width:480px !important; }
 	animation:maillogFlash 1s; -webkit-animation:maillogFlash 1s;
 }
 
-@keyframes maillogFlash { 0% { background-color:gray !important; } 100% { background-color:transparent !important; } }
-@-webkit-keyframes maillogFlash { 0% { background-color:gray !important; } 100% { background-color:transparent !important; } }
+@keyframes maillogFlash { 0% { background-color:#808080 !important; } 100% { background-color:transparent !important; } }
+@-webkit-keyframes maillogFlash { 0% { background-color:#808080 !important; } 100% { background-color:transparent !important; } }

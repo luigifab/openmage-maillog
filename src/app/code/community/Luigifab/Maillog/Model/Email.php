@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/15/06/2023
+ * Updated L/02/10/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -79,7 +79,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 	public function setMailContent($vars, $parts) {
 
 		$storeId = $this->getStoreId();
-		$this->setData('uniqid', mb_substr(sha1(time().$this->getData('mail_recipients').$this->getData('mail_subject')), 0, 30));
+		$this->setData('uniqid', substr(sha1(time().$this->getData('mail_recipients').$this->getData('mail_subject')), 0, 30)); // not mb_substr
 
 		// $parts[0]->getContent() = $zend->body lorsque le mail n'a pas de pièce jointe
 		if (empty($parts) || is_string($parts)) {
@@ -136,7 +136,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			// permet de trier les emails par Type
 			if (mb_stripos($body, '#mailid#') !== false) {
 				$mailid = mb_substr($body, mb_stripos($body, '#mailid#'));
-				$mailid = mb_substr($mailid, strlen('#mailid#'));
+				$mailid = mb_substr($mailid, strlen('#mailid#')); // not mb_strlen
 				$mailid = mb_substr($mailid, 0, mb_stripos($mailid, '#'));
 				$body = str_replace('#mailid#'.$mailid.'#', '', $body);
 				$this->setData('type', trim($mailid));
@@ -195,7 +195,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					$helper  = Mage::helper('core');
 					$baseUrl = Mage::app()->getStore($storeId)->getBaseUrl('web');
 					$customerId  = $customer->getId();
-					$customerKey = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15);
+					$customerKey = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15); // not mb_substr
 
 					$body = preg_replace_callback('#(<a[^>]+)href="'.$baseUrl.'([^"]+)"#', function ($matches) use (
 						$helper, $baseUrl, $storeId, $customerId, $customerKey
@@ -302,25 +302,18 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 		try {
 			$heads = str_replace(["\r", "\n"], ['', "\r\n"], $this->getData('mail_header'));
-			$recpt = $this->getData('mail_recipients'); // addTo
-			$allow = (!empty($recpt) && Mage::getStoreConfigFlag('maillog/general/send', $storeId)) ?
-				Mage::helper('maillog')->canSend($recpt) : false;
-
-			// modifie les entêtes
 			$heads .= "\r\n".'X-Maillog: '.$this->getData('uniqid');
+
+			$dests = $this->getData('mail_recipients'); // for example: test <test@example.org>, copy <copy@example.org>
+			$allow = (!empty($dests) && Mage::getStoreConfigFlag('maillog/general/send', $storeId)) ?
+				Mage::helper('maillog')->canSend($dests) : false;
 
 			$encoding = Mage::getStoreConfig('maillog/general/encoding', $storeId);
 			if ($encoding != 'quoted-printable')
 				$heads = str_replace('Content-Transfer-Encoding: quoted-printable', 'Content-Transfer-Encoding: '.$encoding, $heads);
 
-			$subject = $this->getData('encoded_mail_subject');
-			//if ((mb_substr($subject, 0, 2) != '=?') || (mb_substr($subject, 0, 2) != '?=')) {
-			//	//if ($encoding == 'quoted-printable')
-			//	//	$subject = '=?utf-8?Q?'.quoted_printable_encode($subject).'?=';
-			//	$subject = '=?utf-8?B?'.base64_encode($subject).'?=';
-			//}
-
 			// contenu de l'email
+			$subject = $this->getData('encoded_mail_subject');
 			$content = $this->getData('mail_body');
 			$parts   = $this->getEmailParts();
 
@@ -353,7 +346,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			else if ($encoding == 'base64') {
 				$body = rtrim(chunk_split(base64_encode($content)));
 			}
-			else { //if ($encoding == 'quoted-printable')
+			else { // quoted-printable
 				$body = quoted_printable_encode($content);
 			}
 
@@ -366,30 +359,69 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			);
 
 			// action
-			if (empty($subject) || ($allow !== true) || empty($content) || Mage::getSingleton('maillog/source_bounce')->isBounce($recpt)) {
+			if (empty($subject) || ($allow !== true) || empty($content) || Mage::getSingleton('maillog/source_bounce')->isBounce($dests)) {
 				$this->setData('status', $allow ? 'bounce' : 'notsent');
 				$this->setData('duration', time() - $start);
 				if (is_string($allow))
 					$this->setData('exception', $allow);
 			}
 			else {
-				// SMTP personnalisé avec CURL ou MAIL standard
+				// SMTP personnalisé avec CURL
 				if (Mage::getStoreConfigFlag('maillog/general/smtp_enabled', $storeId)) {
 
-					// @todo addBcc addCc
-					$heads = 'To: '.$recpt."\r\n".$heads;
+					$from = $this->getData('mail_sender');
+					$from = trim(empty($pos = strpos($from, '<')) ? $from : substr($from, $pos + 1, -1));
+
+					// addTo addCc addBcc
+					// $dests » mail_recipients, addTo
+					// $heads » mail_header, addCc, addBcc
+					// https://stackoverflow.com/a/2750359/2980105
+					//
+					// To: to1 <to1@example.org>,
+					//  to2 <to2@example.org>,
+					//  to3@example.org
+					// Cc: cc1 <cc1@example.org>,
+					//  cc2 <cc2@example.org>,
+					//  cc2@example.org
+					// Bcc: bcc1 <bcc2@example.org>,
+					//  bcc2@example.org
+					$addrs  = [];
+					$recpts = [];
+					$next   = '';
+					foreach (array_merge(explode("\r\n", str_replace(',', ",\r\n ", 'To: '.$dests)), explode("\r\n", $heads)) as $head) {
+						if (($next == 'To') || (strpos($head, 'To:') === 0)) {
+							$info = trim(empty($next) ? substr($head, 3) : $head); // To: = 3
+							$next = (substr($head, -1) == ',') ? 'To' : '';
+							$info = trim($info, ',');
+							$addr = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
+							$addrs[]  = empty($pos) ? $addr : '=?utf-8?B?'.base64_encode(trim(substr($info, 0, $pos))).'?= <'.$addr.'>';
+							$recpts[] = $addr;
+						}
+						else if (($next == 'Cc') || (strpos($head, 'Cc:') === 0)) {
+							$info = trim(empty($next) ? substr($head, 3) : $head); // Cc: = 3
+							$next = (substr($info, -1) == ',') ? 'Cc' : '';
+							$info = trim($info, ',');
+							$addr = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
+							$recpts[] = $addr;
+						}
+						else if (($next == 'Bcc') || (strpos($head, 'Bcc:') === 0)) {
+							$info = trim(empty($next) ? substr($head, 4) : $head); // Bcc: = 4
+							$next = (substr($info, -1) == ',') ? 'Bcc' : '';
+							$info = trim($info, ',');
+							$addr = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
+							$recpts[] = $addr;
+							$heads = str_replace($head."\r\n", '', $heads);
+						}
+					}
+
+					// all recipients (to and cc) except bcc
+					$heads = 'To: '.implode(",\r\n ", $addrs)."\r\n".$heads;
+					//echo '<pre>',htmlspecialchars($heads); exit;
 
 					// 550, 5.7.1, delivery not authorized: message missing a valid messageId header are not accepted (gmail)
 					// https://stackoverflow.com/q/14483861
 					if (!empty($domain = Mage::getStoreConfig('maillog/general/smtp_domain', $storeId)))
 						$heads .= "\r\n".'Message-ID: <'.time().'-'.$this->getData('uniqid').'@'.$domain.'>';
-
-					// recherche l'email de l'expéditeur et des destinataires
-					$from = $this->getData('mail_sender');
-					$from = trim(empty($pos = strpos($from, '<')) ? $from : substr($from, $pos + 1, -1));
-					$recpts = [];
-					foreach (explode(',', $recpt) as $info)
-						$recpts[] = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
 
 					// une trouvaille fantastique
 					// https://gist.github.com/hdogan/8649cd9c25c75d0ab27e140d5eef5ce2
@@ -409,8 +441,8 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 					curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
 					curl_setopt($ch, CURLOPT_TIMEOUT, 50);
-					curl_setopt($ch, CURLOPT_MAIL_FROM, $from);
-					curl_setopt($ch, CURLOPT_MAIL_RCPT, $recpts);
+					curl_setopt($ch, CURLOPT_MAIL_FROM, $from);   // sender - setFrom (email only)
+					curl_setopt($ch, CURLOPT_MAIL_RCPT, $recpts); // all recipients - addTo addCc addBcc (email only)
 					curl_setopt($ch, CURLOPT_UPLOAD, true);
 					curl_setopt($ch, CURLOPT_INFILE, $fp);
 					curl_setopt($ch, CURLOPT_READFUNCTION, static function ($ch, $fp, $length) { return fread($fp, $length); });
@@ -428,6 +460,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					//Mage::log($stream);
 					//fclose($log);
 				}
+				// PHP mail
 				else {
 					$result = mail(
 						$this->getData('encoded_mail_recipients'), // version originale
@@ -454,6 +487,8 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 		$this->setData('duration', time() - $start);
 		$this->save();
+
+		return $this;
 	}
 
 

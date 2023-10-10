@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/24/08/2017
- * Updated L/26/12/2022
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -44,6 +44,9 @@ class Luigifab_Maillog_Model_Source_Bounce extends Mage_Eav_Model_Entity_Attribu
 
 	public function isBounce($data) {
 
+		// @todo
+		// test <test@example.org>
+		// test <test@example.org>, copy <copy@example.org>
 		if (!empty($data) && (mb_stripos($data, '@') !== false)) {
 
 			$email = (mb_stripos($data, ',') === false)  ? $data : explode(',', $data);

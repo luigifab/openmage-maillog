@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated V/09/06/2023
+ * Updated J/21/09/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -47,7 +47,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// vérifie
 		if (empty($code) || empty($config[$code]))
-			return null;
+			return '';
 
 		// récupére ou charge l'éventuel produit
 		if (!empty($product)) {
@@ -97,7 +97,7 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// vérifie
 		if (empty($params['file']))
-			return null;
+			return '';
 
 		// action
 		$sizes  = $config[$code];

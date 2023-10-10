@@ -1,7 +1,7 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated M/24/01/2023
+ * Updated V/23/06/2023
  *
  * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
@@ -45,11 +45,13 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		return Mage::getSingleton('admin/session')->isAllowed('tools/maillog');
 	}
 
-	protected function _redirectBack() {
+	protected function _redirectBack($same = false) {
 
 		$request = $this->getRequest();
 
-		if ($request->getParam('back') == 'order')
+		if ($same)
+			$this->_redirect('*/*/view', $request->getParams());
+		else if ($request->getParam('back') == 'order')
 			$this->_redirect('*/sales_order/view', ['order_id' => $request->getParam('bid'), 'active_tab' => 'maillog_order_grid']);
 		else if ($request->getParam('back') == 'customer')
 			$this->_redirect('*/customer/edit', ['id' => $request->getParam('bid'), 'back' => 'edit', 'tab' => 'customer_info_tabs_maillog_customer_grid']);
@@ -107,7 +109,7 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 		$this->_redirectBack();
 	}
 
-	public function resendAction() {
+	public function sendAction() {
 
 		try {
 			if (!Mage::getSingleton('admin/session')->isFirstPageAfterLogin()) {
@@ -115,14 +117,21 @@ class Luigifab_Maillog_Maillog_HistoryController extends Mage_Adminhtml_Controll
 				if (empty($id = $this->getRequest()->getParam('id')) || !is_numeric($id))
 					Mage::throwException($this->__('The <em>%s</em> field is a required field.', 'id'));
 
-				Mage::getModel('maillog/email')->load($id)->setData('status', 'pending')->setData('exception', null)->save();
-				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Email number %d will be resent.', $id));
+				$email = Mage::getModel('maillog/email')->load($id);
+				if ($email->getData('status') == 'pending') {
+					$email->sendNow();
+					Mage::getSingleton('adminhtml/session')->addSuccess($this->__('Email number %d was sent.', $id));
+				}
+				else if (!in_array($email->getData('status'), ['notsent', 'bounce'])) {
+					$email->setData('status', 'pending')->setData('exception', null)->save();
+					Mage::getSingleton('adminhtml/session')->addNotice($this->__('Email number %d will be sent again.', $id));
+				}
 			}
 		}
 		catch (Throwable $t) {
 			Mage::getSingleton('adminhtml/session')->addError($t->getMessage());
 		}
 
-		$this->_redirectBack();
+		$this->_redirectBack(true);
 	}
 }
