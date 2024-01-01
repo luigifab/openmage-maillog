@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated L/27/02/2023
+ * Updated V/29/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -26,20 +26,49 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 
 		$msg = $this->checkChanges();
 		if ($msg !== true)
-			return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
-				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog',
+			return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://github.com/luigifab/%3$s">github.com</a> | <a href="https://www.%4$s">%4$s</a> - ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%5$s</strong><br />%6$s</p>',
+				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'openmage-maillog', 'luigifab.fr/openmage/maillog',
 				$this->__('INCOMPLETE MODULE INSTALLATION'),
 				$this->__('Changes in <em>%s</em> are not present. Please read the documentation.', $msg));
 
 		$msg = $this->checkRewrites();
 		if ($msg !== true)
-			return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%s</strong><br />%s</p>',
-				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog',
+			return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://github.com/luigifab/%3$s">github.com</a> | <a href="https://www.%4$s">%4$s</a> - ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%5$s</strong><br />%6$s</p>',
+				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'openmage-maillog', 'luigifab.fr/openmage/maillog',
 				$this->__('INCOMPLETE MODULE INSTALLATION'),
 				$this->__('There is conflict (<em>%s</em>).', $msg));
 
-		return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://www.%s">%3$s</a> | ⚠ IPv6</span></p>',
-			'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'luigifab.fr/openmage/maillog');
+		$msg = $this->checkRobots();
+		if ($msg !== true)
+			return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://github.com/luigifab/%3$s">github.com</a> | <a href="https://www.%4$s">%4$s</a> - ⚠ IPv6</span></p><p class="box" style="margin-top:-5px; color:white; background-color:#E60000;"><strong>%5$s</strong><br />%6$s</p>',
+				'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'openmage-maillog', 'luigifab.fr/openmage/maillog',
+				$this->__('INCOMPLETE MODULE INSTALLATION'),
+				$this->__('Disallow lines are missing in <em>%s</em>, please add: %s + %s', $msg, '<code style="color:black; background-color:yellow;">Noindex: */maillog/</code>', '<code style="color:black; background-color:yellow;">Disallow: */maillog/</code>'));
+
+		return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://github.com/luigifab/%3$s">github.com</a> | <a href="https://www.%4$s">%4$s</a> - ⚠ IPv6</span></p>',
+			'Luigifab/Maillog', $this->helper('maillog')->getVersion(), 'openmage-maillog', 'luigifab.fr/openmage/maillog');
+	}
+
+	protected function checkRobots() {
+
+		$dir = getenv('SCRIPT_FILENAME');
+		if (!empty($dir))
+			$dir = dirname($dir);
+		if (!is_dir($dir))
+			$dir = BP;
+
+		$file = 'robots.txt';
+		if (is_file($dir.'/'.$file)) {
+			$robots = file_get_contents($dir.'/'.$file);
+			// @todo ['maillog', 'customer', 'downloadable', 'review', 'sales', 'shipping', 'newsletter', 'wishlist']
+			if (str_contains($robots, 'Disallow: */maillog/'))
+				return true;
+			if (preg_replace('#\s#', '', trim($robots)) == 'User-agent:*Noindex:/Disallow:/')
+				return true;
+		}
+
+		// @see https://github.com/luigifab/webext-openfileeditor
+		return '<span class="openfileeditor" data-file="'.$dir.'/'.$file.'">'.$file.'</span>';
 	}
 
 	protected function checkRewrites() {
@@ -54,9 +83,9 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block_
 			foreach ($rewrite as $type => $class) {
 				if (($type == 'model') && (mb_stripos(Mage::getConfig()->getModelClassName($class), 'luigifab') === false))
 					return $class;
-				else if (($type == 'block') && (mb_stripos(Mage::getConfig()->getBlockClassName($class), 'luigifab') === false))
+				if (($type == 'block') && (mb_stripos(Mage::getConfig()->getBlockClassName($class), 'luigifab') === false))
 					return $class;
-				else if (($type == 'helper') && (mb_stripos(Mage::getConfig()->getHelperClassName($class), 'luigifab') === false))
+				if (($type == 'helper') && (mb_stripos(Mage::getConfig()->getHelperClassName($class), 'luigifab') === false))
 					return $class;
 			}
 		}

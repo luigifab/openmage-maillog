@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated S/18/02/2023
+ * Updated V/22/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -35,7 +35,7 @@
 			<show_in_default>1</show_in_default>
 			<show_in_website>0</show_in_website>
 			<show_in_store>0</show_in_store>
-			<buttons>
+			<buttons pr="3195">
 				<maillog translate="title">
 					<title>Show</title>
 					<action>adminhtml/maillog_history/index</action>
@@ -267,7 +267,8 @@
 						<ul>
 							<li>when the customer changes his password,</li>
 							<li>or when the customer changes his email address,</li>
-							<li>or when the email is removed from the history.</li>
+							<li>or when the email is removed from the history,</li>
+							<li>1h after sending the email.</li>
 						</ul>
 					]]></comment>
 					<frontend_model>maillog/adminhtml_config_comment</frontend_model>
@@ -312,9 +313,10 @@
 							<show_in_website>0</show_in_website>
 							<show_in_store>0</show_in_store>
 						</frequency>
-						<recipient_email translate="label comment">
+						<recipient_email translate="label">
 							<label>Send Emails To</label>
-							<comment>Separate addresses by a space.</comment>
+							<frontend_model>maillog/adminhtml_config_addresses</frontend_model>
+							<backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
 							<sort_order>3</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>0</show_in_website>
@@ -384,7 +386,7 @@
 			<show_in_default>1</show_in_default>
 			<show_in_website>0</show_in_website>
 			<show_in_store>0</show_in_store>
-			<buttons>
+			<buttons pr="3195">
 				<maillog_sync translate="title">
 					<title>Show</title>
 					<action>adminhtml/maillog_sync/index</action>
@@ -902,7 +904,7 @@
 					<show_in_store>0</show_in_store>
 				</help>
 				<general translate="label comment">
-					<label>Emails and wysiwyg directives</label>
+					<label>General</label>
 					<comment>They are extraordinary new directives:</comment>
 					<frontend_model>maillog/adminhtml_config_comment</frontend_model>
 					<sort_order>1</sort_order>
@@ -911,6 +913,15 @@
 					<show_in_store>0</show_in_store>
 					<expanded>1</expanded>
 					<fields>
+						<noinlinecss translate="label">
+							<label>Disable inlinecss directive</label>
+							<frontend_type>select</frontend_type>
+							<source_model>adminhtml/system_config_source_yesno</source_model>
+							<sort_order>1</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</noinlinecss>
 						<picture translate="label">
 							<label>Picture directive</label>
 							<frontend_model>adminhtml/system_config_form_field_heading</frontend_model>

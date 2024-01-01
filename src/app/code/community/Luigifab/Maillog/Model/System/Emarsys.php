@@ -1,9 +1,9 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated J/21/09/2023
+ * Updated S/09/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2016      | Pierre-Alexandre Rouanet <pierre-alexandre.rouanet~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
@@ -23,7 +23,7 @@
 
 class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_System {
 
-	// https://dev.emarsys.com/v2/
+	// @see https://dev.emarsys.com/v2/
 	protected $_code = 'emarsys';
 
 	protected $_locales = [
@@ -39,7 +39,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		'pl_PL' => 17, 'pt_BR' => 50, 'pt_PT' => 14, 'ro_MD' => 23, 'ro_RO' => 18,
 		'ru_RU' => 21, 'sk_SK' => 24, 'sl_SI' => 19, 'sr_RS' => 44, 'sv_SE' => 9,
 		'th_TH' => 27, 'tr_TR' => 25, 'uk_UA' => 38, 'vi_VN' => 52, 'zh_CN' => 28,
-		'zh_HK' => 29, 'zh_TW' => 29
+		'zh_HK' => 29, 'zh_TW' => 29,
 	];
 
 	protected $_countries = [
@@ -75,7 +75,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 		'TM' => 179, 'TN' => 177, 'TO' => 175, 'TR' => 178, 'TT' => 176, 'TV' => 180,
 		'TW' => 170, 'TZ' => 172, 'UA' => 182, 'UG' => 181, 'US' => 185, 'UY' => 186,
 		'UZ' => 187, 'VA' => 189, 'VC' => 147, 'VE' => 190, 'VN' => 191, 'VU' => 188,
-		'WS' => 148, 'YE' => 193, 'ZA' => 161, 'ZM' => 196, 'ZW' => 197
+		'WS' => 148, 'YE' => 193, 'ZA' => 161, 'ZM' => 196, 'ZW' => 197,
 	];
 
 
@@ -83,7 +83,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 
 		if (empty($this->_fields)) {
 
-			// https://dev.emarsys.com/v2/fields/list-available-fields
+			// @see https://dev.emarsys.com/v2/fields/list-available-fields
 			$result = $this->sendRequest('GET', 'field/translate', substr(Mage::getSingleton('core/locale')->getLocaleCode(), 0, 2)); // not mb_substr
 			$fields = [];
 
@@ -97,7 +97,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 					$fields[$field['id']] = [
 						'id'       => $field['id'],
 						'name'     => $field['name'],
-						'readonly' => in_array($field['id'], $readonly)
+						'readonly' => in_array($field['id'], $readonly),
 					];
 				}
 
@@ -193,14 +193,14 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 
 	public function updateCustomer(array $data) {
 
-		// https://dev.emarsys.com/v2/contacts/update-contacts
+		// @see https://dev.emarsys.com/v2/contacts/update-contacts
 		$method = empty($data['key_id']) ? 'contact/create_if_not_exists=1' : 'contact/create_if_not_exists=1&key_id='.$data['key_id'];
 		return $this->sendRequest('PUT', $method, $data);
 	}
 
 	public function deleteCustomer(array $data) {
 
-		// https://dev.emarsys.com/v2/contacts/delete-contact
+		// @see https://dev.emarsys.com/v2/contacts/delete-contact
 		return $this->sendRequest('POST', 'contact/delete', $data);
 	}
 
@@ -223,7 +223,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 			return null;
 
 		$timestamp = gmdate('c');
-		$nonce     = md5(random_int(1000000000000000, 9999999999999999));
+		$nonce     = md5((string) random_int(1000000000000000, 9999999999999999));
 		$password  = Mage::helper('core')->decrypt(Mage::getStoreConfig('maillog_sync/'.$this->_code.'/api_password'));
 		$password  = base64_encode(sha1($nonce.$timestamp.$password));
 
@@ -242,7 +242,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		}
 		else if ($type == 'PUT') {
-			// https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
+			// @see https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
 			//curl_setopt($ch, CURLOPT_POST, true);
 			//$override = 'X-HTTP-Method-Override: PUT';
@@ -250,7 +250,7 @@ class Luigifab_Maillog_Model_System_Emarsys extends Luigifab_Maillog_Model_Syste
 				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		}
 		else if ($type == 'DELETE') {
-			// https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
+			// @see https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
 			//curl_setopt($ch, CURLOPT_POST, true);
 			//$override = 'X-HTTP-Method-Override: DELETE';

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created J/24/08/2017
- * Updated J/21/09/2023
+ * Updated D/17/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -27,15 +27,15 @@ class Luigifab_Maillog_Model_Source_Bounce extends Mage_Eav_Model_Entity_Attribu
 		if (empty($this->_options)) {
 
 			// @see self::getBounceIds()
-			// @see Luigifab_Maillog_Model_Observer::bouncesFileImport()
-			// @see Luigifab_Maillog_Model_Observer::updateCustomersDatabase()
-			$help = Mage::helper('maillog');
+			// @see Luigifab_Maillog_Model_Import::bouncesFile()
+			// @see Luigifab_Maillog_Model_Import::updateCustomersDatabase()
+			$helper = Mage::helper('maillog');
 			$this->_options = [
 				['value' => 0, 'label' => Mage::helper('adminhtml')->__('No')],
 				['value' => 1, 'label' => Mage::helper('adminhtml')->__('Yes')],
-				['value' => 2, 'label' => $help->__('Yes - forced by admin')],
-				['value' => 3, 'label' => $help->__('No - forced by admin')],
-				['value' => 4, 'label' => $help->__('No - forced by customer')],
+				['value' => 2, 'label' => $helper->__('Yes - forced by admin')],
+				['value' => 3, 'label' => $helper->__('No - forced by admin')],
+				['value' => 4, 'label' => $helper->__('No - forced by customer')],
 			];
 		}
 

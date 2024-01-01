@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/21/09/2023
+ * Updated S/09/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -276,7 +276,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 (?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
 (?:{{else?if\s*(.*?)}}(.*?)(?={{els|{{\/if}}))?
 (?:({{else}})(.*?))?
-{{\/if}}/six' => 'ifelseDirective'
+{{\/if}}/six' => 'ifelseDirective',
 		] as $pattern => $directive) {
 			if (preg_match_all($pattern, $value, $constructions, PREG_SET_ORDER)) {
 				foreach ($constructions as $construction) {
@@ -297,19 +297,26 @@ abstract class Luigifab_Maillog_Model_Filter {
 		}
 
 		if (preg_match_all(Varien_Filter_Template::CONSTRUCTION_PATTERN, $value, $constructions, PREG_SET_ORDER)) {
+			$noInlineCss = Mage::getStoreConfigFlag('maillog_directives/general/noinlinecss');
 			foreach ($constructions as $construction) {
-				$callback = [$this, $construction[1].'Directive'];
-				if (is_callable($callback)) {
-					try {
-						$replace = $callback($construction);
-						$replace = (is_object($replace) || is_array($replace)) ? '' : $replace;
-						$value   = str_replace($construction[0], $replace, $value);
-					}
-					catch (Throwable $t) {
-						if (Mage::getIsDeveloperMode())
-							throw $t;
-						Mage::logException($t);
-						$value = str_replace($construction[0], '', $value);
+				if ($noInlineCss && ($construction[1] == 'inlinecss')) {
+					// {CSS inlining error: Class "Pelago\Emogrifier\CssInliner" not found}
+					$value = str_replace($construction[0], '', $value);
+				}
+				else {
+					$callback = [$this, $construction[1].'Directive'];
+					if (is_callable($callback)) {
+						try {
+							$replace = $callback($construction);
+							$replace = (is_object($replace) || is_array($replace)) ? '' : (string) $replace;
+							$value   = str_replace($construction[0], $replace, $value);
+						}
+						catch (Throwable $t) {
+							if (Mage::getIsDeveloperMode())
+								throw $t;
+							Mage::logException($t);
+							$value = str_replace($construction[0], '', $value);
+						}
 					}
 				}
 			}
@@ -349,7 +356,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 			$base   = $this->_getVariable2($values[0], $default);
 			if (empty($check = $this->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return (is_numeric($base) && is_numeric($check)) ? ($base > $check) : false;
+			return is_numeric($base) && is_numeric($check) && ($base > $check);
 		}
 		// >=
 		if (mb_stripos($value, ' gte ') !== false) {
@@ -357,14 +364,14 @@ abstract class Luigifab_Maillog_Model_Filter {
 			$base   = $this->_getVariable2($values[0], $default);
 			if (empty($check = $this->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return (is_numeric($base) && is_numeric($check)) ? ($base >= $check) : false;
+			return is_numeric($base) && is_numeric($check) && ($base >= $check);
 		}
 		if (mb_stripos($value, ' gteq ') !== false) {
 			$values = array_map('trim', explode(' gteq ', $value));
 			$base   = $this->_getVariable2($values[0], $default);
 			if (empty($check = $this->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return (is_numeric($base) && is_numeric($check)) ? ($base >= $check) : false;
+			return is_numeric($base) && is_numeric($check) && ($base >= $check);
 		}
 		// <
 		if (mb_stripos($value, ' lt ') !== false) {
@@ -372,7 +379,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 			$base   = $this->_getVariable2($values[0], $default);
 			if (empty($check = $this->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return (is_numeric($base) && is_numeric($check)) ? ($base < $check) : false;
+			return is_numeric($base) && is_numeric($check) && ($base < $check);
 		}
 		// <=
 		if (mb_stripos($value, ' lte ') !== false) {
@@ -380,14 +387,14 @@ abstract class Luigifab_Maillog_Model_Filter {
 			$base   = $this->_getVariable2($values[0], $default);
 			if (empty($check = $this->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return (is_numeric($base) && is_numeric($check)) ? ($base <= $check) : false;
+			return is_numeric($base) && is_numeric($check) && ($base <= $check);
 		}
 		if (mb_stripos($value, ' lteq ') !== false) {
 			$values = array_map('trim', explode(' lteq ', $value));
 			$base   = $this->_getVariable2($values[0], $default);
 			if (empty($check = $this->_getVariable2($values[1], $default)) && !is_numeric($check))
 				$check = $values[1];
-			return (is_numeric($base) && is_numeric($check)) ? ($base <= $check) : false;
+			return is_numeric($base) && is_numeric($check) && ($base <= $check);
 		}
 		// ==
 		if (mb_stripos($value, ' eq ') !== false) {
@@ -452,7 +459,7 @@ abstract class Luigifab_Maillog_Model_Filter {
 		if (empty($data))
 			return $attrs;
 
-		// https://stackoverflow.com/a/1083799/2980105
+		// @see https://stackoverflow.com/a/1083799/2980105
 		//               1               2        3         4
 		preg_match_all('#(\w+)\s*=\s*(?:"(.*?)"|\'(.*?)\'|\$(\S+))\s*#', $data, $parts, PREG_SET_ORDER);
 		foreach ($parts as $part) {

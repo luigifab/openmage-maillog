@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created D/22/03/2015
- * Updated J/21/09/2023
+ * Updated D/17/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -23,7 +23,7 @@
 <config>
 	<modules>
 		<Luigifab_Maillog>
-			<version>5.8.3</version>
+			<version>5.9.0</version>
 		</Luigifab_Maillog>
 	</modules>
 	<global>
@@ -203,14 +203,6 @@
 					</maillog>
 				</observers>
 			</admin_system_config_changed_section_maillog_sync>
-			<admin_system_config_changed_section_maillog_directives>
-				<observers>
-					<maillog>
-						<class>maillog/observer</class>
-						<method>clearCache</method>
-					</maillog>
-				</observers>
-			</admin_system_config_changed_section_maillog_directives>
 			<admin_system_config_changed_section_maillog_sync>
 				<observers>
 					<maillog_clearconfig>
@@ -219,6 +211,14 @@
 					</maillog_clearconfig>
 				</observers>
 			</admin_system_config_changed_section_maillog_sync>
+			<admin_system_config_changed_section_maillog_directives>
+				<observers>
+					<maillog>
+						<class>maillog/observer</class>
+						<method>clearCache</method>
+					</maillog>
+				</observers>
+			</admin_system_config_changed_section_maillog_directives>
 			<adminhtml_init_system_config>
 				<observers>
 					<maillog>
@@ -265,7 +265,7 @@
 		<jobs>
 			<maillog_send_report>
 				<run>
-					<model>maillog/observer::sendEmailReport</model>
+					<model>maillog/report::send</model>
 				</run>
 			</maillog_send_report>
 			<maillog_clean_old_data>
@@ -275,12 +275,12 @@
 			</maillog_clean_old_data>
 			<maillog_bounces_import>
 				<run>
-					<model>maillog/observer::bouncesFileImport</model>
+					<model>maillog/import::bouncesFile</model>
 				</run>
 			</maillog_bounces_import>
 			<maillog_unsubscribers_import>
 				<run>
-					<model>maillog/observer::unsubscribersFileImport</model>
+					<model>maillog/import::unsubscribersFile</model>
 				</run>
 			</maillog_unsubscribers_import>
 		</jobs>
@@ -300,7 +300,6 @@
 			</filters>
 			<email>
 				<enabled>0</enabled>
-				<recipient_email>hello@example.org</recipient_email>
 				<sender_email_identity>general</sender_email_identity>
 			</email>
 			<bounces>

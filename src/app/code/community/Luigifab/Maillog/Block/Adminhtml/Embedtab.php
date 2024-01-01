@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/15/05/2015
- * Updated V/12/05/2023
+ * Updated S/16/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -72,6 +72,6 @@ class Luigifab_Maillog_Block_Adminhtml_Embedtab extends Mage_Adminhtml_Block_Abs
 	}
 
 	protected function _toHtml() {
-		return $this->_ajax ? '' : $this->getLayout()->getBlock('adminhtml_maillog_history_embedtab')->toHtml();
+		return $this->_ajax ? '' : $this->getLayout()->getBlock('adminhtml_maillog_embedtab')->toHtml();
 	}
 }

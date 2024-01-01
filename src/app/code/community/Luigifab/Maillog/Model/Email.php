@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated L/02/10/2023
+ * Updated S/23/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -80,6 +80,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 		$storeId = $this->getStoreId();
 		$this->setData('uniqid', substr(sha1(time().$this->getData('mail_recipients').$this->getData('mail_subject')), 0, 30)); // not mb_substr
+		$this->setData('diqinu', substr(sha1(time().$this->getData('encoded_mail_recipients')), 0, 10)); // not mb_substr
 
 		// $parts[0]->getContent() = $zend->body lorsque le mail n'a pas de pièce jointe
 		if (empty($parts) || is_string($parts)) {
@@ -189,23 +190,24 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 
 				if (isset($customer)) {
 
-					if (empty($customer->getData('email')) || empty($customer->getData('password_hash')))
-						$customer->load($customer->getId());
-
 					$helper  = Mage::helper('core');
 					$baseUrl = Mage::app()->getStore($storeId)->getBaseUrl('web');
-					$customerId  = $customer->getId();
-					$customerKey = substr(md5($customer->getId().$customer->getData('email').$customer->getData('password_hash')), 15); // not mb_substr
+
+					$customerId = $customer->getId();
+					if (empty($customer->getData('email')) || empty($customer->getData('password_hash')))
+						$customer->load($customerId);
+
+					$customerKey = substr(md5($customerId.$customer->getData('email').$customer->getData('password_hash')), 15); // not mb
 
 					$body = preg_replace_callback('#(<a[^>]+)href="'.$baseUrl.'([^"]+)"#', function ($matches) use (
 						$helper, $baseUrl, $storeId, $customerId, $customerKey
 					) {
 						return $matches[1].'href="'.$this->getEmbedUrl('elink', [
 							'_store' => $storeId,
-							'cid' => $customerId,
-							'sum' => $customerKey,
-							'lnk' => $helper->urlEncode(str_replace($baseUrl, '', $matches[2])),
-						]).'" rel="nofollow"';
+							'cid'    => $customerId,
+							'sum'    => $customerKey,
+							'lnk'    => $helper->urlEncode(str_replace([$baseUrl, '&amp;'], ['', '&'], $matches[2])),
+						]).'" rel="noindex,nofollow"';
 					}, $body);
 				}
 			}
@@ -238,7 +240,7 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			'#<br ?/?>\s+#',
 			'#</code>\s</pre>#',
 			'#\s+</textarea>#',
-			'#\n?<!--[^\->]+-->#'
+			'#\n?<!--[^\->]+-->#',
 		], [
 			'css">',
 			'</style',
@@ -252,14 +254,15 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			'<br>', // ici pas de /
 			'</code></pre>',
 			'</textarea>',
-			''
+			'',
 		], $html);
 	}
 
-	protected function getColors() {
+	public function getColors() {
 
-		$config = @unserialize(Mage::getStoreConfig('maillog/general/special_config'), ['allowed_classes' => false]);
-		if (!empty($config) && is_array($config)) {
+		$config = Mage::helper('maillog')->getConfigUnserialized('maillog/general/special_config');
+
+		if (!empty($config)) {
 
 			foreach ($config as $key => $value) {
 				if (!empty($value) && ($key == $this->getData('type').'_back_color'))
@@ -370,12 +373,12 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 				if (Mage::getStoreConfigFlag('maillog/general/smtp_enabled', $storeId)) {
 
 					$from = $this->getData('mail_sender');
-					$from = trim(empty($pos = strpos($from, '<')) ? $from : substr($from, $pos + 1, -1));
+					$from = trim(empty($pos = mb_strpos($from, '<')) ? $from : mb_substr($from, $pos + 1, -1));
 
 					// addTo addCc addBcc
 					// $dests » mail_recipients, addTo
 					// $heads » mail_header, addCc, addBcc
-					// https://stackoverflow.com/a/2750359/2980105
+					// @see https://stackoverflow.com/a/2750359/2980105
 					//
 					// To: to1 <to1@example.org>,
 					//  to2 <to2@example.org>,
@@ -389,26 +392,26 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					$recpts = [];
 					$next   = '';
 					foreach (array_merge(explode("\r\n", str_replace(',', ",\r\n ", 'To: '.$dests)), explode("\r\n", $heads)) as $head) {
-						if (($next == 'To') || (strpos($head, 'To:') === 0)) {
-							$info = trim(empty($next) ? substr($head, 3) : $head); // To: = 3
-							$next = (substr($head, -1) == ',') ? 'To' : '';
+						if (($next == 'To') || (mb_strpos($head, 'To:') === 0)) {
+							$info = trim(empty($next) ? mb_substr($head, 3) : $head); // To: = 3
+							$next = (mb_substr($head, -1) == ',') ? 'To' : '';
 							$info = trim($info, ',');
-							$addr = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
-							$addrs[]  = empty($pos) ? $addr : '=?utf-8?B?'.base64_encode(trim(substr($info, 0, $pos))).'?= <'.$addr.'>';
+							$addr = trim(empty($pos = mb_strpos($info, '<')) ? $info : mb_substr($info, $pos + 1, -1));
+							$addrs[]  = empty($pos) ? $addr : '=?utf-8?B?'.base64_encode(trim(mb_substr($info, 0, $pos))).'?= <'.$addr.'>';
 							$recpts[] = $addr;
 						}
-						else if (($next == 'Cc') || (strpos($head, 'Cc:') === 0)) {
-							$info = trim(empty($next) ? substr($head, 3) : $head); // Cc: = 3
-							$next = (substr($info, -1) == ',') ? 'Cc' : '';
+						else if (($next == 'Cc') || (mb_strpos($head, 'Cc:') === 0)) {
+							$info = trim(empty($next) ? mb_substr($head, 3) : $head); // Cc: = 3
+							$next = (mb_substr($info, -1) == ',') ? 'Cc' : '';
 							$info = trim($info, ',');
-							$addr = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
+							$addr = trim(empty($pos = mb_strpos($info, '<')) ? $info : mb_substr($info, $pos + 1, -1));
 							$recpts[] = $addr;
 						}
-						else if (($next == 'Bcc') || (strpos($head, 'Bcc:') === 0)) {
-							$info = trim(empty($next) ? substr($head, 4) : $head); // Bcc: = 4
-							$next = (substr($info, -1) == ',') ? 'Bcc' : '';
+						else if (($next == 'Bcc') || (mb_strpos($head, 'Bcc:') === 0)) {
+							$info = trim(empty($next) ? mb_substr($head, 4) : $head); // Bcc: = 4
+							$next = (mb_substr($info, -1) == ',') ? 'Bcc' : '';
 							$info = trim($info, ',');
-							$addr = trim(empty($pos = strpos($info, '<')) ? $info : substr($info, $pos + 1, -1));
+							$addr = trim(empty($pos = mb_strpos($info, '<')) ? $info : mb_substr($info, $pos + 1, -1));
 							$recpts[] = $addr;
 							$heads = str_replace($head."\r\n", '', $heads);
 						}
@@ -419,12 +422,12 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 					//echo '<pre>',htmlspecialchars($heads); exit;
 
 					// 550, 5.7.1, delivery not authorized: message missing a valid messageId header are not accepted (gmail)
-					// https://stackoverflow.com/q/14483861
+					// @see https://stackoverflow.com/q/14483861
 					if (!empty($domain = Mage::getStoreConfig('maillog/general/smtp_domain', $storeId)))
 						$heads .= "\r\n".'Message-ID: <'.time().'-'.$this->getData('uniqid').'@'.$domain.'>';
 
 					// une trouvaille fantastique
-					// https://gist.github.com/hdogan/8649cd9c25c75d0ab27e140d5eef5ce2
+					// @see https://gist.github.com/hdogan/8649cd9c25c75d0ab27e140d5eef5ce2
 					$fp = fopen('php://memory', 'rb+');
 					fwrite($fp, $heads."\r\n".'Subject: '.$subject."\r\n\r\n".$body);
 					//rewind($fp); $stream = stream_get_contents($fp);
@@ -482,13 +485,25 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 		catch (Throwable $t) {
 			Mage::logException($t);
 			$this->setData('status', 'error');
-			$this->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
+			$this->setData('exception', $this->formatException($t));
 		}
 
 		$this->setData('duration', time() - $start);
 		$this->save();
 
 		return $this;
+	}
+
+	public function formatException(Throwable $t) {
+
+		// $t->__toString()...
+		// same as Mage::printException
+		return get_class($t).': '.$t->getMessage()."\n".
+			str_replace(
+				str_contains(__FILE__, 'vendor/luigifab') ? dirname(BP) : BP,
+				'',
+				$t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()
+			);
 	}
 
 
@@ -534,13 +549,12 @@ class Luigifab_Maillog_Model_Email extends Mage_Core_Model_Abstract {
 			->setData('email', $this)
 			->setData('mail_head', $head)
 			->setData('mail_body', $body)
-			->setData('colors', $this->getColors())
 			->toHtml();
 	}
 
 	public function getEmbedUrl(string $action, array $params = []) {
 
-		$params = array_merge(['_secure' => false, 'key' => $this->getData('uniqid')], $params);
+		$params = array_merge(['_secure' => false, 'key' => $this->getData('uniqid'), 'yek' => $this->getData('diqinu')], $params);
 		if (empty($params['_store']) || Mage::app()->getStore()->isAdmin())
 			$params['_store'] = Mage::app()->getDefaultStoreView()->getId();
 

@@ -1,8 +1,8 @@
 /**
  * Created D/22/03/2015
- * Updated L/02/10/2023
+ * Updated S/16/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -21,7 +21,7 @@
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& global &&& */
 body.adminhtml-maillog-history-index h3.icon-head, body.adminhtml-maillog-history-view h3.icon-head,
-body.adminhtml-maillog-sync-index h3.icon-head {
+body.adminhtml-maillog-history-preview h3.icon-head, body.adminhtml-maillog-sync-index h3.icon-head {
 	min-height:19px; padding-left:22px;
 	background:url("../../../images/fam_lorry.gif") no-repeat left center;
 }
@@ -43,9 +43,11 @@ body.adminhtml-maillog-history-view div.content li strong { height:auto; line-he
 body.adminhtml-maillog-history-view .maillog-status { display:inline-block; margin:0 0.5em; width:13em; vertical-align:text-bottom; }
 
 body.adminhtml-maillog-history-view div.content pre {
-	display:block; margin:1em auto; padding:0.7em 1em; width:calc(100% - 4em); overflow:hidden; white-space:pre-wrap;
-	border-radius:1em; border:1px solid #DDD; background-color:#FFD9D9;
+	display:block; margin:1em auto; padding:0.7em 1em; width:calc(100% - 4em); overflow:hidden;
+	font-size:12px; line-height:16px; white-space:pre-wrap; border-radius:1em; border:1px solid #DDD; background-color:#FFD9D9;
 }
+
+body.adminhtml-maillog-history-view div.content pre::first-line { font-weight:bold; }
 
 body.adminhtml-maillog-history-view div.content iframe {
 	display:block; margin:1em auto; width:calc(100% - 2em); min-height:26em; overflow:hidden;
@@ -55,10 +57,18 @@ body.adminhtml-maillog-history-view div.content iframe {
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/history/index &&& */
 body.adminhtml-maillog-history-index div.etype { max-width:100px; overflow:hidden; text-overflow:ellipsis; }
 
+/* &&&&&&&&&&&&&&&&&&&&&&&&&& maillog/history/preview &&& */
+body.adminhtml-maillog-history-preview div.eprev {
+	display:block; margin:1em auto; padding:0.2em 0.4em; width:calc(100% - 2px - 2.8em); min-height:26em;
+	border-radius:1em; border:1px solid #DDD;
+}
+
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& maillog/sync/index &&& */
 body.adminhtml-maillog-sync-index table.data td div.data { column-count:2; -moz-column-count:2; -webkit-column-count:2; word-wrap:anywhere; }
-body.adminhtml-maillog-sync-index table.data td div.details { font-size:10px; line-height:13px; }
+body.adminhtml-maillog-sync-index table.data td div.details { font-size:10px; line-height:14px; }
 body.adminhtml-maillog-sync-index table.data td div.details:last-child { margin-bottom:5px; }
+body.adminhtml-maillog-sync-index table.data td div.details.exception { padding:0.3em 0.6em; background-color:#FFD9D9; }
+body.adminhtml-maillog-sync-index table.data td div.details.exception::first-line { font-weight:bold; }
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& system/config &&& */
 img.logo.maillog {
@@ -101,7 +111,7 @@ textarea.maillogsync { margin-left:-206px; width:480px !important; }
 #pictureConfig .validation-advice { position:absolute; display:none; max-width:20em; background-color:white; }
 #pictureConfig .validation-failed { border-color:red; }
 #pictureConfig .validation-failed:hover ~ .validation-advice { display:block; }
-#pictureConfig .line { display:flex; white-space:nowrap; padding-right:1em; }
+#pictureConfig .line { display:flex; padding-right:1em; white-space:nowrap; }
 #pictureConfig .line:hover { background-color:#DEDEDE; }
 #pictureConfig .line input { width:5em; }
 #pictureConfig .bp { min-width:12em; }

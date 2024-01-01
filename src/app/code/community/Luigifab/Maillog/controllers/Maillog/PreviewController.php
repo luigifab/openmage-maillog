@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated V/10/03/2023
+ * Updated S/16/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -36,6 +36,8 @@ class Luigifab_Maillog_Maillog_PreviewController extends Mage_Adminhtml_Controll
 		$locale = Mage::getStoreConfig('general/locale/code', $store);
 
 		Mage::getSingleton('core/app_emulation')->startEnvironmentEmulation($store);
+		Mage::app()->getStore()->setConfig('dev/debug/template_hints', 0);
+		Mage::app()->getStore()->setConfig('dev/debug/template_hints_blocks', 0);
 		Mage::getDesign()->setTheme(Mage::getStoreConfig('design/theme/default', $store));
 		Mage::register('maillog_preview', true);
 

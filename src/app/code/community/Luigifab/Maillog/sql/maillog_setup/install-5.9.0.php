@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated J/02/03/2023
+ * Updated S/16/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -44,9 +44,7 @@ try {
 
 	// configuration et tables
 	$this->run('
-		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%";
-		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog_sync/%";
-		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog_directives/%";
+		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog%" AND path NOT LIKE "maillog/general/enabled";
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "crontab/jobs/maillog_%";
 		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "newsletter/%/%send";
 
@@ -62,6 +60,7 @@ try {
 			sent_at                 datetime             NULL DEFAULT NULL,
 			duration                int(4)               NOT NULL DEFAULT -1,
 			uniqid                  varchar(30)          NOT NULL,
+			diqinu                  varchar(10)          NOT NULL,
 			type                    varchar(50)          NOT NULL DEFAULT "--",
 			size                    int(8) unsigned      NOT NULL DEFAULT 0,
 			encoded_mail_recipients varchar(255)         NULL DEFAULT NULL,
@@ -128,7 +127,7 @@ try {
 }
 catch (Throwable $t) {
 	$lock->unlock();
-	Mage::throwException($t);
+	throw $t;
 }
 
 $this->endSetup();

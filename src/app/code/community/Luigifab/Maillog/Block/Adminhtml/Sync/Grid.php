@@ -1,9 +1,9 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated M/24/01/2023
+ * Updated S/23/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -124,31 +124,58 @@ class Luigifab_Maillog_Block_Adminhtml_Sync_Grid extends Mage_Adminhtml_Block_Wi
 
 	public function decorateDetails($value, $row, $column, $isExport) {
 
-		$action = preg_replace('#update:customer:(\d+):#', 'update:<a href="'.str_replace('999999', '\\1', $this->getUrl('*/customer/edit', ['id' => 999999])).'">customer:\1</a>:', $row->getData('action'));
+		$helper = $this->helper('maillog');
+		$action = preg_replace(
+			'#update:customer:(\d+):#',
+			'update:<a href="'.str_replace('999999', '\\1', $this->getUrl('*/customer/edit', ['id' => 999999])).'">customer:\1</a>:',
+			$row->getData('action')
+		);
 
-		if (in_array($row->getData('sync_at'), ['', '0000-00-00 00:00:00', null]))
-			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> with <em>%s</em>.<br />Created at <em>%s UTC</em>.</div>',
+		if (in_array($row->getData('sync_at'), ['', '0000-00-00 00:00:00', null])) {
+			$text = sprintf(
+				'<div>By <em>%s</em> for <em>%s</em> with <em>%s</em>.<br />Created at <em>%s UTC</em>.</div>',
 				$row->getData('user'), $action, $row->getData('model'),
-				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT));
-		else
-			$text = sprintf('<div>By <em>%s</em> for <em>%s</em> with <em>%s</em>.<br />Created at <em>%s UTC</em> and synced at <em>%s UTC</em> %s.</div>',
+				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT)
+			);
+		}
+		else {
+			$text = sprintf(
+				'<div>By <em>%s</em> for <em>%s</em> with <em>%s</em>.<br />Created at <em>%s UTC</em> and synced at <em>%s UTC</em> %s.</div>',
 				$row->getData('user'), $action, $row->getData('model'),
 				$this->formatDate($row->getData('created_at'), Zend_Date::DATETIME_SHORT),
 				$this->formatDate($row->getData('sync_at'), Zend_Date::DATETIME_SHORT),
-				empty($duration = $this->helper('maillog')->getHumanDuration($row->getData('duration'))) ? '' : '(duration <em>'.$duration.'</em>)');
-
-		if (!empty($data = $row->getData('request')))
-			$text .= ' <em>== request ==</em> <div class="details data">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
-
-		if (!empty($data = $row->getData('response'))) {
-			if (mb_stripos($data, 'STOP! ') === 0) // old way < 5.8.0 @todo
-				$text .= ' <em>== exception ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
-			else
-				$text .= ' <em>== response ==</em> <div class="details data">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
+				empty($duration = $helper->getHumanDuration($row->getData('duration'))) ? '' : '(duration <em>'.$duration.'</em>)'
+			);
 		}
 
-		if (!empty($data = $row->getData('exception')))
-			$text .= ' <em>== exception ==</em> <div class="details">'.nl2br($this->helper('maillog')->escapeEntities($data)).'</div>';
+		$data = $row->getData('request');
+		if (!empty($data))
+			$text .= ' <em>== request ==</em> <div class="details data">'.nl2br($helper->escapeEntities($data)).'</div>';
+
+		$data = $row->getData('response');
+		if (!empty($data)) {
+			if (mb_stripos($data, 'STOP! ') === 0) // old way < 5.8.0 @todo
+				$text .= ' <em>== exception ==</em> <div class="details">'.nl2br($helper->escapeEntities($data)).'</div>';
+			else
+				$text .= ' <em>== response ==</em> <div class="details data">'.nl2br($helper->escapeEntities($data)).'</div>';
+		}
+
+		$data = $row->getData('exception');
+		if (!empty($data)) {
+
+			$data = $helper->escapeEntities($data);
+			$dir  = str_contains(__FILE__, 'vendor/luigifab') ? dirname(BP) : BP;
+
+			// @see https://github.com/luigifab/webext-openfileeditor
+			$data = preg_replace_callback('#(\#\d+ )([^(]+)\((\d+)\): #', static function ($data) use ($dir) {
+				return $data[1].'<span class="openfileeditor" data-file="'.$dir.$data[2].'" data-line="'.$data[3].'">'.$data[2].'</span>('.$data[3].'): ';
+			}, $data);
+			$data = preg_replace_callback('#  thrown in (.+) on line (\d+)#', static function ($data) use ($dir) {
+				return '  thrown in <span class="openfileeditor" data-file="'.$dir.$data[1].'" data-line="'.$data[2].'">'.$data[1].'</span> on line '.$data[2];
+			}, $data);
+
+			$text .= ' <em>== exception ==</em> <div class="details exception">'.nl2br($data).'</div>';
+		}
 
 		return '<div lang="mul">'.$text.'</div>';
 	}

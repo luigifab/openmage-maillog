@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/13/08/2017
- * Updated S/29/04/2023
+ * Updated V/22/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -26,16 +26,14 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Lifetime extends Mage_Adminhtml_Bl
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
-		$config = @unserialize(Mage::getStoreConfig('maillog/general/special_config'), ['allowed_classes' => false]);
-		$types  = $this->helper('maillog')->getAllTypes();
+		$helper = $this->helper('maillog');
+		$types  = $helper->getAllTypes();
+		$config = $helper->getConfigUnserialized('maillog/general/special_config');
 
-		if (!empty($config) && is_array($config)) {
-			// ajoute les types configurés ayant disparus
-			foreach ($config as $key => $value) {
-				$type = mb_substr($key, 0, mb_strpos($key, '_'));
-				if (!in_array($type, $types) && !in_array($type, ['all', 'without']))
-					$types[$type] = $type;
-			}
+		foreach (array_keys($config) as $key) {
+			$type = mb_substr($key, 0, mb_strpos($key, '_'));
+			if (!in_array($type, $types) && !in_array($type, ['all', 'without']))
+				$types[$type] = $type;
 		}
 
 		unset($types['--']);

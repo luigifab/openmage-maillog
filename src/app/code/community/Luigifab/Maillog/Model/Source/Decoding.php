@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/27/01/2023
- * Updated V/27/01/2023
+ * Updated S/11/11/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -27,12 +27,12 @@ class Luigifab_Maillog_Model_Source_Decoding {
 	public function toOptionArray() {
 
 		if (empty($this->_options)) {
-			$help = Mage::helper('maillog');
+			$helper = Mage::helper('maillog');
 			$this->_options = [
 				['value' => 0, 'label' => Mage::helper('adminhtml')->__('No')],
-				['value' => 'sync',  'label' => $help->__('Yes - %s', 'sync')],
-				['value' => 'async', 'label' => $help->__('Yes - %s', 'async')],
-				['value' => 'auto',  'label' => $help->__('Yes - %s', 'auto')],
+				['value' => 'sync',  'label' => $helper->__('Yes - %s', 'sync')],
+				['value' => 'async', 'label' => $helper->__('Yes - %s', 'async')],
+				['value' => 'auto',  'label' => $helper->__('Yes - %s', 'auto')],
 			];
 		}
 

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/17/01/2021
- * Updated J/21/09/2023
+ * Updated S/09/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -34,6 +34,9 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 		$html  = [];
 		$codes = [];
 		$text  = str_contains($element->getHtmlId(), '_text');
+		$separ = null;
+		$start = false;
+		$end   = false;
 
 		$nodes = self::$_cache;
 		foreach ($nodes as $node) {
@@ -47,9 +50,6 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 
 		$store = $this->getRequest()->getParam('store');
 		$store = empty($store) ? Mage::app()->getDefaultStoreView()->getId() : Mage::app()->getStore($store)->getId();
-		$separ = null;
-		$start = false;
-		$end   = false;
 
 		ksort($codes);
 		foreach ($codes as $code => [$label, $file]) {
@@ -77,8 +77,11 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 
 			$langs = [];
 			$names = glob(BP.'/app/locale/*/template/email/'.$file);
-			foreach ($names as $name)
-				$langs[] = mb_substr($name, mb_strpos($name, '/locale/') + 8, 5);
+			foreach ($names as $name) {
+				$lang = explode('/', mb_substr($name, mb_strpos($name, '/locale/') + 8));
+				// @see https://github.com/luigifab/webext-openfileeditor
+				$langs[] = '<span class="openfileeditor" data-file="'.$name.'">'.array_shift($lang).'</span>';
+			}
 
 			if (empty($langs)) {
 				$html[] = '<td class="label" style="width:50%;">';
@@ -88,7 +91,9 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Preview extends Mage_Adminhtml_Blo
 				$html[] = '</td>';
 			}
 			else {
-				$url    = $this->getUrl('*/maillog_preview/index', ['code' => $code, 'file' => str_replace('.html', '', urlencode($file)), 'store' => $store]);
+				$url = str_replace('.html', '', urlencode($file));
+				$url = $this->getUrl('*/maillog_preview/index', ['code' => $code, 'file' => $url, 'store' => $store]);
+
 				$html[] = '<td class="label" style="width:50%;">';
 				$html[] = '<a href="'.$url.'">'.$this->__($label).'</a>';
 				$html[] = '<br />'.$code;

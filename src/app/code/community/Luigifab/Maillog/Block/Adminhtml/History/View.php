@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/23/06/2023
+ * Updated S/23/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -75,15 +75,15 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 	public function getGridHtml() {
 
-		$email = Mage::registry('current_email');
-		$class = 'class="maillog-status grid-'.$email->getData('status').'"';
-		$help  = $this->helper('maillog');
+		$email  = Mage::registry('current_email');
+		$class  = 'class="maillog-status grid-'.$email->getData('status').'"';
+		$helper = $this->helper('maillog');
 
 		// status
 		if ($email->getData('status') == 'read')
 			$status = $this->__('Open/read');
 		else if ($email->getData('status') == 'error')
-			$status = $this->helper('maillog')->_('Error');
+			$status = $helper->_('Error');
 		else if ($email->getData('status') == 'notsent')
 			$status = $this->__('Unsent');
 		else if ($email->getData('status') == 'bounce')
@@ -96,11 +96,11 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 		$html[] = '<div class="content">';
 		$html[] = '<div>';
 		$html[] = '<ul>';
-		$html[] = '<li>'.$this->__('Created At: %s', $help->formatDate($email->getData('created_at'))).'</li>';
+		$html[] = '<li>'.$this->__('Created At: %s', $helper->formatDate($email->getData('created_at'))).'</li>';
 
 		if (!in_array($email->getData('sent_at'), ['', '0000-00-00 00:00:00', null])) {
-			$html[] = '<li><strong>'.$this->__('Sent At: %s', $help->formatDate($email->getData('sent_at'))).'</strong></li>';
-			if (!empty($duration = $help->getHumanDuration($email->getData('duration'))))
+			$html[] = '<li><strong>'.$this->__('Sent At: %s', $helper->formatDate($email->getData('sent_at'))).'</strong></li>';
+			if (!empty($duration = $helper->getHumanDuration($email->getData('duration'))))
 				$html[] = '<li>'.$this->__('Duration: %s', $duration).'</li>';
 		}
 
@@ -115,35 +115,56 @@ class Luigifab_Maillog_Block_Adminhtml_History_View extends Mage_Adminhtml_Block
 
 		$userAgent = $email->getData('useragent');
 		if (!empty($userAgent)) {
-			if ($this->helper('core')->isModuleEnabled('Luigifab_Apijs'))
-				$browser = Mage::getSingleton('apijs/useragentparser')->parse($userAgent);
+			$browser = Mage::getSingleton('maillog/useragentparser')->parse($userAgent);
 			if (empty($browser['browser']))
 				$html[] = '<li>'.$this->__('Customer browser: %s', '<i>'.$userAgent.'</i>').'</li>';
 			else
-				$html[] = '<li title="'.$help->escapeEntities($userAgent, true).'">'.$this->__('Customer browser: %s', sprintf('%s %d (%s)', $browser['browser'], $browser['version'], $browser['platform'])).'</li>';
+				$html[] = '<li title="'.$helper->escapeEntities($userAgent, true).'">'.$this->__('Customer browser: %s', sprintf('%s %d (%s)', $browser['browser'], $browser['version'], $browser['platform'])).'</li>';
 		}
 
 		if (!empty($email->getSize()))
-			$html[] = '<li>'.$this->__('Approximate size: %s', $help->getNumberToHumanSize($email->getSize())).'</li>';
+			$html[] = '<li>'.$this->__('Approximate size: %s', $helper->getNumberToHumanSize($email->getSize())).'</li>';
 		if ($email->getData('mail_sender'))
-			$html[] = '<li>'.$this->__('Sender: %s', $help->getHumanEmailAddress($email->getData('mail_sender'))).'</li>';
+			$html[] = '<li>'.$this->__('Sender: %s', $helper->getHumanEmailAddress($email->getData('mail_sender'))).'</li>';
 
-		$html[] = '<li>'.$this->__('Recipient(s): %s', $help->getHumanEmailAddress($email->getData('mail_recipients'))).'</li>';
+		$html[] = '<li>'.$this->__('Recipient(s): %s', $helper->getHumanEmailAddress($email->getData('mail_recipients'))).'</li>';
 
 		$value = $email->getData('mail_header');
-		if (!empty($value) && (preg_match('/Reply-To: <([^>]+)>/', $value, $value) === 1))
-			$html[] = '<li>'.$this->__('Reply to: %s', $help->getHumanEmailAddress($value[1])).'</li>';
+		if (!empty($value)) {
+			$result = '';
+			if (preg_match('/Reply-To: <?([^\s>]+)>?/', $value, $result) === 1)
+				$html[] = '<li>'.$this->__('Reply to: %s', $helper->getHumanEmailAddress($result[1])).'</li>';
+			//$result = '';
+			//if (preg_match('/Cc: <?([^\s>]+)>?/', $value, $result) === 1)
+			//	$html[] = '<li>'.$this->__('CC: %s', $helper->getHumanEmailAddress($result[1])).'</li>';
+			//$result = '';
+			//if (preg_match('/Bcc: <?([^\s>]+)>?/', $value, $result) === 1)
+			//	$html[] = '<li>'.$this->__('BCC: %s', $helper->getHumanEmailAddress($result[1])).'</li>';
+		}
 
 		$html[] = '</ul>';
 		$html[] = '</div>';
 
-		if (!empty($value = $email->getData('exception')))
-			$html[] = '<pre>'.$value.'</pre>';
+		$value = $email->getData('exception');
+		if (!empty($value)) {
 
-		$base   = '<html lang="mul"><head><title></title><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>';
-		$html[] = '<iframe type="text/html" scrolling="no" srcdoc="data:text/html;base64,'.base64_encode($base).'" onload="maillog.iframe(this)">'.
-			base64_encode($email->toHtml(true)). // true for nomark
-		'</iframe>';
+			$dir = str_contains(__FILE__, 'vendor/luigifab') ? dirname(BP) : BP;
+
+			// @see https://github.com/luigifab/webext-openfileeditor
+			$value = preg_replace_callback('#(\#\d+ )([^(]+)\((\d+)\): #', static function ($data) use ($dir) {
+				return $data[1].'<span class="openfileeditor" data-file="'.$dir.$data[2].'" data-line="'.$data[3].'">'.$data[2].'</span>('.$data[3].'): ';
+			}, $value);
+			$value = preg_replace_callback('#  thrown in (.+) on line (\d+)#', static function ($data) use ($dir) {
+				return '  thrown in <span class="openfileeditor" data-file="'.$dir.$data[1].'" data-line="'.$data[2].'">'.$data[1].'</span> on line '.$data[2];
+			}, $value);
+
+			$html[] = '<pre lang="mul">'.$value.'</pre>';
+		}
+
+		// empty doc
+		$base = '<html lang="mul"><head><title>...</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>...</body></html>';
+
+		$html[] = '<iframe type="text/html" scrolling="no" srcdoc="data:text/html;base64,'.base64_encode($base).'" onload="maillog.iframe(this)">'.base64_encode($email->toHtml(true)).'</iframe>'; // true for nomark
 		$html[] = '</div>';
 
 		return implode("\n", $html);

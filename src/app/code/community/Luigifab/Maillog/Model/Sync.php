@@ -1,9 +1,9 @@
 <?php
 /**
  * Created M/10/11/2015
- * Updated J/21/09/2023
+ * Updated S/23/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -22,7 +22,7 @@
 
 class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
-	protected $_eventPrefix  = 'maillog_sync';
+	protected $_eventPrefix = 'maillog_sync';
 	protected static $_reviews = [];
 
 	public function _construct() {
@@ -30,25 +30,18 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 	}
 
 
-	// action
-	public function updateNow($entity = null) {
+	public function updateNow(object $system, $entity = null) {
 
 		$start = time();
-		if (empty($this->getId()))
-			Mage::throwException('You must load a sync before trying to sync it.');
-
-		// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
-		// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3           : 4 email
-		$info = explode(':', $this->getData('action'));
 
 		$this->setData('exception', null);
 		$this->setData('status', 'running');
 		$this->save();
 
 		try {
-			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
-			if (!($system instanceof Luigifab_Maillog_Model_Interface))
-				Mage::throwException(sprintf('Unknown system (%s) for sync %d.', get_class($system), $this->getId()));
+			// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
+			// 0 method_name (update) : 1 object_type (customer) : 2 object_id : 3           : 4 email
+			$info = explode(':', $this->getData('action'));
 
 			// chargement des objets du client
 			if ($info[1] == 'customer') {
@@ -89,14 +82,18 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$object   = $this->initSpecialObject($customer, $system->getMapping());
 			}
 			else {
-				Mage::throwException(sprintf('Unknown object_type (%s) for sync %d.', $info[1], $this->getId()));
+				$customer   = null;
+				$billing    = null;
+				$shipping   = null;
+				$subscriber = null;
+				$object     = null;
 			}
 
 			// action
 			// note très très importante, le + fait en sorte que ce qui est déjà présent n'est pas écrasé
 			// par exemple, si entity_id est trouvé dans $customer, même si entity_id est trouvé dans $billing,
 			// c'est bien l'entity_id de customer qui est utilisé
-			$allow = Mage::getStoreConfigFlag('maillog_sync/'.$code.'/send') ? Mage::helper('maillog')->canSend(...$info) : false;
+			$allow = $system->isRunnable() ? Mage::helper('maillog')->canSend(...$info) : false;
 			$data  = $system->mapFields($customer, 'customer');
 			$data += $system->mapFields($billing, 'address');
 			$data += $system->mapFields($shipping, 'address');
@@ -115,31 +112,25 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
-			$this->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
+			$this->setData('exception', $this->formatException($t));
 			$this->saveAllData($system, $start, $data ?? null);
 		}
 
 		return empty($data) ? null : $data;
 	}
 
-	public function deleteNow($entity = null) {
+	public function deleteNow(object $system, $entity = null) {
 
 		$start = time();
-		if (empty($this->getId()))
-			Mage::throwException('You must load a sync before trying to sync it.');
-
-		// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
-		// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3           : 4 email
-		$info = explode(':', $this->getData('action'));
 
 		$this->setData('exception', null);
 		$this->setData('status', 'running');
 		$this->save();
 
 		try {
-			$system = Mage::helper('maillog')->getSystem($code = $this->getData('model'));
-			if (!($system instanceof Luigifab_Maillog_Model_Interface))
-				Mage::throwException(sprintf('Unknown system (%s) for sync %d.', get_class($system), $this->getId()));
+			// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3 old-email : 4 email
+			// 0 method_name (delete) : 1 object_type (customer) : 2 object_id : 3           : 4 email
+			$info = explode(':', $this->getData('action'));
 
 			// simule un client
 			if ($info[1] == 'customer') {
@@ -153,11 +144,11 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$customer->setData('email', $info[4]);
 			}
 			else {
-				Mage::throwException(sprintf('Unknown object_type (%s) for sync %d.', $info[1], $this->getId()));
+				$customer = null;
 			}
 
 			// action
-			$allow = Mage::getStoreConfigFlag('maillog_sync/'.$code.'/send') ? Mage::helper('maillog')->canSend(...$info) : false;
+			$allow = $system->isRunnable() ? Mage::helper('maillog')->canSend(...$info) : false;
 			$data  = $system->mapFields($customer, 'customer');
 
 			if ($allow !== true) {
@@ -172,15 +163,26 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 		}
 		catch (Throwable $t) {
 			Mage::logException($t);
-			$this->setData('exception', $t->getMessage()."\n".str_replace(dirname(Mage::getBaseDir()), '', $t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()));
+			$this->setData('exception', $this->formatException($t));
 			$this->saveAllData($system, $start, $data ?? null);
 		}
 
 		return empty($data) ? null : $data;
 	}
 
+	public function formatException(Throwable $t) {
 
-	// gestion des données des objets et de l'historique
+		// $t->__toString()...
+		// same as Mage::printException
+		return get_class($t).': '.$t->getMessage()."\n".
+			str_replace(
+				str_contains(__FILE__, 'vendor/luigifab') ? dirname(BP) : BP,
+				'',
+				$t->getTraceAsString()."\n".'  thrown in '.$t->getFile().' on line '.$t->getLine()
+			);
+	}
+
+
 	protected function initSpecialObject(object $customer, array $values, $object = null) {
 
 		$object = is_object($object) ? $object : new Varien_Object();
@@ -245,12 +247,16 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$object->setData('first_order_date',        $firstOrder->getData('created_at'));
 				$object->setData('first_order_status',      $firstOrder->getData('status'));
 				$object->setData('first_order_payment',     $firstOrder->getPayment()->getData('method'));
-				$object->setData('first_order_total', ($firstOrder->getData('base_grand_total') * $firstOrder->getData('base_to_global_rate')));
-				$object->setData('first_order_total_notax', (($firstOrder->getData('base_grand_total') - $firstOrder->getData('base_tax_amount')) * $firstOrder->getData('base_to_global_rate')));
+				$object->setData('first_order_total', $firstOrder->getData('base_grand_total') * $firstOrder->getData('base_to_global_rate'));
+				$object->setData('first_order_total_notax',
+					($firstOrder->getData('base_grand_total') - $firstOrder->getData('base_tax_amount')) *
+					$firstOrder->getData('base_to_global_rate'));
 
-				if ($this->inArray('first_order_names_list', $values) ||
-				    $this->inArray('first_order_skus_list', $values) || $this->inArray('first_order_skus_number', $values)) {
-
+				if (
+					$this->inArray('first_order_names_list', $values) ||
+					$this->inArray('first_order_skus_list', $values) ||
+					$this->inArray('first_order_skus_number', $values)
+				) {
 					$firstSkus = $firstOrder->getItemsCollection()
 						->addFieldToFilter('parent_item_id', ['null' => true])
 						->setOrder('price_incl_tax', 'desc');
@@ -275,10 +281,13 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				$object->setData('last_order_total', ($lastOrder->getData('base_grand_total') * $lastOrder->getData('base_to_global_rate')));
 				$object->setData('last_order_total_notax', (($lastOrder->getData('base_grand_total') - $lastOrder->getData('base_tax_amount')) * $lastOrder->getData('base_to_global_rate')));
 
-				if ($this->inArray('last_order_names_list', $values) ||
-				    $this->inArray('last_order_skus_list', $values) || $this->inArray('last_order_skus_number', $values) ||
-				    $this->inArray('last_order_product_1_sku', $values) || $this->inArray('last_order_product_1_name', $values)) {
-
+				if (
+					$this->inArray('last_order_names_list', $values) ||
+					$this->inArray('last_order_skus_list', $values) ||
+					$this->inArray('last_order_skus_number', $values) ||
+					$this->inArray('last_order_product_1_sku', $values) ||
+					$this->inArray('last_order_product_1_name', $values)
+				) {
 					$lastSkus = $lastOrder->getItemsCollection()
 						->addFieldToFilter('parent_item_id', ['null' => true])
 						->setOrder('price_incl_tax', 'desc');
@@ -365,7 +374,9 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				}
 
 				// mautic
-				$rom = $this->inArray('rating_order_monetary', $values) || $this->inArray('rating_order_recency', $values) || $this->inArray('rating_order_frequency', $values);
+				$rom = $this->inArray('rating_order_monetary', $values) ||
+					$this->inArray('rating_order_recency', $values) ||
+					$this->inArray('rating_order_frequency', $values);
 
 				// moyennes
 				$columns = [];
@@ -377,7 +388,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 						'SUM(main_table.base_tax_amount * main_table.base_to_global_rate)';
 
 				if ($this->inArray('average_days_between_orders', $values))
-					$columns['average_days'] = new Zend_Db_Expr( // https://dba.stackexchange.com/a/164826
+					$columns['average_days'] = new Zend_Db_Expr( // @see https://dba.stackexchange.com/a/164826
 						'CASE WHEN COUNT(*) > 1'.
 						' THEN ABS(DATEDIFF(MIN(main_table.created_at), MAX(main_table.created_at)) / (COUNT(*) - 1)) '.
 						' ELSE 0 '.
@@ -403,10 +414,12 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 				}
 
 				// mautic
-				if ($rom) {
+				if ($rom)
+					$config = Mage::helper('maillog')->getConfigUnserialized('maillog_sync/mautic/mautic_config');
 
-					$config = @unserialize(Mage::getStoreConfig('maillog_sync/mautic/mautic_config'), ['allowed_classes' => false]);
-					$time   = Mage::getModel('core/date')->gmtTimestamp();
+				if ($rom && !empty($config)) {
+
+					$time = Mage::getModel('core/date')->gmtTimestamp();
 
 					// nombre de jour depuis la dernière commande
 					$recency = ($time - strtotime($lastOrder->getData('created_at'))) / (60 * 60 * 24);
@@ -462,7 +475,7 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 	protected function inArray($needle, array $haystack, bool $strict = false) {
 
-		// https://stackoverflow.com/a/4128377/2980105
+		// @see https://stackoverflow.com/a/4128377/2980105
 		foreach ($haystack as $item) {
 			if (($strict ? ($item === $needle) : ($item == $needle)) || (is_array($item) && $this->inArray($needle, $item, $strict)))
 				return true;
@@ -475,21 +488,21 @@ class Luigifab_Maillog_Model_Sync extends Mage_Core_Model_Abstract {
 
 		$inline = [];
 
-		foreach ($data as $key => $value) {
-			if (is_array($value)) {
-				$subdata = $this->transformDataForHistory($value, false);
-				foreach ($subdata as $subvalue)
-					$inline[] = sprintf('[%s]%s', $key, $subvalue);
+		foreach ($data as $key => $datum) {
+			if (is_array($datum)) {
+				$subdata = $this->transformDataForHistory($datum, false);
+				foreach ($subdata as $subdatum)
+					$inline[] = sprintf('[%s]%s', $key, $subdatum);
 			}
 			else {
-				$inline[] = sprintf('[%s] %s%s', $key, $value, "\n");
+				$inline[] = sprintf('[%s] %s%s', $key, $datum, "\n");
 			}
 		}
 
 		return $asString ? trim(implode($inline)) : $inline;
 	}
 
-	public function saveAllData(object $system, int $start, $request = null, $response = null) {
+	protected function saveAllData(object $system, int $start, $request = null, $response = null) {
 
 		if (!empty($request)) {
 

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created S/26/10/2019
- * Updated M/24/01/2023
+ * Updated S/09/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -53,14 +53,14 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
 			$vars['myvar1'][$i]['k'] = ($n == $n) ? 'true' : 'false';
 			$vars['myvar1'][$i]['l'] = ($n != $n) ? 'true' : 'false';
 			// == et != avec empty
-			$vars['myvar1'][$i]['m'] =  empty($n) ? 'true' : 'false';
-			$vars['myvar1'][$i]['n'] = !empty($n) ? 'true' : 'false';
+			$vars['myvar1'][$i]['m'] = empty($n) ? 'true' : 'false';
+			$vars['myvar1'][$i]['n'] = empty($n) ? 'false' : 'true';
 			// == et != // en PHP, tout string vaut 0 (voir aussi _getVariable)
 			$vars['myvar1'][$i]['o'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'false' : (($n == 'abcde') ? 'true' : 'false');
 			$vars['myvar1'][$i]['p'] = (is_numeric($n) && ($n == 0) && !is_numeric('abcde')) ? 'true'  : (($n != 'abcde') ? 'true' : 'false');
 			// in_array
-			$vars['myvar1'][$i]['q'] =  in_array($n, [0,1,2]) ? 'true' : 'false';
-			$vars['myvar1'][$i]['r'] = !in_array($n, [0,1,2]) ? 'true' : 'false';
+			$vars['myvar1'][$i]['q'] = in_array($n, [0,1,2]) ? 'true' : 'false';
+			$vars['myvar1'][$i]['r'] = in_array($n, [0,1,2]) ? 'false' : 'true';
 			// contains
 			$vars['myvar1'][$i]['s'] = (mb_stripos($t, 'truc') !== false) ? 'true' : 'false';
 			$vars['myvar1'][$i]['t'] = (mb_stripos($t, 'truc') === false) ? 'true' : 'false';
@@ -159,7 +159,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Blo
  B / {currency path="currency/options/base"} / <em>{{currency path="currency/options/base"}}</em>
 ')))).'</pre>',
 '</div>',
-			'</div>' // div class comment
+			'</div>', // div class comment
 		]);
 	}
 }

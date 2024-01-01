@@ -1,6 +1,6 @@
 <?php
 /**
- * Created M/23/11/2021
+ * Created S/11/11/2023
  * Updated S/25/11/2023
  *
  * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
@@ -33,17 +33,29 @@ ignore_user_abort(true);
 set_time_limit(0);
 
 try {
-	$this->run('
-		ALTER TABLE '.$this->getTable('maillog/email').'
-			ADD FULLTEXT mail_recipients (mail_recipients),
-			ADD FULLTEXT mail_subject (mail_subject);
-	');
+	$table = $this->getTable('maillog/email');
+	if (!$this->getConnection()->tableColumnExists($table, 'diqinu'))
+		$this->run('ALTER TABLE '.$table.' ADD COLUMN diqinu varchar(10) NOT NULL AFTER uniqid');
+
+	$emails = $this->_conn->fetchOne(
+		'SELECT value FROM '.$this->getTable('core_config_data').' WHERE path LIKE ?',
+		'maillog/email/recipient_email'
+	);
+
+	if (!empty($emails) && !str_contains($emails, '"')) {
+
+		$emails = array_filter(preg_split('#\s+#', $emails));
+		$values = [];
+		$uuid   = round(microtime(true) * 1000 - 10000);
+		foreach ($emails as $idx => $email)
+			$values['_1700916273_'.($uuid + $idx)] = ['email' => $email];
+
+		$this->setConfigData('maillog/email/recipient_email', serialize($values));
+	}
 }
 catch (Throwable $t) {
-	if (mb_stripos($t->getMessage(), 'Duplicate key name') === false) {
-		$lock->unlock();
-		throw $t;
-	}
+	$lock->unlock();
+	throw $t;
 }
 
 $this->endSetup();

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created M/24/03/2015
- * Updated J/20/10/2022
+ * Updated S/11/11/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -28,14 +28,14 @@ class Luigifab_Maillog_Model_Source_Minify {
 
 		if (empty($this->_options)) {
 
-			$help = Mage::helper('maillog');
-			$tidy = (class_exists('tidy', false) && extension_loaded('tidy')) ?
-				date('Ymd', strtotime(tidy_get_release())) : $help->__('not available');
+			$helper = Mage::helper('maillog');
+			$tidy   = (class_exists('tidy', false) && extension_loaded('tidy')) ?
+				date('Ymd', strtotime(tidy_get_release())) : $helper->__('not available');
 
 			$this->_options = [
 				['value' => 0, 'label' => Mage::helper('adminhtml')->__('No')],
-				['value' => 1, 'label' => $help->__('Yes with PHP-TIDY (%s)', $tidy)],
-				['value' => 2, 'label' => $help->__('Yes but remove only white spaces')],
+				['value' => 1, 'label' => $helper->__('Yes with PHP-TIDY (%s)', $tidy)],
+				['value' => 2, 'label' => $helper->__('Yes but remove only white spaces')],
 			];
 		}
 

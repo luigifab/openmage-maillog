@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated V/14/04/2023
+ * Updated V/22/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -70,8 +70,9 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 		return Zend_Locale_Format::toNumber($value, $options);
 	}
 
-	public function getNumberToHumanSize(int $number) {
+	public function getNumberToHumanSize($number) {
 
+		$number = (float) $number;
 		if ($number < 1) {
 			$data = '';
 		}
@@ -122,21 +123,34 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 	public function getSystem($code = null, $klass = null) {
 
+		// $code  = mautic|emarsys|...
+		// $klass = Luigifab_Maillog_Model_System_Mautic|Emarsys|...
 		if (empty($code)) {
+
 			$systems = [];
 			$config  = Mage::getConfig()->getNode('global/models/maillog/adaptators')->asArray();
+
 			foreach ($config as $key => $value) {
-				if (Mage::getStoreConfigFlag('maillog_sync/'.$key.'/enabled'))
-					$systems[$key] = $this->getSystem($key, $value);
+				$system = $this->getSystem($key, $value);
+				if (!empty($system))
+					$systems[$key] = $system;
 			}
+
 			return $systems;
 		}
 
 		$system = Mage::registry('maillog_'.$code);
-		if (!is_object($system)) {
+		if (!is_object($system) && !is_bool($system)) {
+
+			$system = false;
 			if (empty($klass))
 				$klass = (string) Mage::getConfig()->getNode('global/models/maillog/adaptators/'.$code);
-			$system = empty($klass) ? new Varien_Object() : Mage::getSingleton($klass);
+
+			if (!empty($klass)) {
+				$system = Mage::getSingleton($klass);
+				$system = $system->isEnabled() ? $system : false;
+			}
+
 			Mage::register('maillog_'.$code, $system);
 		}
 
@@ -294,7 +308,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$actionKey = $originalKey;
 				$sync = Mage::getModel('maillog/sync');
 
-				// des fois qu'une synchro en attente pour le même client existe déjà
+				// des fois qu'il existe déjà une synchro en attente pour le même client
 				if (!empty($syncs->getSize())) {
 
 					$candidate = $syncs->getFirstItem();
@@ -347,7 +361,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$sync->save();
 			}
 
-			if ((PHP_SAPI != 'cli') && Mage::app()->getStore()->isAdmin() && Mage::getSingleton('admin/session')->isLoggedIn())
+			if ((PHP_SAPI != 'cli') && !empty($systems) && Mage::app()->getStore()->isAdmin() && Mage::getSingleton('admin/session')->isLoggedIn())
 				Mage::getSingleton('adminhtml/session')->addNotice($this->__('Customer data will be synchronized (%s).', $email));
 		}
 
@@ -362,15 +376,16 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 	public function getImportStatus(string $key, $id = null) {
 
-		$basedir = Mage::getStoreConfig('maillog_sync/'.$key.'/directory');
-		$basedir = str_replace('//', '/', Mage::getBaseDir('var').'/'.trim($basedir, "/ \t\n\r\0\x0B").'/');
+		$dir  = Mage::getStoreConfig('maillog_sync/'.$key.'/directory');
+		$dir  = empty($dir) ? '' : str_replace('//', '/', Mage::getBaseDir('var').'/'.trim($dir, "/ \t\n\r\0\x0B").'/');
+		$file = false;
 
-		if (is_file($basedir.'status.dat')) {
+		if (is_file($dir.'status.dat')) {
 
-			$result = new Varien_Object(@json_decode(file_get_contents($basedir.'status.dat'), true, 3));
+			$result = new Varien_Object(@json_decode(file_get_contents($dir.'status.dat'), true, 3));
 			$result->setData('duration', strtotime($result->getData('finished_at')) - strtotime($result->getData('started_at')));
 
-			// de qui ?
+			// de qui
 			if (empty($result->getData('cron'))) {
 				$txt = $this->__('Manual import: %s.', $this->formatDate($result->getData('finished_at'), Zend_Date::DATETIME_FULL));
 			}
@@ -382,11 +397,11 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 					$txt = strip_tags($txt);
 			}
 
-			// détails ?
+			// détails
 			if (!empty($result->getData('file'))) {
 
 				$file = $result->getData('file');
-				$file = $basedir.'done/'.mb_substr($file, 0, mb_stripos($file, '-') - 2).'/'.$file;
+				$file = $dir.'done/'.mb_substr($file, 0, mb_stripos($file, '-') - 2).'/'.$file;
 
 				if (is_file($file)) {
 					if ($key == 'bounces') {
@@ -418,7 +433,7 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				$txt .= "\n".'<br /><span lang="en">'.$result->getData('exception').'</span>';
 			}
 
-			// en cours ?
+			// en cours
 			// sauf si la tâche cron à durée plus d'une heure
 			$cron = Mage::getResourceModel('cron/schedule_collection')
 				->addFieldToFilter('job_code', 'maillog_'.$key.'_import')
@@ -435,10 +450,8 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 				else {
 					$url  = $this->getCronUrl($cron->getId());
 					$cron = $this->__('An import is in progress (cron job #<a %s>%d</a>).', 'href="'.$url.'"', $cron->getId());
-
 					if (empty($url))
 						$cron = strip_tags($cron);
-
 					$txt .= "\n".'<br /><strong>'.$cron.'</strong>';
 				}
 			}
@@ -466,5 +479,18 @@ class Luigifab_Maillog_Helper_Data extends Mage_Core_Helper_Abstract {
 
 		ksort($types);
 		return $types;
+	}
+
+	public function getConfigUnserialized(string $path) {
+
+		$data = Mage::getStoreConfig($path);
+		if (empty($data))
+			return [];
+
+		$data = @unserialize($data, ['allowed_classes' => false]);
+		if (empty($data) || !is_array($data))
+			return [];
+
+		return $data;
 	}
 }

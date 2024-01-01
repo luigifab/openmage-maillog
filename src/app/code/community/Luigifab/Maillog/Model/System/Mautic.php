@@ -1,9 +1,9 @@
 <?php
 /**
  * Created J/23/09/2021
- * Updated J/21/09/2023
+ * Updated S/09/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -22,7 +22,7 @@
 
 class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System {
 
-	// https://developer.mautic.org/#rest-api
+	// @see https://developer.mautic.org/#rest-api
 	protected $_code = 'mautic';
 	protected $_regions = [];
 
@@ -31,7 +31,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 
 		if (empty($this->_fields)) {
 
-			// https://developer.mautic.org/#list-available-fields
+			// @see https://developer.mautic.org/#list-available-fields
 			$result = $this->sendRequest('GET', 'contacts/list/fields');
 			$fields = [];
 
@@ -44,7 +44,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 					$fields[$field['id']] = [
 						'id'       => $field['type'].'_'.$field['alias'],
 						'name'     => $field['group'].' / '.$field['object'].' / '.$field['label'],
-						'readonly' => false
+						'readonly' => false,
 					];
 				}
 
@@ -157,7 +157,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 					else {
 						// 2016-02-26T10:31:11+00:00
 						// 2016-02-26 10:32:28
-						$fields[$system] = $object->getData($code);
+						$fields[$system] = (string) $object->getData($code);
 						if (!empty($fields[$system]) && (preg_match('#^\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}#', $fields[$system]) === 1))
 							$fields[$system] = date('Y-m-d H:i:s', strtotime($fields[$system]));
 					}
@@ -175,15 +175,15 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 
 	public function updateCustomer(array $data) {
 
-		// https://developer.mautic.org/#create-contact
-		// https://developer.mautic.org/#edit-contact
+		// @see https://developer.mautic.org/#create-contact
+		// @see https://developer.mautic.org/#edit-contact
 		return $this->sendRequest('POST', 'contacts/new', $data);
 	}
 
 	public function deleteCustomer(array $data) {
 
-		// https://developer.mautic.org/#list-contacts
-		// https://developer.mautic.org/#delete-contact
+		// @see https://developer.mautic.org/#list-contacts
+		// @see https://developer.mautic.org/#delete-contact
 		$raw = $this->sendRequest('GET', 'contacts', 'search='.urlencode($data['email']).'&limit=1&minimal=1');
 		if ($this->checkResponse($raw)) {
 			$response = $this->extractResponseData($raw, true);
@@ -240,7 +240,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		}
 		else if ($type == 'PUT') {
-			// https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
+			// @see https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
 			//curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
 			curl_setopt($ch, CURLOPT_POST, true);
 			$override = 'X-HTTP-Method-Override: PUT';
@@ -248,7 +248,7 @@ class Luigifab_Maillog_Model_System_Mautic extends Luigifab_Maillog_Model_System
 				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		}
 		else if ($type == 'DELETE') {
-			// https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
+			// @see https://gridpane.com/kb/making-nginx-accept-put-delete-and-patch-verbs/
 			//curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
 			curl_setopt($ch, CURLOPT_POST, true);
 			$override = 'X-HTTP-Method-Override: DELETE';

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created D/22/03/2015
- * Updated S/19/02/2022
+ * Updated D/03/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -37,7 +37,7 @@ class Luigifab_Maillog_Model_Resource_Email_Collection extends Mage_Core_Model_R
 
 	public function addFieldToFilterWithMatch($field, $value) {
 
-		// https://stackoverflow.com/a/3645859/2980105
+		// @see https://stackoverflow.com/a/3645859/2980105
 		// MATCH (field) AGAINST ('"value"' IN BOOLEAN MODE)
 		$this->getSelect()->where(new Zend_Db_Expr('MATCH ('.$field.') AGAINST (\'"'.
 			trim($this->getConnection()->quote(trim($value, '\'')), '\'').

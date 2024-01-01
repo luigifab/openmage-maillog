@@ -1,9 +1,9 @@
 <?php
 /**
  * Created W/11/11/2015
- * Updated D/11/12/2022
+ * Updated S/09/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -31,13 +31,5 @@ class Luigifab_Maillog_Block_Adminhtml_Sync extends Mage_Adminhtml_Block_Widget_
 		$this->_headerText = $this->__('Customers synchronization');
 
 		$this->_removeButton('add');
-
-		if (Mage::getSingleton('admin/session')->isAllowed('system/config/maillog_sync')) {
-			$this->_addButton('config', [
-				'label'   => $this->__('Configuration'),
-				'onclick' => "setLocation('".$this->getUrl('*/system_config/edit', ['section' => 'maillog_sync'])."');",
-				'class'   => 'go',
-			]);
-		}
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created M/28/09/2021
- * Updated S/03/12/2022
+ * Updated V/22/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -26,9 +26,9 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mautic extends Mage_Adminhtml_Bloc
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
-		$config = @unserialize(Mage::getStoreConfig('maillog_sync/mautic/mautic_config'), ['allowed_classes' => false]);
+		$config = $this->helper('maillog')->getConfigUnserialized('maillog_sync/mautic/mautic_config');
 
-		if (empty($config) || !is_array($config)) {
+		if (empty($config)) {
 			$config = [
 				'5a' => 60,
 				'5b' => 20,

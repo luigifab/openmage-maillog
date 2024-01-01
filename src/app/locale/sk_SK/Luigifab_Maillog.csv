@@ -11,6 +11,8 @@
 "Status: <span %s>%s</span>","Stav: <span %s>%s</span>"
 "Sender: %s","Odosielateľ: %s"
 "Recipient(s): %s","Prijímatel(ia): %s"
+"CC: %s","Kópia: %s"
+"BCC: %s","Skrytá kópia: %s"
 " monthly","mesačne"
 " weekly","týždenne"
 " daily","denne"

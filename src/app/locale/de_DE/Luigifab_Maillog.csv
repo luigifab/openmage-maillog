@@ -11,7 +11,6 @@
 "Number of emails","Anzahl der E-Mails"
 "Table size","Tabellengröße"
 "Email reports","Berichte pro E-Mail"
-"Separate addresses by a space.","E-Mail-Adressen durch einen Abstand trennen."
 "Send an email now","Jetzt eine E-Mail senden"
 "
 						<p>Synchronization allow to synchronize customer data from <strong>OpenMage</strong> to your <strong>System</strong>.<br />It is performed every minutes by cron job on the following events (whether from the backend or from the frontend):</p>
@@ -22,7 +21,7 @@
 							<li>when saving a shipping or a billing address of a customer,</li>
 							<li>when invoicing an order.</li>
 						</ul>
-					","<p>Die Synchronisation ermöglicht, die Daten der Kunden von <strong>OpenMage</strong> zu Ihrem <strong>System</strong> zu synchronisieren.<br />Sie wird every minutes by cron job auf den folgenden Ereignissen realisiert (entweder aus dem Frontend oder aus dem Backend):</p>
+					","<p>Die Synchronisation ermöglicht, die Daten der Kunden von <strong>OpenMage</strong> zu Ihrem <strong>System</strong> zu synchronisieren.<br />Sie wird alle Minuten durch einen Kron-Task bei den folgenden Ereignissen durchgeführt (entweder aus dem Frontend oder aus dem Backend):</p>
 <ul>
 <li>bei der Verbindung eines Kunden,</li>
 <li>bei der Registrierung oder der Abschaffung eines Kunden,</li>
@@ -54,6 +53,7 @@
 "If yes, <strong>all</strong> customers not present in the file will be subscribed to the newsletter.","Wenn ja, <strong>alle</strong> die in der Datei nicht anwesenden OpenMage-Kunden werden dem Newsletter abonniert."
 "Number of subscribers","Abonnentenanzahl"
 "Confirmation request email","E-Mail zur Anfrage der Bestellbestätigung"
+"Reply to","Antworten an"
 "Recipient(s)","Empfänger"
 "Sent At","Am gesendet"
 "Duration","Dauer"
@@ -72,6 +72,7 @@
 "Approximate size: %s","Ungefähre Größe: %s"
 "Sender: %s","Von: %s"
 "Recipient(s): %s","Empfänger: %s"
+"Reply to: %s","Antworten an: %s"
 "Synchronized At","Am synchronisiert"
 "Running","Im Lauf"
 " Success","Beendet"
@@ -98,7 +99,6 @@
 "%d days (%d months)","%d Tage (%d Monate)"
 "not available","nicht verfügbar"
 "Yes with PHP-TIDY (%s)","Ja mit PHP-TIDY (%s)"
-"The <em>%s</em> field is a required field.","Das Feld <em>%s</em> ist ein obligatorisches Feld."
 "Email number %d has been successfully deleted.","Die E-Mail Nummer %d wurde gelöscht."
 "Invalid email (hard bounce)","Ungültiges E-Mail (hard bounce)"
 "Transactional emails - %s","Transaktions-E-Mails - %s"

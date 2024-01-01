@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/03/01/2020
- * Updated J/21/09/2023
+ * Updated S/23/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -119,46 +119,51 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 			$this->_configDecoding      = Mage::getStoreConfig('maillog_directives/general/picture_decoding');
 
 			// config des tags (avec mise en cache)
-			$config = Mage::app()->useCache('config') ? @json_decode(Mage::app()->loadCache('maillog_config'), true) : null;
+			if (Mage::app()->useCache('config')) {
+				$config = Mage::app()->loadCache('maillog_config');
+				$config = empty($config) ? null : @json_decode($config, true);
+			}
+
 			if (empty($config) || !is_array($config)) {
 
-				$config = @unserialize(Mage::getStoreConfig('maillog_directives/general/special_config'), ['allowed_classes' => false]);
-				$config = is_array($config) ? $config : [];
+				$config = $this->getConfigUnserialized('maillog_directives/general/special_config');
+				if (!empty($config)) {
 
-				// à partir de
-				// $config[0] => Array(
-				//  [c] => test
-				//  [d] =>
-				//  [0] => Array( [w] => 560 [h] => 480 )
-				//  [1] => Array( [b] => 320 [w] => 209 [h] => 177 )
-				//  [3] => Array( [b] => 768 [w] => 420 [h] => 360 )
-				//  [2] => Array( [b] => 380 [w] => 252 [h] => 216 )
-				// )
-				// génère
-				// $config[test] => Array(
-				//  [320] => Array( [b] => 320 [w] => 209 [h] => 177 )
-				//  [380] => Array( [b] => 380 [w] => 252 [h] => 216 )
-				//  [768] => Array( [b] => 768 [w] => 420 [h] => 360 )
-				//  [769] => Array( [w] => 560 [h] => 480 )
-				// )
-				foreach ($config as $key => $data) {
+					// from
+					// $config[0] => Array(
+					//  [c] => test
+					//  [d] =>
+					//  [0] => Array( [w] => 560 [h] => 480 )
+					//  [1] => Array( [b] => 320 [w] => 209 [h] => 177 )
+					//  [3] => Array( [b] => 768 [w] => 420 [h] => 360 )
+					//  [2] => Array( [b] => 380 [w] => 252 [h] => 216 )
+					// )
+					// generate
+					// $config[test] => Array(
+					//  [320] => Array( [b] => 320 [w] => 209 [h] => 177 )
+					//  [380] => Array( [b] => 380 [w] => 252 [h] => 216 )
+					//  [768] => Array( [b] => 768 [w] => 420 [h] => 360 )
+					//  [769] => Array( [w] => 560 [h] => 480 )
+					// )
+					foreach ($config as $key => $data) {
 
-					$config[$data['c']] = [];
-					foreach ($data as $subdata) {
-						if (is_array($subdata))
-							$config[$data['c']][empty($subdata['b']) ? 0 : $subdata['b']] = $subdata;
+						$config[$data['c']] = [];
+						foreach ($data as $subdata) {
+							if (is_array($subdata))
+								$config[$data['c']][empty($subdata['b']) ? 0 : $subdata['b']] = $subdata;
+						}
+						unset($config[$key]);
+
+						ksort($config[$data['c']]);
+						$last = array_keys($config[$data['c']]);
+						$last = array_pop($last);
+						$config[$data['c']][$last + 1] = $config[$data['c']][0];
+						unset($config[$data['c']][0]);
 					}
-					unset($config[$key]);
 
-					ksort($config[$data['c']]);
-					$last = array_keys($config[$data['c']]);
-					$last = array_pop($last);
-					$config[$data['c']][$last + 1] = $config[$data['c']][0];
-					unset($config[$data['c']][0]);
+					if (Mage::app()->useCache('config'))
+						Mage::app()->saveCache(json_encode($config), 'maillog_config', [Mage_Core_Model_Config::CACHE_TAG]);
 				}
-
-				if (Mage::app()->useCache('config'))
-					Mage::app()->saveCache(json_encode($config), 'maillog_config', [Mage_Core_Model_Config::CACHE_TAG]);
 			}
 
 			$this->_pictureConfig = $config;
@@ -179,9 +184,13 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 		// cache des tags html générés
 		if (empty($this->_cacheTags)) {
-			$this->_cacheTags = Mage::app()->useCache('block_html') ? @json_decode(Mage::app()->loadCache('maillog_tags'), true) : null;
-			if (empty($this->_cacheTags) || !is_array($this->_cacheTags))
+			if (Mage::app()->useCache('block_html')) {
+				$this->_cacheTags = Mage::app()->loadCache('maillog_tags');
+				$this->_cacheTags = empty($this->_cacheTags) ? null : @json_decode($this->_cacheTags, true);
+			}
+			if (empty($this->_cacheTags) || !is_array($this->_cacheTags)) {
 				$this->_cacheTags = ['date' => date('c')];
+			}
 		}
 
 		$attrs = $this->createHtmlAttributes($params, $sizes);
@@ -211,25 +220,25 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 
 	protected function createHtmlTags(array $params, array $sizes, array $attrs, object $object, string $attribute) {
 
-		$help = Mage::helper(empty($params['helper']) ? 'catalog/image' : $params['helper']);
-		$file = $params['file'];
-		$tags = ['<picture>'];
+		$helper = Mage::helper(empty($params['helper']) ? 'catalog/image' : $params['helper']);
+		$file   = $params['file'];
+		$tags   = ['<picture>'];
 
-		// https://www.js-craft.io/blog/what-does-the-html-image-decoding-async-attribute-do-and-how-can-it-help-us-to-improve-performance/
+		// @see https://www.js-craft.io/blog/what-does-the-html-image-decoding-async-attribute-do-and-how-can-it-help-us-to-improve-performance/
 		if (!empty($this->_configDecoding))
 			$attrs[] = 'decoding="'.$this->_configDecoding.'"';
 
 		if (str_ends_with($file, '.svg')) {
 			$size   = (array) end($sizes); // (yes)
-			$tags[] = '<img src="'.$help->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 1)).'" width="'.$size['w'].'" height="'.$size['h'].'" '.implode(' ', $attrs).' />';
+			$tags[] = '<img src="'.$helper->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 1)).'" width="'.$size['w'].'" height="'.$size['h'].'" '.implode(' ', $attrs).' />';
 		}
 		else {
 			$total = count($sizes);
 
-			// source (jpg jpeg gif png webp)
-			$orig = strtolower(mb_substr($file, mb_strrpos($file, '.') + 1));
+			// source (jpg png gif webp)
+			$orig = strtolower(mb_substr($file, mb_strrpos($file, '.') + 1)); // not mb_strtolower
 			$mime = '';
-			if (($orig == 'jpg') || ($orig == 'jpeg'))
+			if (in_array($orig, ['jpg', 'jpeg']))
 				$mime = ' type="image/jpeg"';
 			else if ($orig == 'png')
 				$mime = ' type="image/png"';
@@ -238,20 +247,24 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 			else if ($orig == 'webp')
 				$mime = ' type="image/webp"';
 
-			// ajoute des images webp en plus des jpg jpeg gif png
-			if ($this->_configCreateWebp && ($orig != 'webp') && method_exists($help, 'hasWebp') && $help->hasWebp()) {
+			// génère aussi des images webp
+			if ($this->_configCreateWebp && ($orig != 'webp') && version_compare(Mage::getOpenMageVersion(), '20.1.1', '>=')) {
 
 				foreach ($sizes as $breakpoint => $size) {
+					$wh   = $this->_configWidthHeight ? ' width="'.$size['w'].'" height="'.$size['h'].'"' : '';
 					$srcs = [
-						(string) $help->init($object, $attribute, $file, true, true)->resize(...$this->getSize($size['w'], $size['h'], 1)),
-						(string) $help->init($object, $attribute, $file, true, true)->resize(...$this->getSize($size['w'], $size['h'], 2)),
+						(string) $helper->init($object, $attribute, $file, true, true)->resize(...$this->getSize($size['w'], $size['h'], 1)),
+						(string) $helper->init($object, $attribute, $file, true, true)->resize(...$this->getSize($size['w'], $size['h'], 2)),
 					];
-					// width et height
-					$wh = $this->_configWidthHeight ? ' width="'.$size['w'].'" height="'.$size['h'].'"' : '';
+					if (!str_ends_with($srcs[0], '.webp'))
+						break;
 					// n'ajoute pas une seule balise source (avec 0 rem)
-					if ($total == 1) break;
-					// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
-					// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
+					if ($total == 1) {
+						$tags[] = '<source type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
+						break;
+					}
+					// @see https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
+					// getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
 					if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
 						$rem    = empty($rem) ? 0 : $rem;
 						$tags[] = '<source media="(min-width:'.$rem.'rem)" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
@@ -261,23 +274,22 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 						$tags[] = '<source media="(max-width:'.$rem.'rem)" type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 					}
 				}
-
-				if ($total == 1)
-					$tags[] = '<source type="image/webp" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 			}
 
-			// source (jpg jpeg gif png webp)
+			// source (jpg png gif webp)
 			foreach ($sizes as $breakpoint => $size) {
+				$wh   = $this->_configWidthHeight ? ' width="'.$size['w'].'" height="'.$size['h'].'"' : '';
 				$srcs = [
-					(string) $help->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 1)),
-					(string) $help->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 2))
+					(string) $helper->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 1)),
+					(string) $helper->init($object, $attribute, $file)->resize(...$this->getSize($size['w'], $size['h'], 2)),
 				];
-				// width et height
-				$wh = $this->_configWidthHeight ? ' width="'.$size['w'].'" height="'.$size['h'].'"' : '';
 				// n'ajoute pas une seule balise source (avec 0 rem)
-				if ($total == 1) break;
-				// https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
-				// 16 parce qu'en JavaScript getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
+				if ($total == 1) {
+					$tags[] = '<img src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x"'.$wh.' '.implode(' ', $attrs).' />';
+					break;
+				}
+				// @see https://blog.55minutes.com/2012/04/media-queries-and-browser-zoom/
+				// getComputedStyle(document.documentElement).fontSize = 16 ($this->_configFontSize)
 				if (count($sizes) == count($tags)) { // min-width uniquement sur le dernier
 					$rem    = empty($rem) ? 0 : $rem;
 					$tags[] = '<source'.$mime.' media="(min-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
@@ -287,8 +299,6 @@ class Luigifab_Maillog_Helper_Picture extends Luigifab_Maillog_Helper_Data {
 					$tags[] = '<source'.$mime.' media="(max-width:'.$rem.'rem)" srcset="'.sprintf('%s 1x, %s 2x', ...$srcs).'"'.$wh.' />';
 				}
 			}
-
-			$tags[] = '<img src="'.$srcs[0].'" srcset="'.$srcs[1].' 2x"'.$wh.' '.implode(' ', $attrs).' />';
 		}
 
 		$tags[] = '</picture>';
@@ -365,12 +375,12 @@ window.addEventListener("resize", maillogdebug);
 
 	protected function after(string $html, string $code, array $sizes) {
 
-		/* if (stripos($code, 'email') !== false)
+		/* if (stripos($code, 'email') !== false) // not mb_stripos
 			return $html;
 
 		$size = empty($sizes) ? ['w' => 1, 'h' => 1] : end($sizes);
 		//$html = str_replace(' src="', ' src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="', $html);
-		// https://css-tricks.com/preventing-content-reflow-from-lazy-loaded-images/
+		// @see https://css-tricks.com/preventing-content-reflow-from-lazy-loaded-images/
 		$html = str_replace(' src="', ' src="data:image/svg+xml;base64,'.base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="'.$size['w'].'" height="'.$size['h'].'"></svg>').'" data-src="', $html);
 		$html = str_replace(' srcset="', ' data-srcset="', $html); */
 

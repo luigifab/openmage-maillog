@@ -1,9 +1,9 @@
 <?php
 /**
  * Created J/03/12/2015
- * Updated J/01/06/2023
+ * Updated S/09/12/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -29,8 +29,15 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		$options = ['customerid' => [], 'system' => [], 'core' => []];
 		$system  = $this->helper('maillog')->getSystem($code);
-		$values  = $system->getMapping();
-		$fields  = $system->getFields();
+
+		if ($system instanceof Luigifab_Maillog_Model_Interface) {
+			$values = $system->getMapping();
+			$fields = $system->getFields();
+		}
+		else {
+			$values = [];
+			$fields = [];
+		}
 
 		$search = [
 			'A) System',
@@ -41,7 +48,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			'>selected:',
 			'>has:',
 			'>disabled:',
-			'class=" select"'
+			'class=" select"',
 		];
 
 		$replace = [
@@ -53,7 +60,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			'selected="selected" class="has">',
 			'class="has">',
 			'disabled="disabled">',
-			'class="select maillogsync"'
+			'class="select maillogsync"',
 		];
 
 		// pour le champ id client
@@ -80,7 +87,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		// pour le champ a) système
 		// liste vide lorsque le système est HS
-		if (str_contains($element->getHtmlId(), 'mapping_system')) {
+		else if (str_contains($element->getHtmlId(), 'mapping_system')) {
 
 			$options['system'][] = ['value' => '', 'label' => '-- ('.count($fields).')'];
 
@@ -104,7 +111,7 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 
 		// pour le champ b) openmage
 		// liste jamais vide puisque ce sont les attributs clients
-		if (str_contains($element->getHtmlId(), 'mapping_openmage')) {
+		else if (str_contains($element->getHtmlId(), 'mapping_openmage')) {
 
 			$customerAttributes = Mage::getModel('customer/entity_attribute_collection')->setOrder('attribute_code', 'asc');
 			$addressAttributes  = Mage::getModel('customer/entity_address_attribute_collection')->setOrder('attribute_code', 'asc');
@@ -114,26 +121,34 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 			$options['core'][] = ['value' => 'customer_login_key'];
 
 			foreach ($customerAttributes as $attribute) {
-				$options['core'][] = ['value' => $attribute->getData('attribute_code')];
+				$attrCode = $attribute->getData('attribute_code');
+				if (!empty($attrCode))
+					$options['core'][] = ['value' => $attrCode];
 			}
 
 			foreach ($addressAttributes as $attribute) {
-				$options['core'][] = ['value' => 'address_billing_'.$attribute->getData('attribute_code')];
-				if ($attribute->getData('attribute_code') == 'street') {
-					$options['core'][] = ['value' => 'address_billing_street_1'];
-					$options['core'][] = ['value' => 'address_billing_street_2'];
-					$options['core'][] = ['value' => 'address_billing_street_3'];
-					$options['core'][] = ['value' => 'address_billing_street_4'];
+				$attrCode = $attribute->getData('attribute_code');
+				if (!empty($attrCode)) {
+					$options['core'][] = ['value' => 'address_billing_'.$attrCode];
+					if ($attrCode == 'street') {
+						$options['core'][] = ['value' => 'address_billing_street_1'];
+						$options['core'][] = ['value' => 'address_billing_street_2'];
+						$options['core'][] = ['value' => 'address_billing_street_3'];
+						$options['core'][] = ['value' => 'address_billing_street_4'];
+					}
 				}
 			}
 
 			foreach ($addressAttributes as $attribute) {
-				$options['core'][] = ['value' => 'address_shipping_'.$attribute->getData('attribute_code')];
-				if ($attribute->getData('attribute_code') == 'street') {
-					$options['core'][] = ['value' => 'address_shipping_street_1'];
-					$options['core'][] = ['value' => 'address_shipping_street_2'];
-					$options['core'][] = ['value' => 'address_shipping_street_3'];
-					$options['core'][] = ['value' => 'address_shipping_street_4'];
+				$attrCode = $attribute->getData('attribute_code');
+				if (!empty($attrCode)) {
+					$options['core'][] = ['value' => 'address_shipping_'.$attrCode];
+					if ($attrCode == 'street') {
+						$options['core'][] = ['value' => 'address_shipping_street_1'];
+						$options['core'][] = ['value' => 'address_shipping_street_2'];
+						$options['core'][] = ['value' => 'address_shipping_street_3'];
+						$options['core'][] = ['value' => 'address_shipping_street_4'];
+					}
 				}
 			}
 
@@ -211,11 +226,13 @@ class Luigifab_Maillog_Block_Adminhtml_Config_Mapping extends Mage_Adminhtml_Blo
 	}
 
 	protected function inArray($needle, array $haystack, bool $strict = false) {
-		// https://stackoverflow.com/a/4128377/2980105
+
+		// @see https://stackoverflow.com/a/4128377/2980105
 		foreach ($haystack as $item) {
 			if (($strict ? ($item === $needle) : ($item == $needle)) || (is_array($item) && $this->inArray($needle, $item, $strict)))
 				return true;
 		}
+
 		return false;
 	}
 

@@ -1,9 +1,9 @@
 <?php
 /**
  * Created S/09/03/2019
- * Updated L/26/12/2022
+ * Updated S/25/11/2023
  *
- * Copyright 2015-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2015-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2015-2016 | Fabrice Creuzot <fabrice.creuzot~label-park~com>
  * Copyright 2017-2018 | Fabrice Creuzot <fabrice~reactive-web~fr>
  * Copyright 2020-2023 | Fabrice Creuzot <fabrice~cellublue~com>
@@ -33,29 +33,29 @@ ignore_user_abort(true);
 set_time_limit(0);
 
 try {
-	// ménage
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/ignore"');
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/baseurl"');
-	$this->run('DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/notbaseurl"');
+	$this->run('
+		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/ignore";
+		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/baseurl";
+		DELETE FROM '.$this->getTable('core_config_data').' WHERE path LIKE "maillog/%/notbaseurl";
 
-	// modifie des colonnes
-	$this->run('ALTER TABLE '.$this->getTable('maillog/email').'
-		MODIFY COLUMN mail_subject varchar(255) CHARACTER SET utf8mb4 NULL DEFAULT NULL');
+		ALTER TABLE '.$this->getTable('maillog/email').'
+			MODIFY COLUMN mail_subject varchar(255) CHARACTER SET utf8mb4 NULL DEFAULT NULL;
 
-	$this->run('ALTER TABLE '.$this->getTable('maillog/email').'
-		MODIFY COLUMN mail_body longtext CHARACTER SET utf8mb4 NULL DEFAULT NULL');
+		ALTER TABLE '.$this->getTable('maillog/email').'
+			MODIFY COLUMN mail_body longtext CHARACTER SET utf8mb4 NULL DEFAULT NULL;
 
-	$this->run('ALTER TABLE '.$this->getTable('maillog/email').'
-		MODIFY COLUMN status enum("pending","sent","error","read","notsent","bounce","sending") NOT NULL DEFAULT "pending"');
+		ALTER TABLE '.$this->getTable('maillog/email').'
+			MODIFY COLUMN status enum("pending","sent","error","read","notsent","bounce","sending") NOT NULL DEFAULT "pending";
 
-	$this->run('ALTER TABLE '.$this->getTable('maillog/sync').'
-		MODIFY COLUMN status enum("pending","success","error","running","notsync") NOT NULL DEFAULT "pending"');
+		ALTER TABLE '.$this->getTable('maillog/sync').'
+			MODIFY COLUMN status enum("pending","success","error","running","notsync") NOT NULL DEFAULT "pending";
 
-	$this->run('CREATE INDEX IF NOT EXISTS uniqid ON '.$this->getTable('maillog/email').' (uniqid)');
+		CREATE INDEX IF NOT EXISTS uniqid ON '.$this->getTable('maillog/email').' (uniqid);
+	');
 }
 catch (Throwable $t) {
 	$lock->unlock();
-	Mage::throwException($t);
+	throw $t;
 }
 
 $this->endSetup();

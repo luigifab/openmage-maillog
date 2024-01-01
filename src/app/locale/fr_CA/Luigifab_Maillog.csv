@@ -20,16 +20,17 @@
 						<ul>
 							<li>when the customer changes his password,</li>
 							<li>or when the customer changes his email address,</li>
-							<li>or when the email is removed from the history.</li>
+							<li>or when the email is removed from the history,</li>
+							<li>1h after sending the email.</li>
 						</ul>
 					","<p>Grâce à cette fonctionnalité, les clients seront automatiquement connectés lorsqu'ils cliqueront sur un lien dans un courriel transactionnel.<br />Le lien expirera automatiquement :</p>
 <ul>
 <li>lorsque le client change son mot de passe,</li>
 <li>ou lorsque le client change d'adresse de courriel,</li>
-<li>ou lorsque l'email est supprimé de l'historique.</li>
+<li>ou lorsque le courriel est supprimé de l'historique.</li>
+<li>1h après l'envoi du courriel.</li>
 </ul>"
 "Email reports","Rapports par courriel"
-"Separate addresses by a space.","Séparer les adresses par un espace."
 "Send an email now","Envoyer un courriel maintenant"
 "All <em>base_url</em> must contain","Toutes les <em lang=""en"">base_url</em> doivent contenir"
 "Separate keywords by a space.","Séparer les mots clefs par un espace."
@@ -81,6 +82,7 @@
 "If yes, <strong>all</strong> customers not present in the file will be subscribed to the newsletter.","Si oui, <strong>tous</strong> les clients non présents dans le fichier seront inscrits à l'infolettre."
 "Number of subscribers","Nombre d'abonnés"
 "They are extraordinary new directives:","Il y a de nouvelles directives extraordinaires :"
+"Disable inlinecss directive","Désactiver la directive inlinecss"
 "Picture directive","Directive picture"
 "Show image dimensions","Afficher les dimensions des images"
 "Create also webp images","Créer aussi des images webp"
@@ -98,6 +100,8 @@
 "INCOMPLETE MODULE INSTALLATION","INSTALLATION INCOMPLÈTE DU MODULE"
 "Changes in <em>%s</em> are not present. Please read the documentation.","Les changements dans <em>%s</em> ne sont pas présents. Veuillez lire la documentation."
 "There is conflict (<em>%s</em>).","Il y a un conflit (<em lang=""en"">%s</em>)."
+"Disallow lines are missing in <em>%s</em>, please add: %s + %s","Des lignes <em lang=""en"">Disallow</em> sont manquantes dans le <em>%s</em>, veuillez ajouter : %s + %s"
+"See a preview (after saving)","Voir un aperçu (après avoir sauvegardé)"
 "Recipient(s)","Destinataire(s)"
 "Sent At","Envoyé le"
 "Duration","Durée"
@@ -120,6 +124,8 @@
 "Sender: %s","Expéditeur : %s"
 "Recipient(s): %s","Destinataire(s) : %s"
 "Reply to: %s","Répondre à : %s"
+"CC: %s","Copie à : %s"
+"BCC: %s","Copie cachée à : %s"
 "Action / Request / Response","Action / Requête / Réponse"
 "Synchronized At","Synchronisé le"
 "Running","En cours"
@@ -153,10 +159,9 @@
 "not available","non disponible"
 "Yes with PHP-TIDY (%s)","Oui avec PHP-TIDY (%s)"
 "Yes but remove only white spaces","Oui mais supprimer uniquement les blancs"
-"The <em>%s</em> field is a required field.","Le champ <em>%s</em> est un champ obligatoire."
-"Email number %d has been successfully deleted.","Le courriel numéro %d a bien été supprimé."
 "Email number %d was sent.","Le courriel numéro %d a été envoyé."
 "Email number %d will be sent again.","Le courriel numéro %d va être renvoyé."
+"Email number %d has been successfully deleted.","Le courriel numéro %d a bien été supprimé."
 "Invalid email (hard bounce)","Courriel invalide (hard bounce)"
 "Transactional emails - %s","Courriels transactionnels - %s"
 "Email address is invalid.","L'adresse de courriel est invalide."

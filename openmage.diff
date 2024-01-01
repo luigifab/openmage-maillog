@@ -1,33 +1,36 @@
-diff --git a/lib/Zend/Mail/Transport/Sendmail.php b/lib/Zend/Mail/Transport/Sendmail.php
+# for zf1-future 1.23.5 / OpenMage 20.3.0
+# this is for maillog
+diff --git a/vendor/shardj/zf1-future/library/Zend/Mail/Transport/Sendmail.php b/vendor/shardj/zf1-future/library/Zend/Mail/Transport/Sendmail.php
 index 83b6a98bd..78196fb12 100644
---- a/lib/Zend/Mail/Transport/Sendmail.php
-+++ b/lib/Zend/Mail/Transport/Sendmail.php
-@@ -97,6 +97,10 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
+--- a/vendor/shardj/zf1-future/library/Zend/Mail/Transport/Sendmail.php
++++ b/vendor/shardj/zf1-future/library/Zend/Mail/Transport/Sendmail.php
+@@ -97,6 +97,10 @@
       */
      public function _sendMail()
      {
-+        // https://www.luigifab.fr/openmage/maillog
++        // @see https://github.com/luigifab/openmage-maillog
 +        if (Mage::helper('core')->isModuleEnabled('Luigifab_Maillog') && Mage::getStoreConfigFlag('maillog/general/enabled'))
 +            return Mage::helper('maillog')->sendMail($this, $this->_mail, $this->_parts);
 +
-         if ($this->parameters === null) {
-             set_error_handler(array($this, '_handleMailErrors'));
-             $result = mail(
+         $recipients = $this->recipients;
+         $subject = $this->_mail->getSubject();
+         $body = $this->body;
 diff --git a/lib/Varien/Filter/Template.php b/lib/Varien/Filter/Template.php
 index 83b6a98bd..78196fb12 100644
 --- a/lib/Varien/Filter/Template.php
 +++ b/lib/Varien/Filter/Template.php
-@@ -32,7 +32,8 @@
-  * @author      Magento Core Team <core@magentocommerce.com>
+@@ -20,7 +20,9 @@
+  * @package    Varien_Filter
   */
  
 -class Varien_Filter_Template implements Zend_Filter_Interface
-+// https://www.luigifab.fr/openmage/maillog
++// @see https://github.com/luigifab/openmage-maillog
++//class Varien_Filter_Template implements Zend_Filter_Interface
 +class Varien_Filter_Template extends Luigifab_Maillog_Model_Filter implements Zend_Filter_Interface
  {
      /**
       * Cunstruction regular expression
-@@ -128,7 +129,7 @@ class Varien_Filter_Template implements Zend_Filter_Interface
+@@ -128,7 +130,7 @@
       * @param string $value
       * @return string
       */
@@ -35,13 +38,13 @@ index 83b6a98bd..78196fb12 100644
 +    public function filter2($value)
      {
          // "depend" and "if" operands should be first
-         foreach (array(
-@@ -281,7 +282,7 @@ class Varien_Filter_Template implements Zend_Filter_Interface
-      * @param string $default default value
+         $directives = [
+@@ -281,7 +283,7 @@
+      * @param string|null $default default value
       * @return string
       */
--    protected function _getVariable($value, $default='{no_value_defined}')
-+    protected function _getVariable2($value, $default='{no_value_defined}')
+-    protected function _getVariable($value, $default = '{no_value_defined}')
++    protected function _getVariable2($value, $default = '{no_value_defined}')
      {
          Varien_Profiler::start("email_template_proccessing_variables");
          $tokenizer = new Varien_Filter_Template_Tokenizer_Variable();
